@@ -1,0 +1,5 @@
+{
+  "content-connector": {
+    "base_dir": "../../../latest/contentstack-sync-manager/example/_contents"
+  }
+}

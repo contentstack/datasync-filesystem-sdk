@@ -1,0 +1,14 @@
+{
+  "name": "filesyetm-sdk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "config": "^1.30.0",
+    "express": "^4.16.4",
+    "lodash": "^4.17.11",
+    "sift": "^7.0.1"
+  }
+}
