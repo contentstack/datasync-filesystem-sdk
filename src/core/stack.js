@@ -1,42 +1,40 @@
-var Utils = require('./lib/utils')
-var Entry = new (require('./modules/entry'))()
-var Assets = require('./modules/assets')
-var Query = require('./modules/query')
-//var Request = require('./lib/request')
-var filesytem = require('fs')
+var Query = require('./query')
+var fs = require('fs')
 var path = require('path')
-
+var _ = require('lodash')
+var config = require('./default')
 class Stack {
 
-    constructor(contentConnector) {
+    constructor(...stack_arguments) {
         this.baseDir
         this.masterLocale
-        this.connector(contentConnector).then((connector) => {
-            console.log(`Connected to ${path.resolve(connector.base_dir)} filesystem successfully!!`)
-            this.baseDir = path.resolve(connector.base_dir)
-            this.masterLocale = connector.master_language
-        }).catch((err) => {
-            console.log(`Failed to connect to filesytem due to ${err}`)
-        })
+        this.config = _.merge({}, config, ...stack_arguments)
     }
 
-    connector(contentConnector) {
-        return new Promise(function (resolve, reject) {
-            if(!contentConnector.hasOwnProperty('base_dir'))
-            {
-                reject("Please provide base_dir to connect the filesystem")
-            }
-            if(filesytem.existsSync(contentConnector.base_dir))
-            {
-                resolve(contentConnector)
-            }
-            else{
-                reject(`${contentConnector.base_dir} didn't exits`)
+    connect() {
+        return new Promise((resolve, reject) => {
+            try {
+                if (!this.config['content-connector'].hasOwnProperty('base_dir')) {
+                    throw new Error("Please provide base_dir to connect the filesystem.")
+                } else if(!this.config.hasOwnProperty('locales') || this.config['locales'].length == 0){
+                    throw new Error(`Please provide locales with code and relative_url_prefix.\n Example ==> locales:[{code:"en-us",relative_ul_prefix:"/"}].`)
+                } else if (!(fs.existsSync(this.config['content-connector'].base_dir))) {
+                    throw new Error(`${this.config['content-connector'].base_dir} didn't exits.`)
+                } else {
+                    this.baseDir = this.config['content-connector'].base_dir
+                    this.masterLocale = this.config['locales'][0].code
+                    return resolve(this.config['content-connector'])
+                }
+            } catch (error) {
+                reject(error)
             }
         })
     }
 
     contentType(uid) {
+        if(this.baseDir == undefined){
+            throw new Error("Please call the Stack.connect() first")
+        }
         if (uid && typeof uid === 'string') {
             this.content_type_uid = uid;
             this.type = "contentType";
@@ -44,23 +42,86 @@ class Stack {
         return this;
     }
 
-    entries(...val){
-        let entry = Entry
-        if (Array.isArray(val)) {
+    entries(...val) {
+        let entry = Query
+        this.entry = "multiple"
+        if (this.type == undefined) {
+            throw new Error("Please call contentType('uid') first")
+        }
+        if (val.length > 0) {
             if (arguments.length) {
                 for (let i = 0; i < arguments.length; i++) {
                     entry.entry_uid = [];
                     entry.entry_uid = entry.entry_uid.concat(arguments[i]);
                 }
             }
-            console.log(Utils.merge(entry, this),"Utils.merge(entry, this) if")
-            return Utils.merge(entry, this)
+            return _.merge(this, entry)
         } else {
-            console.log(Utils.merge(entry, this),"Utils.merge(entry, this) else")
-            return Utils.merge(entry, this)
+            return _.merge(this, entry)
         }
     }
-    
+    find() {
+        let baseDir = this.baseDir
+        let masterLocale = this.masterLocale
+        let result
+        return new Promise((resolve, reject) => {
+            if (this.type == "asset") {
+                let dataPath = (!this._query['locale'])? path.join(baseDir, masterLocale, "assets", "_assets.json"): path.join(baseDir, this._query['locale'], "assets", "_assets.json");
+                if (!fs.existsSync(dataPath)) {
+                    return reject(`${dataPath} didn't exist`)
+                } else {
+                    fs.readFile(dataPath, 'utf8', (err, data) => {
+                        if (err) {
+                            return reject(err)
+                        } else {
+                            let assetData = JSON.parse(data)
+                            let finalRes ={}
+                            if(this.asset_uid){
+                                result = _.find(assetData, { 'uid': this.asset_uid })
+                                finalRes.asset = result
+                            }else{
+                                result = assetData
+                                finalRes.assets = result
+                            }
+                            resolve(finalRes)
+                        }
+                    })
+                }
+
+            } else {
+                let dataPath = (!this._query['locale']) ? path.join(baseDir, masterLocale, "data", this.content_type_uid, "index.json") : path.join(baseDir, this._query['locale'], "data", this.content_type_uid, "index.json");
+                if (!fs.existsSync(dataPath)) {
+                    return reject(`${dataPath} didn't exist`)
+                } else {
+                    fs.readFile(dataPath, 'utf8', (err, data) => {
+                        if (err) {
+                            return reject(err)
+                        } else {
+                            let entryData = JSON.parse(data)
+                            result = _.map(entryData, 'data')
+                            let finalRes = {
+                                'content_type_uid': entryData[0].content_type_uid,
+                                'locale': entryData[0].locale,
+                            }
+                            if (this.entry == "multiple") {
+                                finalRes.entries = result
+                                resolve(finalRes)
+                            }
+                            else if (this.entry == "single") {
+                                result = _.find(result, { 'uid': this.entry_uid })
+                                console.log(result, this.entry_uid, "fgsfssj")
+                                finalRes.entry = result
+                                resolve(finalRes)
+                            }
+
+                        }
+                    })
+                }
+            }
+        })
+
+
+    }
 
     /**
      * @method Entry
@@ -76,13 +137,17 @@ class Stack {
      *      })
      * @returns {Entry}
      */
-    Entry(uid) {
-        let entry = Entry
+    entry(uid) {
+        let entry = Query
+        if (this.type == undefined) {
+            throw new Error("Please call contentType('uid') first")
+        }
         if (uid && typeof uid === "string") {
             entry.entry_uid = uid;
         }
-        console.log(Utils.merge(entry, this),"Utils.merge(entry, this)")
-        return Utils.merge(entry, this);
+        this.entry = "single"
+        //console.log(Utils.merge(entry, this), "Utils.merge(entry, this)")
+        return _.merge(this, entry);
     }
 
     /**
@@ -99,14 +164,23 @@ class Stack {
      *      })log
      * @returns {Assets}
      */
-    Assets(uid) {
+    asset(uid) {
         this.type = 'asset';
+        let asset = Query
         if (uid && typeof uid === "string") {
-            let asset = Assets
             asset.asset_uid = uid;
-            return Utils.merge(asset, this);
+            return _.merge(this, asset);
+
+        }else{
+            throw new Error("Please provide valid single asset uid")
         }
-        return this;
+        
+    }
+
+    assets() {
+        this.type = 'asset';
+        let asset = Query
+        return _.merge(this, asset);
     }
 
     /**
@@ -115,9 +189,12 @@ class Stack {
      * @example Stack.ContentTyplogog').Query().toJSON().find()
      * @returns {Query}
      */
-    Query() {
+    query() {
+        if(typeof this.entry !== "string"){
+            throw new Error("Please call the entries() before query()")
+        }
         let query = Query;
-        return Utils.merge(query, this);
+        return _.merge(query, this);
     }
 
 }
