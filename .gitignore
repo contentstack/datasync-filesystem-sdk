@@ -1,2 +1,8 @@
-node_modules
-notes.js
+*
+!example
+!example/**
+!src
+!src/**
+!.gitignore
+!package.json
+!README.md

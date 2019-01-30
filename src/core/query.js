@@ -1,14 +1,14 @@
-var Entry = require('./entry')
-var Request = require('../lib/request')
-var Utils = require('../lib/utils')
+var Utils = require('./utils')
 var fs = require('fs')
 var path = require('path')
 var sift = require('sift').default
 var _ = require('lodash')
+var mask = require('json-mask')
 const _extend = {
     compare: function (type) {
         return function (key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
+                this._query.query = this._query.query || {}
                 this._query['query'][key] = this._query['query']['file_size'] || {};
                 this._query['query'][key][type] = value;
                 return this;
@@ -21,7 +21,8 @@ const _extend = {
         let type = (bool) ? '$in' : '$nin';
         return function (key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
-                this._query['query'][key] = this._query['query'][key] || {};
+                this._query.query = this._query.query || {}
+                this._query.query[key] = this._query.query[key] || {};
                 this._query['query'][key][type] = this._query['query'][key][type] || [];
                 this._query['query'][key][type] = this._query['query'][key][type].concat(value);
                 return this;
@@ -33,6 +34,7 @@ const _extend = {
     exists: function (bool) {
         return function (key) {
             if (key && typeof key === 'string') {
+                this._query.query = this._query.query || {}
                 this._query['query'][key] = this._query['query'][key] || {};
                 this._query['query'][key]['$exists'] = bool;
                 return this;
@@ -43,19 +45,11 @@ const _extend = {
     },
     logical: function (type) {
         return function () {
-            let _query = [];
-            for (let i = 0, _i = arguments.length; i < _i; i++) {
-                if (arguments[i] instanceof Query && arguments[i]._query.query) {
-                    _query.push(arguments[i]._query.query);
-                } else if (typeof arguments[i] === "object") {
-                    _query.push(arguments[i]);
-                }
-            }
-            if (this._query['query'][type]) {
-                this._query['query'][type] = this._query['query'][type].concat(_query);
-            } else {
-                this._query['query'][type] = _query;
-            }
+            this._query['logical'] = this._query['logical'] || {}
+            this._query['logical'][type] = this._query['logical'][type] || {};
+            this._query['logical'][type] = this._query.query
+            delete this._query.query
+            console.log(this,"logical")
             return this;
         };
     },
@@ -91,10 +85,9 @@ const _extend = {
  * let assetQuery =  Contentstack.Stack().Assets().Query();
  * @ignore
  */
-class Query extends Entry {
+class Query {
 
     constructor() {
-        super();
         this._query = this._query || {};
         this._query['query'] = this._query['query'] || {};
         /**
@@ -272,7 +265,7 @@ class Query extends Entry {
          */
         this.descending = _extend.sort('desc');
 
-       
+
         /**
         * @method skip
         * @description Skips at specific number of entries.
@@ -321,6 +314,8 @@ class Query extends Entry {
         * @returns {Query}
         */
         this.or = _extend.logical('$or');
+        this.nor = _extend.logical('$nor');
+        this.not = _extend.logical('$not');
 
         /**
          * @method and
@@ -344,6 +339,7 @@ class Query extends Entry {
 
     equalTo(key, value) {
         if (key && typeof key === 'string') {
+            this._query.query = this._query.query || {}
             this._query['query'][key] = value;
 
             return this;
@@ -369,6 +365,7 @@ class Query extends Entry {
 
     where(key, value) {
         if (key && typeof key === 'string') {
+            this._query.query = this._query.query || {}
             this._query['query'][key] = value;
             return this;
         } else {
@@ -449,6 +446,19 @@ class Query extends Entry {
         return this;
     }
 
+    language(language_code) {
+        if (language_code && typeof language_code === 'string') {
+            this._query['locale'] = language_code;
+            return this;
+        } else {
+            console.error("Argument should be a String.");
+        }
+    }
+
+    includeContentType() {
+        this._query['include_content_type'] = true;
+        return this;
+    }
 
     addParam(key, value) {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
@@ -495,29 +505,28 @@ class Query extends Entry {
         }
     }
 
-    /**
-     * @method search
-     * @description Retrieve entries that have fields which match the provided search value.
-     * @param {string} value - value to search in entries
-     * @example blogQuery.search('Welcome to demo')
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.search('welcome to demo').find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains the object that possess the text "’welcome to demo’".
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    search(value) {
-        console.log("search", value)
-        if (value && typeof value === 'string') {
-            this._query['typeahead'] = value;
-            return this;
-        } else {
-            console.error("Kindly provide valid parameters.");
+    only(fields) {
+        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
+            throw new Error('Kindly provide valid \'field\' values for \'only()\'')
         }
+        this._query.query = this._query.query || {}
+        this._query.only = this._query.only || {}
+        this._query.only = fields
+
+        return this
     }
+
+    except(fields) {
+        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
+            throw new Error('Kindly provide valid \'field\' values for \'except()\'')
+        }
+        this._query.query = this._query.query || {}
+        this._query.except = this._query.except || {}
+        this._query.except = fields
+
+        return this
+    }
+
     isEmpty(obj) {
         for (var key in obj) {
             if (obj.hasOwnProperty(key))
@@ -539,11 +548,9 @@ class Query extends Entry {
      */
     find() {
         let baseDir = this.baseDir
-        let masterLocale = (this.masterLocale === undefined) ? "en-us" : this.masterLocale
+        let masterLocale = this.masterLocale
         let result
-        console.log(this._query, "this._query")
-        if (this.isEmpty(this._query['query'])) {
-            console.log("find ifffff", this._query, this.content_type_uid)
+        if (this.isEmpty(this._query['query']) && this._query['query'] === "undefined") {
             return new Promise((resolve, reject) => {
                 let dataPath = (!this._query['locale']) ? path.join(baseDir, masterLocale, "data", this.content_type_uid, "index.json") : path.join(baseDir, this._query['locale'], "data", this.content_type_uid, "index.json");
                 if (!fs.existsSync(dataPath)) {
@@ -555,7 +562,7 @@ class Query extends Entry {
                         } else {
                             result = _.map(JSON.parse(data), 'content_type')
                             result = result[0]
-                            let res = {'content_type' : result}
+                            let res = { 'content_type': result }
                             resolve(res)
                         }
                     })
@@ -563,8 +570,8 @@ class Query extends Entry {
             })
         }
         else {
-            console.log("find else", this._query.query)
             return new Promise((resolve, reject) => {
+                let result
                 let dataPath = (!this._query['locale']) ? path.join(baseDir, masterLocale, "data", this.content_type_uid, "index.json") : path.join(baseDir, this._query['locale'], "data", this.content_type_uid, "index.json");
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`)
@@ -574,40 +581,83 @@ class Query extends Entry {
                             return reject(err)
                         } else {
                             let entryData = JSON.parse(data)
-                            
                             let filteredEntryData = _.map(entryData, 'data')
-                           // console.log(entryData,entryData.locale, entryData.content_type_uid ,this._query['query'])
-                            result = sift(this._query['query'], filteredEntryData)
-                            
+                            const sortKeys = ['asc', 'desc'];
+                            const sortQuery = Object.keys(this._query)
+                                .filter(key => sortKeys.includes(key))
+                                .reduce((obj, key) => {
+                                    return {
+                                        ...obj,
+                                        [key]: this._query[key]
+                                    };
+                                }, {});
+
+                            if (this._query['asc'] || this._query['desc']) {
+                                result = _.orderBy(filteredEntryData, Object.values(sortQuery), Object.keys(sortQuery))
+                            }
+
+                            if (this._query['query'] && Object.keys(this._query['query']).length > 0) {
+                                result = sift(this._query['query'], filteredEntryData)
+                            }else if(this._query['logical']){
+                                let operator = Object.keys(this._query['logical'])[0]
+                                let values = JSON.parse(JSON.stringify(Object.values(this._query['logical'])).replace(/\,/, '},{'))
+                                let logicalQuery= {}
+                                logicalQuery[operator]=values
+                                result = sift(logicalQuery, filteredEntryData)
+                            }else {
+                                result = filteredEntryData
+                            }
+
+                            if (this._query['limit'] && this._query['limit'] < result.length) {
+                                let limit = this._query['limit']
+                                result = result.splice(0, limit)
+                            }
+
+                            if (this._query['skip']) {
+                                let skip = this._query['skip']
+                                result = result.splice(0, skip)
+                            }
+
+                            if (this._query['only']) {
+                                let only = this._query['only'].toString().replace(/\./g, "/")
+                                result = mask(result, only)
+                            }
+
+                            if (this._query['except']) {
+                                let bukcet = this._query['except'].toString().replace(/\./g, "/")
+                                let except = mask(result, bukcet)
+                                result = Utils.difference(result, except)
+                            }
+
                             let finalRes
-                            if(this._query['count'])
-                            {
-                                finalRes={
-                                    'content_type_uid':entryData[0].content_type_uid,
-                                    'locale':entryData[0].locale,
-                                    'count' : result.length 
+                            if (this._query['count']) {
+                                finalRes = {
+                                    'content_type_uid': entryData[0].content_type_uid,
+                                    'locale': entryData[0].locale,
+                                    'count': result.length
+                                }
+                            } else {
+                                finalRes = {
+                                    'content_type_uid': entryData[0].content_type_uid,
+                                    'locale': entryData[0].locale,
+                                    'entries': result
                                 }
                             }
-                            else{
-                                finalRes= {
-                                    'content_type_uid':entryData[0].content_type_uid,
-                                    'locale':entryData[0].locale,
-                                    'entries' : result 
-                                }
-                            }
-                            if(this._query['include_count']){
+
+                            if (this._query['include_count']) {
                                 finalRes['count'] = result.length
                             }
-                            if(this._query['include_content_type']){
+
+                            if (this._query['include_content_type']) {
                                 finalRes['content_type'] = entryData[0].content_type
                             }
-                            if(this._query['tags']){
+
+                            if (this._query['tags']) {
                                 result = sift({ tags: { $in: this._query['tags'] } }, result)
                                 finalRes['entries'] = result
                                 finalRes['count'] = result.length
                             }
-                            
-                                
+
                             resolve(finalRes)
                         }
                     })
@@ -620,7 +670,7 @@ class Query extends Entry {
     /**
     * @method findOne
     * @deprecated since verion 3.3.0
-    * @description Retrieve a single entry from the result
+    * @description Retrieve a first entry from the result
     * @example let blogQuery = Stack().ContentType('example').Query().findOne();
     *          blogQuery.then(function(result) {
     *          // result contains the single item object. 
@@ -631,7 +681,7 @@ class Query extends Entry {
     */
     findOne() {
         let baseDir = this.baseDir
-        let masterLocale = (this.masterLocale === undefined) ? "en-us" : this.masterLocale
+        let masterLocale = this.masterLocale
         let result
         return new Promise((resolve, reject) => {
             if (!fs.existsSync(baseDir)) {
@@ -643,9 +693,9 @@ class Query extends Entry {
                         return reject(err)
                     } else {
                         result = _.map(JSON.parse(data), 'data')
-                            result = result[0]
-                            let res = {'entry' : result}
-                            resolve(res)
+                        result = result[0]
+                        let res = { 'entry': result }
+                        resolve(res)
 
                     }
                 })

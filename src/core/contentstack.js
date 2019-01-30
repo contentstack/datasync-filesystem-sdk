@@ -1,5 +1,4 @@
 var Stack = require('./stack')
-var CacheProvider = require('./cache-provider/index')
 
 /**
  * @method Contentstack
@@ -9,17 +8,7 @@ var CacheProvider = require('./cache-provider/index')
 class Contentstack {
 
 	constructor() {
-		/**
-		 * @constant CachePolicy
-		 * @description CachePolicy contains different cache policies constants.
-		 * @example
-		 * Contentstack.CachePolicy.IGNORE_CACHE
-		 * Contentstack.CachePolicy.ONLY_NETWORK
-		 * Contentstack.CachePolicy.CACHE_ELSE_NETWORK
-		 * Contentstack.CachePolicy.NETWORK_ELSE_CACHE
-		 * Contentstack.CachePolicy.CACHE_THEN_NETWORK
-		 */
-		this.CachePolicy = CacheProvider.policies;
+		
 	}
 
 	/**
@@ -37,8 +26,8 @@ class Contentstack {
 	 *
 	 * @returns {Stack}
 	 */
-	Stack(contentConnector) {
-		return new Stack(contentConnector)
+	Stack(...stack_argumetnts) {
+		return new Stack(...stack_argumetnts)
 	}
 }
 
