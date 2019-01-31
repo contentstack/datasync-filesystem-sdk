@@ -351,165 +351,124 @@ export class Query {
         this.and = _extend.logical('$and')
     }
 
-    /**
-     * @method lessThanOrEqualTo
-     * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
-     * @param {String} key - uid of the field
-     * @param {*} value - Value used to match or compare
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
-     *          data.then(function (result) {
-     *          // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    this.lessThanOrEqualTo = _extend.compare('$lte')
-    /**
-     * @method greaterThan
-     * @description Retrieves entries in which the value for a field is greater than the provided value.
-     * @param {String} key - uid of the field
-     * @param {*} value -  value used to match or compare
-     * @example
-     *          let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.greaterThan('created_at','2015-03-12').find()
-     *                     daEntryta.then(function(result) {
-     *                       // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
-     *                     },function (error) {
-     *                       // error function
-     *                     })
-     * @returns {Query}
-     */
-    this.greaterThan = _extend.compare('$gt')
+
+    public equalTo(key, value) {
+        if (key && typeof key === 'string') {
+            this._query.query = this._query.query || {}
+            this._query.query[key] = value
+
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters.')
+        }
+    }
 
     /**
-     * @method greaterThanOrEqualTo
-     * @description Retrieves entries in which the value for a field is greater than or equal to the provided value.
-     * @param {String} key - uid of the field
-     * @param {*} value - Value used to match or compare
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.greaterThanOrEqualTo('created_at','2015-03-12').find()
-     *          data.then(function(result) {
-     *          // result contains the data of entries where the 'created_at' date will be greaterThan or equalto '2015-06-22'
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    this.greaterThanOrEqualTo = _extend.compare('$gte')
-
-    /**
-     * @method notEqualTo
-     * @description Retrieves entries in which the value for a field does not match the provided value.
-     * @param {String} key - uid of the field
-     * @param {*} value - Value used to match or compare
-     * @example blogQuery.notEqualTo('title','Demo')
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.notEqualTo('title','Demo').find()
-     *          data.then(function(result) {
-     *            // ‘result’ contains the list of entries where value of the ‘title’ field will not be 'Demo'.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    this.notEqualTo = _extend.compare('$ne')
-
-    /**
-     * @method containedIn
-     * @description Retrieve entries in which the value of a field matches with any of the provided array of values
+     * @method where
+     * @description Retrieve entries in which a specific field satisfies the value provided
      * @param {String} key - uid of the field
      * @param {*} value - value used to match or compare
      * @example let blogQuery = Stack().contentType('example').entries().query();
      *          let data = blogQuery.where('title','Demo').find()
      *          data.then(function(result) {
-     *          // ‘result’ contains the list of entries where value of the ‘title’ field will contain either 'Demo' or ‘Welcome’.
+     *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
      *       },function (error) {
      *          // error function
      *      })
      * @returns {Query}
      */
-    this.containedIn = _extend.contained(true)
+
+    public where(key, value) {
+        if (key && typeof key === 'string') {
+            this._query.query = this._query.query || {}
+            this._query.query[key] = value
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters.')
+        }
+    }
 
     /**
-     * @method notContainedIn
-     * @description Retrieve entries in which the value of a field does not match with any of the provided array of values.
-     * @param {String} key - uid of the field
-     * @param {Array} value - Array of values that are to be used to match or compare
+     * @method count
+     * @description Returns the total number of entries
+     * @example blogQuery.count()
      * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
+     *          let data = blogQuery.count().find()
      *          data.then(function(result) {
-     *          // 'result' contains the list of entries where value of the title field should not be either "Demo" or ‘Welcome’
+     *           // ‘result’ contains the total count.
      *       },function (error) {
      *          // error function
      *      })
      * @returns {Query}
      */
-    this.notContainedIn = _extend.contained(false)
+    public count() {
+        this._query.count = true
+        return this
+    }
 
     /**
-     * @method exists
-     * @description Retrieve entries if value of the field, mentioned in the condition, exists.
-     * @param {String} key - uid of the field
-     * @example blogQuery.exists('featured')
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.exists('featured').find()
-     *          data.then(function(result) {
-     *          // ‘result’ contains the list of entries in which "featured" exists.
-     *       },function (error) {
-     *          // error function
-     *      })
+     * @method query
+     * @description Retrieve entries based on raw queries
+     * @param {object} query - RAW (JSON) queries
      * @returns {Query}
      */
-    this.exists = _extend.exists(true)
+    public query(query) {
+        if (typeof query === 'object') {
+            this._query.query = mergeDeep(this._query.query, query)
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters')
+        }
+    }
 
     /**
-     * @method notExists
-     * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
-     * @param {String} key - uid of the field
-     * @example blogQuery.notExists('featured')
+     * @method tags
+     * @description Retrieves entries based on the provided tags
+     * @param {Array} values - tags
      * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.notExists('featured').find()
+     *          let data = blogQuery.tags(['technology', 'business']).find()
      *          data.then(function(result) {
-     *        // result is the list of non-existing’featured’" data.
+     *        // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
      *       },function (error) {
      *          // error function
      *      })
      * @returns {Query}
      */
-    this.notExists = _extend.exists(false)
+    public tags(values) {
+        if (Array.isArray(values)) {
+            this._query.tags = values
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters')
+        }
+    }
 
     /**
-     * @method ascending
-     * @description Sort fetched entries in the ascending order with respect to a specific field.
-     * @param {String} key - field uid based on which the ordering will be done
+     * @method includeCount
+     * @description Includes the total number of entries returned in the response.
+     * @example blogQuery.includeCount()
      * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.ascending('created_at').find()
+     *          let data = blogQuery.includeCount().find()
      *          data.then(function(result) {
-     *           // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
+     *         // ‘result’ contains a list of entries in which count of object is present at array[1] position.
      *       },function (error) {
      *          // error function
      *      })
      * @returns {Query}
      */
-    this.ascending = _extend.sort('asc')
+    public includeCount() {
+        this._query.include_count = true
+        return this
+    }
 
-    /**
-     * @method descending
-     * @description Sort fetched entries in the descending order with respect to a specific field
-     * @param {String} key - field uid based on which the ordering will be done.
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.descending('created_at').find()
-     *          data.then(function(result) {
-     *           // ‘result’ contains the list of entries which is sorted in descending order on the basis of ‘created_at’.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    this.descending = _extend.sort('desc')
-
+    public language(language_code) {
+        if (language_code && typeof language_code === 'string') {
+            this._query.locale = language_code
+            return this
+        } else {
+            return console.error('Argument should be a String.')
+        }
+    }
 
     public includeReferences() {
         this._query.includeReferences = true
@@ -521,235 +480,72 @@ export class Query {
         return this
     }
 
-    /**
-     * @method limit
-     * @description Returns a specific number of entries based on the set limit
-     * @param {Number} limit - maximum number of entries to be returned
-     * @example let blogQuery = Stack().ContentType('example').Query();
-     *          let data = blogQuery.limit(10).find()
-     *          data.then(function(result) {
-     *          // result contains the limited number of entries
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
-    this.limit = _extend.pagination('limit')
+    public addParam(key, value) {
+        if (key && value && typeof key === 'string' && typeof value === 'string') {
+            this._query[key] = value
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters.')
+        }
+    }
 
     /**
-     * @method or
-     * @description Retrieves entries that satisfy at least one of the given conditions
-     * @param {object} queries - array of Query objects or raw queries
-     * @example
-     * <caption> .or with Query instances</caption>
-     * let Query1 = Stack.ContentType('blog').Query().where('title', 'Demo').find()
-     * let Query2 = Stack.ContentType('blog').Query().lessThan('comments', 10).find()
-     * blogQuery.or(Query1, Query2)
-     * @example
-     * <caption> .or with raw queries</caption>
-     * let Query1 = Stack.ContentType('blog').Query().where('title', 'Demo').getQuery()
-     * let Query2 = Stack.ContentType('blog').Query().lessThan('comments', 10).getQuery()
-     * blogQuery.or(Query1, Query2)
+     * @method getQuery
+     * @description Returns the raw (JSON) query based on the filters applied on Query object.
+     * @example Stack.ContentType('contentType_uid').Query().where('title','Demo').getQuery().find()
      * @returns {Query}
      */
-    this.or = _extend.logical('$or')
-    this.nor = _extend.logical('$nor')
-    this.not = _extend.logical('$not')
+    public getQuery() {
+        return this._query.query || {}
+    }
 
     /**
-     * @method and
-     * @description Retrieve entries that satisfy all the provided conditions.
-     * @param {object} queries - array of query objects or raw queries.
+     * @method regex
+     * @description Retrieve entries that match the provided regular expressions
+     * @param {String} key - uid of the field
+     * @param {*} value - value used to match or compare
+     * @param {String} [options] - match or compare value in entry
      * @example
-     * <caption> .and with Query instances</caption>
-     * let Query1 = Stack.ContentType('blog').Query().where('title', 'Demo')
-     * let Query2 = Stack.ContentType('blog').Query().lessThan('comments', 10)
-     * blogQuery.and(Query1, Query2)
+     * <caption> .regex without options</caption>
+     * blogQuery.regex('title','^Demo')
      * @example
-     * <caption> .and with raw queries</caption>
-     * let Query1 = Stack.ContentType('blog').Query().where('title', 'Demo').getQuery()
-     * let Query2 = Stack.ContentType('blog').Query().lessThan('comments', 10).getQuery()
-     * blogQuery.and(Query1, Query2)
+     * <caption> .regex with options</caption>
+     * blogQuery.regex('title','^Demo', 'i')
      * @returns {Query}
      */
-    this.and = _extend.logical('$and')
-  }
-
-  public includeReferences() {
-    this._query.includeReferences = true
-
-    return this
-  }
-
-  public equalTo(key, value) {
-    if (key && typeof key === 'string') {
-      this._query.query = this._query.query || {}
-      this._query.query[key] = value
-
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters.')
+    public regex(key, value, options) {
+        if (key && value && typeof key === 'string' && typeof value === 'string') {
+            this._query.query[key] = {
+                $regex: value,
+            }
+            if (options) { this._query.query[key].$options = options }
+            return this
+        } else {
+            return console.error('Kindly provide valid parameters.')
+        }
     }
-  }
 
-  /**
-   * @method where
-   * @description Retrieve entries in which a specific field satisfies the value provided
-   * @param {String} key - uid of the field
-   * @param {*} value - value used to match or compare
-   * @example let blogQuery = Stack().ContentType('example').Query();
-   *          let data = blogQuery.where('title','Demo').find()
-   *          data.then(function(result) {
-   *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
-   *       },function (error) {
-   *          // error function
-   *      })
-   * @returns {Query}
-   */
+    public only(fields) {
+        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
+            throw new Error('Kindly provide valid \'field\' values for \'only()\'')
+        }
+        this._query.query = this._query.query || {}
+        this._query.only = this._query.only || {}
+        this._query.only = fields
 
-  public where(key, value) {
-    if (key && typeof key === 'string') {
-      this._query.query = this._query.query || {}
-      this._query.query[key] = value
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters.')
+        return this
     }
-  }
 
-  /**
-   * @method count
-   * @description Returns the total number of entries
-   * @example blogQuery.count()
-   * @example let blogQuery = Stack().ContentType('example').Query();
-   *          let data = blogQuery.count().find()
-   *          data.then(function(result) {
-   *           // ‘result’ contains the total count.
-   *       },function (error) {
-   *          // error function
-   *      })
-   * @returns {Query}
-   */
-  public count() {
-    this._query.count = true
-    return this
-  }
+    public except(fields) {
+        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
+            throw new Error('Kindly provide valid \'field\' values for \'except()\'')
+        }
+        this._query.query = this._query.query || {}
+        this._query.except = this._query.except || {}
+        this._query.except = fields
 
-  /**
-   * @method query
-   * @description Retrieve entries based on raw queries
-   * @param {object} query - RAW (JSON) queries
-   * @returns {Query}
-   */
-  public query(query) {
-    if (typeof query === 'object') {
-      this._query.query = mergeDeep(this._query.query, query)
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters')
+        return this
     }
-  }
-
-  /**
-   * @method tags
-   * @description Retrieves entries based on the provided tags
-   * @param {Array} values - tags
-   * @example let blogQuery = Stack().ContentType('example').Query();
-   *          let data = blogQuery.tags(['technology', 'business']).find()
-   *          data.then(function(result) {
-   *        // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
-   *       },function (error) {
-   *          // error function
-   *      })
-   * @returns {Query}
-   */
-  public tags(values) {
-    if (Array.isArray(values)) {
-      this._query.tags = values
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters')
-    }
-  }
-
-  /**
-   * @method includeCount
-   * @description Includes the total number of entries returned in the response.
-   * @example blogQuery.includeCount()
-   * @example let blogQuery = Stack().ContentType('example').Query();
-   *          let data = blogQuery.includeCount().find()
-   *          data.then(function(result) {
-   *         // ‘result’ contains a list of entries in which count of object is present at array[1] position.
-   *       },function (error) {
-   *          // error function
-   *      })
-   * @returns {Query}
-   */
-  public includeCount() {
-    this._query.include_count = true
-    return this
-  }
-
-  public language(language_code) {
-    if (language_code && typeof language_code === 'string') {
-      this._query.locale = language_code
-      return this
-    } else {
-      return console.error('Argument should be a String.')
-    }
-  }
-
-  public includeContentType() {
-    this._query.include_content_type = true
-    return this
-  }
-
-  public addParam(key, value) {
-    if (key && value && typeof key === 'string' && typeof value === 'string') {
-      this._query[key] = value
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters.')
-    }
-  }
-
-  /**
-   * @method getQuery
-   * @description Returns the raw (JSON) query based on the filters applied on Query object.
-   * @example Stack.ContentType('contentType_uid').Query().where('title','Demo').getQuery().find()
-   * @returns {Query}
-   */
-  public getQuery() {
-    return this._query.query || {}
-  }
-
-  /**
-   * @method regex
-   * @description Retrieve entries that match the provided regular expressions
-   * @param {String} key - uid of the field
-   * @param {*} value - value used to match or compare
-   * @param {String} [options] - match or compare value in entry
-   * @example
-   * <caption> .regex without options</caption>
-   * blogQuery.regex('title','^Demo')
-   * @example
-   * <caption> .regex with options</caption>
-   * blogQuery.regex('title','^Demo', 'i')
-   * @returns {Query}
-   */
-  public regex(key, value, options) {
-    if (key && value && typeof key === 'string' && typeof value === 'string') {
-      this._query.query[key] = {
-        $regex: value,
-      }
-      if (options) {
-        this._query.query[key].$options = options
-      }
-      return this
-    } else {
-      return console.error('Kindly provide valid parameters.')
-    }
-  }
 
     public find() {
         const baseDir = this.baseDir
@@ -962,29 +758,6 @@ export class Query {
             }
         })
     }
-  }
-
-  public findOne() {
-    const baseDir = this.baseDir
-    const masterLocale = this.masterLocale
-    const contentTypeUid = this.content_type_uid
-    let result
-    return new Promise((resolve, reject) => {
-      if (!fs.existsSync(baseDir)) {
-        return reject(`${baseDir} didn't exist`)
-      } else {
-        const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid,
-          'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json')
-        fs.readFile(dataPath, 'utf8', (err, data) => {
-          if (err) {
-            return reject(err)
-          } else {
-            result = map(JSON.parse(data), 'data')
-            result = result[0]
-            const res = {
-              entry: result
-            }
-            resolve(res)
 
     public findOne() {
         this.single = true
@@ -1100,11 +873,6 @@ export class Query {
         })
     }
 
-      return Promise.all(referencesFound)
-        .then(resolve)
-        .catch(reject)
-    })
-  }
 }
 
 
