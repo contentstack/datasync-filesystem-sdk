@@ -15,7 +15,6 @@ const query_1 = require("./query");
 let query = new query_1.Query();
 class Stack {
     constructor(...stack_arguments) {
-        this._query = {};
         this.baseDir;
         this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
@@ -69,7 +68,7 @@ class Stack {
             return lodash_1.merge(this, entry);
         }
         else {
-            return lodash_1.merge(entry, this);
+            return lodash_1.merge(this, entry);
         }
     }
     find() {
@@ -78,7 +77,8 @@ class Stack {
         let result;
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
+                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') :
+                    path.join(baseDir, this._query.locale, 'assets', '_assets.json');
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`);
                 }
@@ -91,7 +91,9 @@ class Stack {
                             const assetData = JSON.parse(data);
                             const finalRes = {};
                             if (this.asset_uid) {
-                                result = lodash_1.find(assetData, { uid: this.asset_uid });
+                                result = lodash_1.find(assetData, {
+                                    uid: this.asset_uid
+                                });
                                 finalRes['asset'] = result;
                             }
                             else {
@@ -115,26 +117,22 @@ class Stack {
                         }
                         else {
                             const entryData = JSON.parse(data);
+                            result = lodash_1.map(entryData, 'data');
                             const finalRes = {
                                 content_type_uid: entryData[0].content_type_uid,
                                 locale: entryData[0].locale,
                             };
-                            if (Object.keys(this._query).length === 0) {
-                                result = lodash_1.map(entryData, 'content_type');
-                                finalRes['content_type'] = result;
-                                return resolve(finalRes);
-                            }
-                            else {
-                                result = lodash_1.map(entryData, 'data');
-                            }
                             if (this._entry == 'multiple') {
                                 finalRes['entries'] = result;
-                                return resolve(finalRes);
+                                resolve(finalRes);
                             }
                             else if (this._entry == 'single') {
-                                result = lodash_1.find(result, { uid: this.entry_uid });
+                                result = lodash_1.find(result, {
+                                    uid: this.entry_uid
+                                });
+                                console.log(result, this.entry_uid, 'fgsfssj');
                                 finalRes['entry'] = result;
-                                return resolve(finalRes);
+                                resolve(finalRes);
                             }
                         }
                     });
@@ -168,10 +166,6 @@ class Stack {
         this.type = 'asset';
         const asset = query;
         return lodash_1.merge(this, asset);
-    }
-    query() {
-        const _query = query;
-        return lodash_1.merge(_query, this);
     }
 }
 exports.Stack = Stack;
