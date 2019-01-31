@@ -17,5 +17,4 @@ export declare class Stack {
     entry(uid: any): this & Query;
     asset(uid: any): this & Query;
     assets(): this & Query;
-    query(): Query & this;
 }
