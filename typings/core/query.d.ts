@@ -22,6 +22,7 @@ export declare class Query {
     private _query;
     type: string;
     constructor();
+    includeReferences(): this;
     equalTo(key: any, value: any): void | this;
     where(key: any, value: any): void | this;
     count(): this;
@@ -38,4 +39,6 @@ export declare class Query {
     isEmpty(obj: any): boolean;
     find(): Promise<{}>;
     findOne(): Promise<{}>;
+    private findReferences;
+    private includeReferencesI;
 }

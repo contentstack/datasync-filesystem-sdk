@@ -112,6 +112,10 @@ class Query {
         this.not = _extend.logical('$not');
         this.and = _extend.logical('$and');
     }
+    includeReferences() {
+        this._query.includeReferences = true;
+        return this;
+    }
     equalTo(key, value) {
         if (key && typeof key === 'string') {
             this._query.query = this._query.query || {};
@@ -242,7 +246,9 @@ class Query {
                         else {
                             result = lodash_1.map(JSON.parse(data), 'content_type');
                             result = result[0];
-                            const res = { content_type: result };
+                            const res = {
+                                content_type: result
+                            };
                             resolve(res);
                         }
                     });
@@ -275,6 +281,80 @@ class Query {
                             if (this.type !== 'asset') {
                                 filteredEntryData = lodash_1.map(entryData, 'data');
                                 type = "entries";
+                            }
+                            if (this._query.includeReferences) {
+                                return this.includeReferencesI(filteredEntryData, this._query.locale, {}, undefined)
+                                    .then(() => {
+                                    const sortKeys = ['asc', 'desc'];
+                                    const sortQuery = Object.keys(this._query)
+                                        .filter((key) => sortKeys.includes(key))
+                                        .reduce((obj, key) => {
+                                        return Object.assign({}, obj, { [key]: this._query[key] });
+                                    }, {});
+                                    if (this._query.asc || this._query.desc) {
+                                        const value = Object.values(sortQuery);
+                                        const key = Object.keys(sortQuery);
+                                        result = lodash_1.orderBy(filteredEntryData, value, key);
+                                    }
+                                    if (this._query.query && Object.keys(this._query.query).length > 0) {
+                                        result = sift_1.default(this._query.query, filteredEntryData);
+                                    }
+                                    else if (this._query.logical) {
+                                        const operator = Object.keys(this._query.logical)[0];
+                                        const vals = Object.values(this._query.logical);
+                                        const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
+                                        const logicalQuery = {};
+                                        logicalQuery[operator] = values;
+                                        result = sift_1.default(logicalQuery, filteredEntryData);
+                                    }
+                                    else {
+                                        result = filteredEntryData;
+                                    }
+                                    if (this._query.limit && this._query.limit < result.length) {
+                                        const limit = this._query.limit;
+                                        result = result.splice(0, limit);
+                                    }
+                                    if (this._query.skip) {
+                                        const skip = this._query.skip;
+                                        result = result.splice(0, skip);
+                                    }
+                                    if (this._query.only) {
+                                        const only = this._query.only.toString().replace(/\./g, '/');
+                                        result = json_mask_1.default(result, only);
+                                    }
+                                    if (this._query.except) {
+                                        const bukcet = this._query.except.toString().replace(/\./g, '/');
+                                        const except = json_mask_1.default(result, bukcet);
+                                        result = utils_1.difference(result, except);
+                                    }
+                                    let finalRes = {
+                                        content_type_uid: entryData[0].content_type_uid,
+                                        locale: entryData[0].locale
+                                    };
+                                    if (this._query.count) {
+                                        finalRes['count'] = result.length;
+                                    }
+                                    else {
+                                        finalRes[type] = result;
+                                    }
+                                    if (this._query.include_count) {
+                                        finalRes['count'] = result.length;
+                                    }
+                                    if (this._query.include_content_type) {
+                                        finalRes['content_type'] = entryData[0].content_type;
+                                    }
+                                    if (this._query.tags) {
+                                        result = sift_1.default({
+                                            tags: {
+                                                $in: this._query.tags
+                                            }
+                                        }, result);
+                                        finalRes[type] = result;
+                                        finalRes['count'] = result.length;
+                                    }
+                                    return resolve(finalRes);
+                                })
+                                    .catch(reject);
                             }
                             const sortKeys = ['asc', 'desc'];
                             const sortQuery = Object.keys(this._query)
@@ -335,7 +415,11 @@ class Query {
                                 finalRes['content_type'] = entryData[0].content_type;
                             }
                             if (this._query.tags) {
-                                result = sift_1.default({ tags: { $in: this._query.tags } }, result);
+                                result = sift_1.default({
+                                    tags: {
+                                        $in: this._query.tags
+                                    }
+                                }, result);
                                 finalRes[type] = result;
                                 finalRes['count'] = result.length;
                             }
@@ -364,11 +448,108 @@ class Query {
                     else {
                         result = lodash_1.map(JSON.parse(data), 'data');
                         result = result[0];
-                        const res = { entry: result };
+                        const res = {
+                            entry: result
+                        };
                         resolve(res);
                     }
                 });
             }
+        });
+    }
+    findReferences(query) {
+        return new Promise((resolve, reject) => {
+            let pth;
+            if (query.content_type_uid === 'asset') {
+                pth = path.join(this.baseDir, 'en-us', 'assets', '_assets.json');
+            }
+            else {
+                pth = path.join(this.baseDir, 'en-us', 'data', query.content_type_uid, 'index.json');
+            }
+            if (!fs.existsSync(pth)) {
+                return resolve([]);
+            }
+            return fs.readFile(pth, 'utf-8', (readError, data) => {
+                if (readError) {
+                    return reject(readError);
+                }
+                data = JSON.parse(data);
+                data = lodash_1.map(data, 'data');
+                return resolve(data);
+            });
+        });
+    }
+    includeReferencesI(entry, locale, references, parentUid) {
+        const self = this;
+        return new Promise((resolve, reject) => {
+            if (entry === null || typeof entry !== 'object') {
+                return resolve();
+            }
+            if (entry.uid) {
+                parentUid = entry.uid;
+            }
+            const referencesFound = [];
+            for (const prop in entry) {
+                if (entry[prop] !== null && typeof entry[prop] === 'object') {
+                    if (entry[prop] && entry[prop].reference_to) {
+                        if (entry[prop].values.length === 0) {
+                            entry[prop] = [];
+                        }
+                        else {
+                            let uids = entry[prop].values;
+                            if (typeof uids === 'string') {
+                                uids = [uids];
+                            }
+                            if (entry[prop].reference_to !== '_assets') {
+                                uids = lodash_1.filter(uids, (uid) => {
+                                    return !(utils_1.checkCyclic(uid, references));
+                                });
+                            }
+                            if (uids.length) {
+                                const query = {
+                                    content_type_uid: entry[prop].reference_to,
+                                    locale,
+                                    uid: {
+                                        $in: uids,
+                                    },
+                                };
+                                referencesFound.push(new Promise((rs, rj) => {
+                                    return self.findReferences(query).then((entities) => {
+                                        if (entities.length === 0) {
+                                            entry[prop] = [];
+                                            return rs();
+                                        }
+                                        else if (parentUid) {
+                                            references[parentUid] = references[parentUid] || [];
+                                            references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entry[prop], 'uid')));
+                                        }
+                                        const referenceBucket = [];
+                                        query.uid.$in.forEach((entityUid) => {
+                                            const elem = lodash_1.find(entities, (entity) => {
+                                                console.log('entity: ', entity);
+                                                return entity.uid === entityUid;
+                                            });
+                                            if (elem) {
+                                                referenceBucket.push(elem);
+                                            }
+                                        });
+                                        entry[prop] = entities;
+                                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                                            .then(rs)
+                                            .catch(rj);
+                                    });
+                                }));
+                            }
+                        }
+                    }
+                    else {
+                        referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid));
+                    }
+                }
+            }
+            return Promise.all(referencesFound)
+                .then(resolve)
+                .catch(reject);
         });
     }
 }

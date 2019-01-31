@@ -29,4 +29,26 @@ exports.difference = (object, base) => {
     }
     return changes(object, base);
 };
+exports.checkCyclic = (uid, mapping) => {
+    let flag = false;
+    let list = [uid];
+    for (let i = 0; i < list.length; i++) {
+        const parent = getParents(list[i], mapping);
+        if (parent.indexOf(uid) !== -1) {
+            flag = true;
+            break;
+        }
+        list = lodash_1.uniq(list.concat(parent));
+    }
+    return flag;
+};
+const getParents = (child, mapping) => {
+    const parents = [];
+    for (const key in mapping) {
+        if (mapping[key].indexOf(child) !== -1) {
+            parents.push(key);
+        }
+    }
+    return parents;
+};
 //# sourceMappingURL=utils.js.map
