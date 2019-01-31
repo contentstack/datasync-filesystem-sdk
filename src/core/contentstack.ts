@@ -6,10 +6,6 @@ import {  Stack } from './stack'
  */
 export class Contentstack {
 
-  constructor() {
-
-  }
-
   /**
 	 * @method Stack
 	 * @description Initialize an instance of ‘Stack’
