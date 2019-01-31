@@ -23,22 +23,4 @@ export declare class Query {
     type: string;
     single: boolean;
     constructor();
-    equalTo(key: any, value: any): void | this;
-    where(key: any, value: any): void | this;
-    count(): this;
-    query(query: any): void | this;
-    tags(values: any): void | this;
-    includeCount(): this;
-    language(language_code: any): void | this;
-    includeReferences(): this;
-    includeContentType(): this;
-    addParam(key: any, value: any): void | this;
-    getQuery(): any;
-    regex(key: any, value: any, options: any): void | this;
-    only(fields: any): this;
-    except(fields: any): this;
-    find(): Promise<{}>;
-    findOne(): Promise<{}>;
-    private findReferences;
-    private includeReferencesI;
 }
