@@ -2,8 +2,8 @@ const config = require('./config')
 const Contentstack = require('../dist')
 
 const Stack = Contentstack.Stack({
-  api_key: 'blt46203405576620e7',
-  access_token: 'blt468dc99e0a65476c',
+  api_key: '',
+  access_token: '',
   'content-connector': {
     'base_dir': './_contents'
   },
