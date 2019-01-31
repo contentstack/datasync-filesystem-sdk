@@ -127,22 +127,22 @@ export class Stack {
                 content_type_uid: entryData[0].content_type_uid,
                 locale: entryData[0].locale,
               }
-              if (this._query.includeReferences) {
-                return this.includeReferences(result, this._query.locale, {}, undefined)
-                  .then(() => {
-                    if (this._entry === 'multiple') {
-                      (finalRes as any).entries = result
-                      return resolve(finalRes)
-                    }
-                    result = find(result, {
-                      uid: this.entry_uid
-                    })
-                    console.log(result, this.entry_uid, 'fgsfssj')
-                    finalRes.entry = result
-                    resolve(finalRes)
-                  })
-                  .catch(reject)
-              }
+              // if (this._query.includeReferences) {
+              //   return this.includeReferencesI(result, this._query.locale, {}, undefined)
+              //     .then(() => {
+              //       if (this._entry === 'multiple') {
+              //         (finalRes as any).entries = result
+              //         return resolve(finalRes)
+              //       }
+              //       result = find(result, {
+              //         uid: this.entry_uid
+              //       })
+              //       console.log(result, this.entry_uid, 'fgsfssj')
+              //       finalRes.entry = result
+              //       resolve(finalRes)
+              //     })
+              //     .catch(reject)
+              // }
               // Question: Is 'this._entry=single/multiple' required?
               // Question: How to query only content type schemas?
               // TODO: Use object.property and avoid object['property'], if keys are static

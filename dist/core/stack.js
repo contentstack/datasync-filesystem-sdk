@@ -77,7 +77,8 @@ class Stack {
         let result;
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
+                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') :
+                    path.join(baseDir, this._query.locale, 'assets', '_assets.json');
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`);
                 }
@@ -90,7 +91,9 @@ class Stack {
                             const assetData = JSON.parse(data);
                             const finalRes = {};
                             if (this.asset_uid) {
-                                result = lodash_1.find(assetData, { uid: this.asset_uid });
+                                result = lodash_1.find(assetData, {
+                                    uid: this.asset_uid
+                                });
                                 finalRes['asset'] = result;
                             }
                             else {
@@ -124,7 +127,9 @@ class Stack {
                                 resolve(finalRes);
                             }
                             else if (this._entry == 'single') {
-                                result = lodash_1.find(result, { uid: this.entry_uid });
+                                result = lodash_1.find(result, {
+                                    uid: this.entry_uid
+                                });
                                 console.log(result, this.entry_uid, 'fgsfssj');
                                 finalRes['entry'] = result;
                                 resolve(finalRes);
