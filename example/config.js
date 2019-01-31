@@ -1,6 +1,6 @@
 module.exports = {
     "content-connector": {
-      "base_dir": "../_contents"
+      "base_dir": "path/of/your/filsystem"
     },
     "locales": [
       {
