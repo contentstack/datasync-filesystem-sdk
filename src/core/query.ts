@@ -625,6 +625,94 @@ export class Query {
                 type = "entries"
               }
 
+              if (this._query.includeReferences) {
+                return this.includeReferencesI(filteredEntryData, this._query.locale, {}, undefined)
+                  .then(() => {
+                    const sortKeys: any = ['asc', 'desc']
+                    // Good implementation @sortQuery
+                    const sortQuery: any = Object.keys(this._query)
+                      .filter((key) => sortKeys.includes(key))
+                      .reduce((obj, key) => {
+                        return {
+                          ...obj,
+                          [key]: this._query[key],
+                        }
+                      }, {})
+                    if (this._query.asc || this._query.desc) {
+                      const value: any = (Object as any).values(sortQuery)
+                      const key: any = Object.keys(sortQuery)
+                      result = orderBy(filteredEntryData, value, key)
+                    }
+
+                    if (this._query.query && Object.keys(this._query.query).length > 0) {
+                      result = sift(this._query.query, filteredEntryData)
+                    } else if (this._query.logical) {
+                      const operator = Object.keys(this._query.logical)[0]
+                      const vals: any = (Object as any).values(this._query.logical)
+                      const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
+                      const logicalQuery = {}
+                      logicalQuery[operator] = values
+                      result = sift(logicalQuery, filteredEntryData)
+                    } else {
+                      result = filteredEntryData
+                    }
+
+                    // Bug: Check implementation @skip/limit
+                    if (this._query.limit && this._query.limit < result.length) {
+                      const limit = this._query.limit
+                      result = result.splice(0, limit)
+                    }
+
+                    if (this._query.skip) {
+                      const skip = this._query.skip
+                      result = result.splice(0, skip)
+                    }
+
+                    if (this._query.only) {
+                      const only = this._query.only.toString().replace(/\./g, '/')
+                      result = mask(result, only)
+                    }
+
+                    if (this._query.except) {
+                      const bukcet = this._query.except.toString().replace(/\./g, '/')
+                      const except = mask(result, bukcet)
+                      result = difference(result, except)
+                    }
+
+                    //let finalRes={}
+                    let finalRes = {
+                      content_type_uid: entryData[0].content_type_uid,
+                      locale: entryData[0].locale
+                    }
+                    // Misc: count() in itself is a method, and not part of find()
+                    if (this._query.count) {
+                      finalRes['count'] = result.length
+                    } else {
+                      finalRes[type] = result
+                    }
+
+                    if (this._query.include_count) {
+                      finalRes['count'] = result.length
+                    }
+                    if (this._query.include_content_type) {
+                      finalRes['content_type'] = entryData[0].content_type
+                    }
+
+                    if (this._query.tags) {
+                      result = sift({
+                        tags: {
+                          $in: this._query.tags
+                        }
+                      }, result)
+                      finalRes[type] = result
+                      finalRes['count'] = result.length
+                    }
+
+                    return resolve(finalRes)
+                  })
+                  .catch(reject)
+              }
+
               const sortKeys: any = ['asc', 'desc']
               // Good implementation @sortQuery
               const sortQuery: any = Object.keys(this._query)
@@ -747,9 +835,9 @@ export class Query {
     return new Promise((resolve, reject) => {
       let pth
       if (query.content_type_uid === 'asset') {
-        pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json')
+        pth = path.join(this.baseDir, 'en-us', 'assets', '_assets.json')
       } else {
-        pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
+        pth = path.join(this.baseDir, 'en-us', 'data', query.content_type_uid, 'index.json')
       }
       if (!fs.existsSync(pth)) {
         return resolve([])
@@ -806,8 +894,7 @@ export class Query {
                 }
 
                 referencesFound.push(new Promise((rs, rj) => {
-                  return self.findReferences(query).then((references) => {
-                    const entities = map((references as any), 'data')
+                  return self.findReferences(query).then((entities) => {
                     if (entities.length === 0) {
                       entry[prop] = []
 
@@ -819,6 +906,7 @@ export class Query {
                     const referenceBucket = []
                     query.uid.$in.forEach((entityUid) => {
                       const elem = find(entities, (entity) => {
+                        console.log('entity: ', entity)
                         return entity.uid === entityUid
                       })
                       if (elem) {
