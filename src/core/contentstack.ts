@@ -1,17 +1,16 @@
-var Stack = require('./stack')
-
+import {  Stack } from './stack'
 /**
  * @method Contentstack
  * @description Creates an instance of `Contentstack`.
  * @api public
  */
-class Contentstack {
+export class Contentstack {
 
-	constructor() {
-		
-	}
+  constructor() {
 
-	/**
+  }
+
+  /**
 	 * @method Stack
 	 * @description Initialize an instance of ‘Stack’
 	 * @api public
@@ -26,9 +25,9 @@ class Contentstack {
 	 *
 	 * @returns {Stack}
 	 */
-	Stack(...stack_argumetnts) {
-		return new Stack(...stack_argumetnts)
-	}
+  public Stack(...stack_argumetnts) {
+    return new Stack(...stack_argumetnts)
+  }
 }
 
-module.exports = new Contentstack()
+// module.exports = new Contentstack()

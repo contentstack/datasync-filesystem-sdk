@@ -1,14 +1,29 @@
 {
-  "name": "filesyetm-sdk",
-  "version": "1.0.0",
-  "private": true,
+  "name": "contentstack-filesystem-sdk",
+  "version": "0.0.1",
+  "description": "Contentstack sync utility's filesystem SDK",
+  "main": "dist/index.js",
   "scripts": {
-    "start": "node index.js"
+    "clean": "rimraf dist typings coverage",
+    "build-ts": "npm run clean && tsc",
+    "watch-ts": "npm run clean && tsc -w",
+    "compile": "tsc",
+    "prepare": "npm run compile",
+    "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix"
   },
+  "author": "Contentstack Ecosystem",
+  "license": "ISC",
   "dependencies": {
-    "express": "^4.16.4",
     "json-mask": "^0.3.8",
     "lodash": "^4.17.11",
     "sift": "^7.0.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "4.14.119",
+    "@types/node": "^10.12.18",
+    "@types/rimraf": "^2.0.2",
+    "rimraf": "^2.6.3",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.4"
   }
 }
