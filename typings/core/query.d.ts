@@ -21,6 +21,7 @@ export declare class Query {
     content_type_uid: any;
     private _query;
     type: string;
+    single: boolean;
     constructor();
     equalTo(key: any, value: any): void | this;
     where(key: any, value: any): void | this;
@@ -29,13 +30,15 @@ export declare class Query {
     tags(values: any): void | this;
     includeCount(): this;
     language(language_code: any): void | this;
+    includeReferences(): this;
     includeContentType(): this;
     addParam(key: any, value: any): void | this;
     getQuery(): any;
     regex(key: any, value: any, options: any): void | this;
     only(fields: any): this;
     except(fields: any): this;
-    isEmpty(obj: any): boolean;
     find(): Promise<{}>;
     findOne(): Promise<{}>;
+    private findReferences;
+    private includeReferencesI;
 }

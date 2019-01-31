@@ -15,6 +15,7 @@ const query_1 = require("./query");
 let query = new query_1.Query();
 class Stack {
     constructor(...stack_arguments) {
+        this._query = {};
         this.baseDir;
         this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
@@ -68,7 +69,7 @@ class Stack {
             return lodash_1.merge(this, entry);
         }
         else {
-            return lodash_1.merge(this, entry);
+            return lodash_1.merge(entry, this);
         }
     }
     find() {
@@ -114,20 +115,26 @@ class Stack {
                         }
                         else {
                             const entryData = JSON.parse(data);
-                            result = lodash_1.map(entryData, 'data');
                             const finalRes = {
                                 content_type_uid: entryData[0].content_type_uid,
                                 locale: entryData[0].locale,
                             };
+                            if (Object.keys(this._query).length === 0) {
+                                result = lodash_1.map(entryData, 'content_type');
+                                finalRes['content_type'] = result;
+                                return resolve(finalRes);
+                            }
+                            else {
+                                result = lodash_1.map(entryData, 'data');
+                            }
                             if (this._entry == 'multiple') {
                                 finalRes['entries'] = result;
-                                resolve(finalRes);
+                                return resolve(finalRes);
                             }
                             else if (this._entry == 'single') {
                                 result = lodash_1.find(result, { uid: this.entry_uid });
-                                console.log(result, this.entry_uid, 'fgsfssj');
                                 finalRes['entry'] = result;
-                                resolve(finalRes);
+                                return resolve(finalRes);
                             }
                         }
                     });
@@ -163,9 +170,6 @@ class Stack {
         return lodash_1.merge(this, asset);
     }
     query() {
-        if (typeof this._entry !== 'string' && this.type !== 'asset') {
-            throw new Error('Please call the entries() before query()');
-        }
         const _query = query;
         return lodash_1.merge(_query, this);
     }
