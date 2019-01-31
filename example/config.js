@@ -1,6 +1,6 @@
 module.exports = {
     "content-connector": {
-      "base_dir": "../../latest/contentstack-sync-manager/example/_contents"
+      "base_dir": "../_contents"
     },
     "locales": [
       {
