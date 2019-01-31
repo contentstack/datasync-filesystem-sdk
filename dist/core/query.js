@@ -92,6 +92,7 @@ const _extend = {
 };
 class Query {
     constructor() {
+        this.single = false;
         this._query = this._query || {};
         this._query.query = this._query.query || {};
         this.lessThan = _extend.compare('$lt');
@@ -167,6 +168,10 @@ class Query {
             return console.error('Argument should be a String.');
         }
     }
+    includeReferences() {
+        this._query.includeReferences = true;
+        return this;
+    }
     includeContentType() {
         this._query.include_content_type = true;
         return this;
@@ -215,160 +220,292 @@ class Query {
         this._query.except = fields;
         return this;
     }
-    isEmpty(obj) {
-        for (const key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                return false;
-            }
-        }
-        return true;
-    }
     find() {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
         const contentTypeUid = this.content_type_uid;
-        let result;
-        if (this.isEmpty(this._query.query) && this._query.query === 'undefined') {
-            return new Promise((resolve, reject) => {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json');
-                if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`);
-                }
-                else {
-                    fs.readFile(dataPath, 'utf8', (err, data) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        else {
-                            result = lodash_1.map(JSON.parse(data), 'content_type');
-                            result = result[0];
-                            const res = { content_type: result };
-                            resolve(res);
-                        }
-                    });
-                }
-            });
-        }
-        else {
-            return new Promise((resolve, reject) => {
-                let result;
-                console.log(this, "*******************");
-                let dataPath;
-                if (this.type === 'asset') {
-                    dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
-                }
-                else {
-                    dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json');
-                }
-                if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`);
-                }
-                else {
-                    fs.readFile(dataPath, 'utf8', (err, data) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        else {
-                            const entryData = JSON.parse(data);
-                            let filteredEntryData = entryData;
-                            let type = "assets";
-                            if (this.type !== 'asset') {
-                                filteredEntryData = lodash_1.map(entryData, 'data');
-                                type = "entries";
-                            }
-                            const sortKeys = ['asc', 'desc'];
-                            const sortQuery = Object.keys(this._query)
-                                .filter((key) => sortKeys.includes(key))
-                                .reduce((obj, key) => {
-                                return Object.assign({}, obj, { [key]: this._query[key] });
-                            }, {});
-                            if (this._query.asc || this._query.desc) {
-                                const value = Object.values(sortQuery);
-                                const key = Object.keys(sortQuery);
-                                result = lodash_1.orderBy(filteredEntryData, value, key);
-                            }
-                            if (this._query.query && Object.keys(this._query.query).length > 0) {
-                                result = sift_1.default(this._query.query, filteredEntryData);
-                            }
-                            else if (this._query.logical) {
-                                const operator = Object.keys(this._query.logical)[0];
-                                const vals = Object.values(this._query.logical);
-                                const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
-                                const logicalQuery = {};
-                                logicalQuery[operator] = values;
-                                result = sift_1.default(logicalQuery, filteredEntryData);
-                            }
-                            else {
-                                result = filteredEntryData;
-                            }
-                            if (this._query.limit && this._query.limit < result.length) {
-                                const limit = this._query.limit;
-                                result = result.splice(0, limit);
-                            }
-                            if (this._query.skip) {
-                                const skip = this._query.skip;
-                                result = result.splice(0, skip);
-                            }
-                            if (this._query.only) {
-                                const only = this._query.only.toString().replace(/\./g, '/');
-                                result = json_mask_1.default(result, only);
-                            }
-                            if (this._query.except) {
-                                const bukcet = this._query.except.toString().replace(/\./g, '/');
-                                const except = json_mask_1.default(result, bukcet);
-                                result = utils_1.difference(result, except);
-                            }
-                            let finalRes = {
-                                content_type_uid: entryData[0].content_type_uid,
-                                locale: entryData[0].locale
-                            };
-                            if (this._query.count) {
-                                finalRes['count'] = result.length;
-                            }
-                            else {
-                                finalRes[type] = result;
-                            }
-                            if (this._query.include_count) {
-                                finalRes['count'] = result.length;
-                            }
-                            if (this._query.include_content_type) {
-                                finalRes['content_type'] = entryData[0].content_type;
-                            }
-                            if (this._query.tags) {
-                                result = sift_1.default({ tags: { $in: this._query.tags } }, result);
-                                finalRes[type] = result;
-                                finalRes['count'] = result.length;
-                            }
-                            resolve(finalRes);
-                        }
-                    });
-                }
-            });
-        }
-    }
-    findOne() {
-        const baseDir = this.baseDir;
-        const masterLocale = this.masterLocale;
-        const contentTypeUid = this.content_type_uid;
+        const locale = (!this._query.locale) ? masterLocale : this._query.locale;
         let result;
         return new Promise((resolve, reject) => {
-            if (!fs.existsSync(baseDir)) {
-                return reject(`${baseDir} didn't exist`);
+            let dataPath;
+            if (this.type === 'asset') {
+                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
             }
             else {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json');
+                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json');
+            }
+            if (!fs.existsSync(dataPath)) {
+                return reject(`${dataPath} didn't exist`);
+            }
+            else {
                 fs.readFile(dataPath, 'utf8', (err, data) => {
                     if (err) {
                         return reject(err);
                     }
                     else {
-                        result = lodash_1.map(JSON.parse(data), 'data');
-                        result = result[0];
-                        const res = { entry: result };
-                        resolve(res);
+                        const entryData = JSON.parse(data);
+                        let filteredEntryData = lodash_1.map(entryData, 'data');
+                        let type = "assets";
+                        if (this.type !== 'asset') {
+                            type = "entries";
+                        }
+                        if (this._query.includeReferences) {
+                            return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
+                                .then(() => {
+                                const sortKeys = ['asc', 'desc'];
+                                const sortQuery = Object.keys(this._query)
+                                    .filter((key) => sortKeys.includes(key))
+                                    .reduce((obj, key) => {
+                                    return Object.assign({}, obj, { [key]: this._query[key] });
+                                }, {});
+                                if (this._query.asc || this._query.desc) {
+                                    const value = Object.values(sortQuery);
+                                    const key = Object.keys(sortQuery);
+                                    result = lodash_1.orderBy(filteredEntryData, value, key);
+                                }
+                                if (this._query.query && Object.keys(this._query.query).length > 0) {
+                                    result = sift_1.default(this._query.query, filteredEntryData);
+                                }
+                                else if (this._query.logical) {
+                                    const operator = Object.keys(this._query.logical)[0];
+                                    const vals = Object.values(this._query.logical);
+                                    const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
+                                    const logicalQuery = {};
+                                    logicalQuery[operator] = values;
+                                    result = sift_1.default(logicalQuery, filteredEntryData);
+                                }
+                                else {
+                                    result = filteredEntryData;
+                                }
+                                if (this._query.limit && this._query.limit < result.length) {
+                                    const limit = this._query.limit;
+                                    result = result.splice(0, limit);
+                                }
+                                if (this._query.skip) {
+                                    const skip = this._query.skip;
+                                    result = result.splice(0, skip);
+                                }
+                                if (this._query.only) {
+                                    const only = this._query.only.toString().replace(/\./g, '/');
+                                    result = json_mask_1.default(result, only);
+                                }
+                                if (this._query.except) {
+                                    const bukcet = this._query.except.toString().replace(/\./g, '/');
+                                    const except = json_mask_1.default(result, bukcet);
+                                    result = utils_1.difference(result, except);
+                                }
+                                let finalRes = {
+                                    content_type_uid: entryData[0].content_type_uid,
+                                    locale: entryData[0].locale
+                                };
+                                if (this._query.count) {
+                                    finalRes['count'] = result.length;
+                                }
+                                else {
+                                    finalRes[type] = result;
+                                }
+                                if (this._query.include_count) {
+                                    finalRes['count'] = result.length;
+                                }
+                                if (this._query.include_content_type) {
+                                    finalRes['content_type'] = entryData[0].content_type;
+                                }
+                                if (this._query.tags) {
+                                    result = sift_1.default({
+                                        tags: {
+                                            $in: this._query.tags
+                                        }
+                                    }, result);
+                                    finalRes[type] = result;
+                                    finalRes['count'] = result.length;
+                                }
+                                return resolve(finalRes);
+                            })
+                                .catch(reject);
+                        }
+                        const sortKeys = ['asc', 'desc'];
+                        const sortQuery = Object.keys(this._query)
+                            .filter((key) => sortKeys.includes(key))
+                            .reduce((obj, key) => {
+                            return Object.assign({}, obj, { [key]: this._query[key] });
+                        }, {});
+                        if (this._query.asc || this._query.desc) {
+                            const value = Object.values(sortQuery);
+                            const key = Object.keys(sortQuery);
+                            result = lodash_1.orderBy(filteredEntryData, value, key);
+                        }
+                        if (this._query.query && Object.keys(this._query.query).length > 0) {
+                            result = sift_1.default(this._query.query, filteredEntryData);
+                        }
+                        else if (this._query.logical) {
+                            const operator = Object.keys(this._query.logical)[0];
+                            const vals = Object.values(this._query.logical);
+                            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
+                            const logicalQuery = {};
+                            logicalQuery[operator] = values;
+                            result = sift_1.default(logicalQuery, filteredEntryData);
+                        }
+                        else {
+                            result = filteredEntryData;
+                        }
+                        if (this._query.limit && this._query.limit < result.length) {
+                            const limit = this._query.limit;
+                            result = result.splice(0, limit);
+                        }
+                        if (this._query.skip) {
+                            const skip = this._query.skip;
+                            result = result.splice(0, skip);
+                        }
+                        if (this._query.only) {
+                            const only = this._query.only.toString().replace(/\./g, '/');
+                            result = json_mask_1.default(result, only);
+                        }
+                        if (this._query.except) {
+                            const bukcet = this._query.except.toString().replace(/\./g, '/');
+                            const except = json_mask_1.default(result, bukcet);
+                            result = utils_1.difference(result, except);
+                        }
+                        let finalRes = {
+                            content_type_uid: entryData[0].content_type_uid,
+                            locale: entryData[0].locale
+                        };
+                        if (this.single) {
+                            result = result[0];
+                            type = "entry";
+                        }
+                        if (this._query.count) {
+                            finalRes['count'] = result.length;
+                        }
+                        else {
+                            finalRes[type] = result;
+                        }
+                        if (this._query.include_count) {
+                            if (result === undefined) {
+                                finalRes['count'] = 0;
+                            }
+                            else if (this.single) {
+                                finalRes['count'] = 1;
+                            }
+                            else {
+                                finalRes['count'] = result.length;
+                            }
+                        }
+                        if (this._query.include_content_type) {
+                            finalRes['content_type'] = entryData[0].content_type;
+                        }
+                        if (this._query.tags) {
+                            result = sift_1.default({ tags: { $in: this._query.tags } }, result);
+                            finalRes[type] = result;
+                            finalRes['count'] = result.length;
+                        }
+                        resolve(finalRes);
                     }
                 });
             }
+        });
+    }
+    findOne() {
+        this.single = true;
+        return new Promise((resolve, reject) => {
+            this.find().then((result) => {
+                return resolve(result);
+            }).catch((error) => {
+                return reject(error);
+            });
+        });
+    }
+    findReferences(_query) {
+        return new Promise((resolve, reject) => {
+            let pth;
+            if (_query.content_type_uid === 'asset') {
+                pth = path.join(this.baseDir, _query.locale, 'assets', '_assets.json');
+            }
+            else {
+                pth = path.join(this.baseDir, _query.locale, 'data', _query.content_type_uid, 'index.json');
+            }
+            if (!fs.existsSync(pth)) {
+                return resolve([]);
+            }
+            return fs.readFile(pth, 'utf-8', (readError, data) => {
+                if (readError) {
+                    return reject(readError);
+                }
+                data = JSON.parse(data);
+                data = lodash_1.map(data, 'data');
+                return resolve(data);
+            });
+        });
+    }
+    includeReferencesI(entry, locale, references, parentUid) {
+        const self = this;
+        return new Promise((resolve, reject) => {
+            if (entry === null || typeof entry !== 'object') {
+                return resolve();
+            }
+            if (entry.uid) {
+                parentUid = entry.uid;
+            }
+            const referencesFound = [];
+            for (const prop in entry) {
+                if (entry[prop] !== null && typeof entry[prop] === 'object') {
+                    if (entry[prop] && entry[prop].reference_to) {
+                        if (entry[prop].values.length === 0) {
+                            entry[prop] = [];
+                        }
+                        else {
+                            let uids = entry[prop].values;
+                            if (typeof uids === 'string') {
+                                uids = [uids];
+                            }
+                            if (entry[prop].reference_to !== '_assets') {
+                                uids = lodash_1.filter(uids, (uid) => {
+                                    return !(utils_1.checkCyclic(uid, references));
+                                });
+                            }
+                            if (uids.length) {
+                                const query = {
+                                    content_type_uid: entry[prop].reference_to,
+                                    locale,
+                                    uid: {
+                                        $in: uids,
+                                    },
+                                };
+                                referencesFound.push(new Promise((rs, rj) => {
+                                    return self.findReferences(query).then((entities) => {
+                                        if (entities.length === 0) {
+                                            entry[prop] = [];
+                                            return rs();
+                                        }
+                                        else if (parentUid) {
+                                            references[parentUid] = references[parentUid] || [];
+                                            references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entry[prop], 'uid')));
+                                        }
+                                        const referenceBucket = [];
+                                        query.uid.$in.forEach((entityUid) => {
+                                            const elem = lodash_1.find(entities, (entity) => {
+                                                return entity.uid === entityUid;
+                                            });
+                                            if (elem) {
+                                                referenceBucket.push(elem);
+                                            }
+                                        });
+                                        entry[prop] = entities;
+                                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                                            .then(rs)
+                                            .catch(rj);
+                                    });
+                                }));
+                            }
+                        }
+                    }
+                    else {
+                        referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid));
+                    }
+                }
+            }
+            return Promise.all(referencesFound)
+                .then(resolve)
+                .catch(reject);
         });
     }
 }
