@@ -11,7 +11,7 @@ export class Stack {
     config: any;
     content_type_uid: string;
     type: string;
-    _query: any;
+    _query: any={};
     asset_uid: any;
     entry_uid: any
     _entry: string;
@@ -68,7 +68,7 @@ export class Stack {
             }
             return merge(this, entry)
         } else {
-            return merge(this, entry)
+            return merge(entry, this)
         }
     }
     public find() {
@@ -109,28 +109,32 @@ export class Stack {
                             return reject(err)
                         } else {
                             const entryData = JSON.parse(data)
-                            result = map(entryData, 'data')
                             const finalRes = {
                                 content_type_uid: entryData[0].content_type_uid,
                                 locale: entryData[0].locale,
                             }
+                           if(Object.keys(this._query).length ===0){
+                            result = map(entryData, 'content_type')
+                            finalRes['content_type'] = result
+                            return resolve(finalRes)
+                           }else{
+                            result = map(entryData, 'data')
+                           }
+                           
+                            
                             if (this._entry == 'multiple') {
                                 finalRes['entries'] = result
-                                resolve(finalRes)
+                                return resolve(finalRes)
                             }else if (this._entry == 'single') {
                                 result = find(result, { uid: this.entry_uid })
-                                console.log(result, this.entry_uid, 'fgsfssj')
                                 finalRes['entry'] = result
-                                resolve(finalRes)
+                                return resolve(finalRes)
                             }
-
                         }
                     })
                 }
             }
         })
-
-
     }
 
     
@@ -143,7 +147,6 @@ export class Stack {
             entry['entry_uid'] = uid
         }
         this._entry = 'single'
-        // console.log(Utils.merge(entry, this), "Utils.merge(entry, this)")
         return merge(this, entry)
     }
 
@@ -154,11 +157,9 @@ export class Stack {
         if (uid && typeof uid === 'string') {
             asset['asset_uid'] = uid
             return merge(this, asset)
-
         }else{
             throw new Error('Please provide valid single asset uid')
         }
-
     }
 
     public assets() {
@@ -169,13 +170,10 @@ export class Stack {
 
    
     public query() {
-        if (typeof this._entry !== 'string' && this.type !== 'asset'){
-            throw new Error('Please call the entries() before query()')
-        }
+        // if (typeof this._entry !== 'string' && this.type !== 'asset'){
+        //     throw new Error('Please call the entries() before query()')
+        // }
         const _query = query
         return merge(_query, this)
     }
-
 }
-
-//module.exports = Stack
