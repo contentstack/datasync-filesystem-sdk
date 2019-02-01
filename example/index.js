@@ -2,17 +2,18 @@ var express = require('express')
 var app = express()
 var Contentstack = require('../dist/index')
 var config = require('./config')
-var Stack = Contentstack.Stack(config)
-app.listen(5000,()=>{
-    console.log("Server running on port 5000")
+var Stack = Contentstack.Stack({"api_key":"","token":""})
+app.listen(4000,()=>{
+    console.log("Server running on port 4000")
 })
 
-Stack.connect().then(console.log).catch(console.error)
+Stack.connect(config).then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
-    Stack.contentType('blogs').entries().where('author', 'Chris Bucholtz').lessThan("created_at","2018-06-22").includeCount().includeContentType()
-    .tags(['AI'])
-    .find()
+    Stack.contentType('product').entries()
+    //.includeCount().includeContentType()
+    //.tags(['AI'])
+    .findOne()
     .then(function(result){
         res.json(result)
     })
@@ -34,14 +35,13 @@ app.get('/', (req,res)=>{
     // })
 
     //q4
-    // Stack.contentType('blogs').entries().find()
+    // Stack.contentType('product').entries().skip(5).find()
     // .then(function(result){
-    //     console.log("res",result)
     //     res.json(result)
     // })
 
     //q3
-    // Stack.contentType('blogs').find()
+    // Stack.contentType('product').entries().where('title','LG_Stylo_2').find()
     // .then(function(result){
     //     console.log("res",result)
     //     res.json(result)
@@ -62,7 +62,7 @@ app.get('/', (req,res)=>{
     
 
     //q1
-    // Stack.assets().query().where('uid','blta1c0ba87a8f436c5').find().then(function(result){
+    // Stack.assets().limit(9).find().then(function(result){
     //     console.log("res",result)
     //     res.json(result)
     // })

@@ -4,7 +4,10 @@ import { find, uniq, map, orderBy, filter } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
 import { checkCyclic, difference, mergeDeep } from './utils'
+import { promisify } from 'util';
 
+
+const readFile: any = promisify(fs.readFile);
 const _extend = {
     compare(type) {
         return function (key, value) {
@@ -75,6 +78,12 @@ const _extend = {
     },
 }
 
+/**
+ * @summary
+ *  Expose SDK query methods on Stack
+ * @returns
+ *  'Query' instance
+ */
 export class Query {
     public lessThan: (key: any, value: any) => any
     public lessThanOrEqualTo: (key: any, value: any) => any
@@ -318,13 +327,13 @@ export class Query {
         * @param {object} queries - array of Query objects or raw queries
         * @example
         * <caption> .or with Query instances</caption>
-        * let Query1 = Stack.contentType('blog').entries().query().where('title', 'Demo').find()
-        * let Query2 = Stack.contentType('blog').entries().query().lessThan('comments', 10).find()
+        * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').find()
+        * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).find()
         * blogQuery.or(Query1, Query2)
         * @example
         * <caption> .or with raw queries</caption>
-        * let Query1 = Stack.contentType('blog').entries().query().where('title', 'Demo').getQuery()
-        * let Query2 = Stack.contentType('blog').entries().query().lessThan('comments', 10).getQuery()
+        * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
+        * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
         * blogQuery.or(Query1, Query2)
         * @returns {Query}
         */
@@ -338,19 +347,33 @@ export class Query {
          * @param {object} queries - array of query objects or raw queries.
          * @example
          * <caption> .and with Query instances</caption>
-         * let Query1 = Stack.contentType('blog').entries().query().where('title', 'Demo')
-         * let Query2 = Stack.contentType('blog').entries().query().lessThan('comments', 10)
+         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo')
+         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10)
          * blogQuery.and(Query1, Query2)
          * @example
          * <caption> .and with raw queries</caption>
-         * let Query1 = Stack.contentType('blog').entries().query().where('title', 'Demo').getQuery()
-         * let Query2 = Stack.contentType('blog').entries().query().lessThan('comments', 10).getQuery()
+         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
+         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
          * blogQuery.and(Query1, Query2)
          * @returns {Query}
          */
         this.and = _extend.logical('$and')
     }
 
+    /**
+     * @method equalTo
+     * @description Retrieve entries in which a specific field satisfies the value provided
+     * @param {String} key - uid of the field
+     * @param {*} value - value used to match or compare
+     * @example let blogQuery = Stack().contentType('example').entries();
+     *          let data = blogQuery.equalTo('title','Demo').find()
+     *          data.then(function(result) {
+     *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
+     *       },function (error) {
+     *          // error function
+     *      })
+     * @returns {Query}
+     */
 
     public equalTo(key, value) {
         if (key && typeof key === 'string') {
@@ -359,7 +382,7 @@ export class Query {
 
             return this
         } else {
-            return console.error('Kindly provide valid parameters.')
+            throw new Error('Kindly provide valid parameters.')
         }
     }
 
@@ -368,7 +391,7 @@ export class Query {
      * @description Retrieve entries in which a specific field satisfies the value provided
      * @param {String} key - uid of the field
      * @param {*} value - value used to match or compare
-     * @example let blogQuery = Stack().contentType('example').entries().query();
+     * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.where('title','Demo').find()
      *          data.then(function(result) {
      *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
@@ -384,7 +407,7 @@ export class Query {
             this._query.query[key] = value
             return this
         } else {
-            return console.error('Kindly provide valid parameters.')
+            throw new Error('Kindly provide valid parameters.')
         }
     }
 
@@ -392,7 +415,7 @@ export class Query {
      * @method count
      * @description Returns the total number of entries
      * @example blogQuery.count()
-     * @example let blogQuery = Stack().ContentType('example').Query();
+     * @example let blogQuery = Stack().ContentType('example').entries();
      *          let data = blogQuery.count().find()
      *          data.then(function(result) {
      *           // ‘result’ contains the total count.
@@ -417,7 +440,7 @@ export class Query {
             this._query.query = mergeDeep(this._query.query, query)
             return this
         } else {
-            return console.error('Kindly provide valid parameters')
+            throw new Error('Kindly provide valid parameters')
         }
     }
 
@@ -425,7 +448,7 @@ export class Query {
      * @method tags
      * @description Retrieves entries based on the provided tags
      * @param {Array} values - tags
-     * @example let blogQuery = Stack().ContentType('example').Query();
+     * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.tags(['technology', 'business']).find()
      *          data.then(function(result) {
      *        // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
@@ -439,7 +462,7 @@ export class Query {
             this._query.tags = values
             return this
         } else {
-            return console.error('Kindly provide valid parameters')
+            throw new Error('Kindly provide valid parameters')
         }
     }
 
@@ -447,7 +470,7 @@ export class Query {
      * @method includeCount
      * @description Includes the total number of entries returned in the response.
      * @example blogQuery.includeCount()
-     * @example let blogQuery = Stack().ContentType('example').Query();
+     * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.includeCount().find()
      *          data.then(function(result) {
      *         // ‘result’ contains a list of entries in which count of object is present at array[1] position.
@@ -461,12 +484,25 @@ export class Query {
         return this
     }
 
+    /**
+     * @method language
+     * @description to retrive the result bsed on the specific locale.
+     * @example blogQuery.language()
+     * @example let blogQuery = Stack().contentType('example').entries();
+     *          let data = blogQuery.language('fr-fr').find()
+     *          data.then(function(result) {
+     *         // ‘result’ contains a list of entries of locale fr-fr
+     *       },function (error) {
+     *          // error function
+     *      })
+     * @returns {Query}
+     */
     public language(language_code) {
         if (language_code && typeof language_code === 'string') {
             this._query.locale = language_code
             return this
         } else {
-            return console.error('Argument should be a String.')
+            throw new Error('Argument should be a String.')
         }
     }
 
@@ -475,6 +511,19 @@ export class Query {
         return this
     }
 
+    /**
+     * @method includeContentType
+     * @description Includes the total number of entries returned in the response.
+     * @example blogQuery.includeContentType()
+     * @example let blogQuery = Stack().contentType('example').entries();
+     *          let data = blogQuery.includeContentType().find()
+     *          data.then(function(result) {
+     *         // ‘result’ contains a list of entries along contentType 
+     *       },function (error) {
+     *          // error function
+     *      })
+     * @returns {Query}
+     */
     public includeContentType() {
         this._query.include_content_type = true
         return this
@@ -485,7 +534,7 @@ export class Query {
             this._query[key] = value
             return this
         } else {
-            return console.error('Kindly provide valid parameters.')
+            throw new Error('Kindly provide valid parameters.')
         }
     }
 
@@ -521,10 +570,22 @@ export class Query {
             if (options) { this._query.query[key].$options = options }
             return this
         } else {
-            return console.error('Kindly provide valid parameters.')
+            throw new Error('Kindly provide valid parameters.')
         }
     }
 
+    /**
+     * @method only
+     * @example blogQuery.only([title,uid])
+     * @example let blogQuery = Stack().contentType('example').entries();
+     *          let data = blogQuery.only(["title","uid"]).find()
+     *          data.then(function(result) {
+     *         // ‘result’ contains a list of entries with field title and uid only 
+     *       },function (error) {
+     *          // error function
+     *      })
+     * @returns {Query}
+     */
     public only(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'only()\'')
@@ -536,6 +597,18 @@ export class Query {
         return this
     }
 
+    /**
+     * @method except
+     * @example blogQuery.except([title,uid])
+     * @example let blogQuery = Stack().contentType('example').entries();
+     *          let data = blogQuery.except(["title","uid"]).find()
+     *          data.then(function(result) {
+     *         // ‘result’ contains a list of entries without fields title and uid only 
+     *       },function (error) {
+     *          // error function
+     *      })
+     * @returns {Query}
+     */
     public except(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'except()\'')
@@ -555,31 +628,40 @@ export class Query {
         let result
         return new Promise((resolve, reject) => {
             let dataPath
+            let schemaPath
             if (this.type === 'asset') {
-                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json')
+                dataPath =  path.join(baseDir, locale, 'assets', '_assets.json')
             } else {
-                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json')
+                dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
+                schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
             }
-
+            
             if (!fs.existsSync(dataPath)) {
                 return reject(`${dataPath} didn't exist`)
             } else {
-                fs.readFile(dataPath, 'utf8', (err, data) => {
+                fs.readFile(dataPath, 'utf8', async (err, data) => {
                     if (err) {
                         return reject(err)
                     } else {
+
+                        let finalRes = {
+                            content_type_uid: this.content_type_uid,
+                            locale: locale
+                        }
+                        let type = (this.type !== 'asset')? 'entries':'assets'
+                        if(!data){
+                            finalRes[type]= []
+                            return resolve(finalRes)
+                        }
                         const entryData = JSON.parse(data)
                         let filteredEntryData = map(entryData, 'data')
-                        let type = "assets"
-                        if (this.type !== 'asset') {
-                            type = "entries"
-                        }
+                        
 
                         if (this._query.includeReferences) {
                             return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
-                                .then(() => {
+                                .then(async () => {
                                     const sortKeys: any = ['asc', 'desc']
-                                    // Good implementation @sortQuery
+                                   
                                     const sortQuery: any = Object.keys(this._query)
                                         .filter((key) => sortKeys.includes(key))
                                         .reduce((obj, key) => {
@@ -607,15 +689,15 @@ export class Query {
                                         result = filteredEntryData
                                     }
 
-                                    // Bug: Check implementation @skip/limit
-                                    if (this._query.limit && this._query.limit < result.length) {
+                                   
+                                    if (this._query.limit) {
                                         const limit = this._query.limit
                                         result = result.splice(0, limit)
                                     }
 
                                     if (this._query.skip) {
                                         const skip = this._query.skip
-                                        result = result.splice(0, skip)
+                                        result = result.slice(skip)
                                     }
 
                                     if (this._query.only) {
@@ -629,7 +711,6 @@ export class Query {
                                         result = difference(result, except)
                                     }
 
-                                    //let finalRes={}
                                     let finalRes = {
                                         content_type_uid: entryData[0].content_type_uid,
                                         locale: entryData[0].locale
@@ -642,10 +723,29 @@ export class Query {
                                     }
 
                                     if (this._query.include_count) {
-                                        finalRes['count'] = result.length
+                                        if (result === undefined) {
+                                            finalRes['count'] = 0
+                                        } else if (this.single) {
+                                            finalRes['count'] = 1
+                                        } else {
+                                            finalRes['count'] = result.length
+                                        }
                                     }
+
                                     if (this._query.include_content_type) {
-                                        finalRes['content_type'] = entryData[0].content_type
+                                        if (!fs.existsSync(schemaPath)) {
+                                            return reject(`${schemaPath} didn't exist`)
+                                        } else {
+                                            let contents
+                                            if (fs.existsSync(schemaPath)) {
+                                                contents = await readFile(schemaPath);
+                                                if(!contents){
+                                                    finalRes['content_type']= null
+                                                }else{
+                                                    finalRes['content_type'] = JSON.parse(contents)
+                                                }
+                                              }
+                                        }
                                     }
 
                                     if (this._query.tags) {
@@ -665,7 +765,7 @@ export class Query {
 
 
 
-
+                        //preprocess
                         const sortKeys: any = ['asc', 'desc']
                         const sortQuery: any = Object.keys(this._query)
                             .filter((key) => sortKeys.includes(key))
@@ -695,14 +795,14 @@ export class Query {
                             result = filteredEntryData
                         }
 
-                        if (this._query.limit && this._query.limit < result.length) {
+                        if (this._query.limit) {
                             const limit = this._query.limit
                             result = result.splice(0, limit)
                         }
 
                         if (this._query.skip) {
                             const skip = this._query.skip
-                            result = result.splice(0, skip)
+                            result = result.slice(skip)
                         }
 
                         if (this._query.only) {
@@ -716,16 +816,16 @@ export class Query {
                             result = difference(result, except)
                         }
 
-                        let finalRes = {
-                            content_type_uid: entryData[0].content_type_uid,
-                            locale: entryData[0].locale
-                        }
-
                         if (this.single) {
                             result = result[0]
-                            type = "entry"
+                            
+                            type = (this.type !== 'asset') ?"entry":"asset"
                         }
 
+                       
+
+                        
+                        //post process
                         if (this._query.count) {
                             finalRes['count'] = result.length
                         } else {
@@ -743,7 +843,19 @@ export class Query {
                         }
 
                         if (this._query.include_content_type) {
-                            finalRes['content_type'] = entryData[0].content_type
+                            if (!fs.existsSync(schemaPath)) {
+                                return reject(`${schemaPath} didn't exist`)
+                            } else {
+                                let contents
+                                if (fs.existsSync(schemaPath)) {
+                                    contents = await readFile(schemaPath);
+                                    if(!contents){
+                                        finalRes['content_type']= null
+                                    }else{
+                                        finalRes['content_type'] = JSON.parse(contents)
+                                    }
+                                  }
+                            }
                         }
 
                         if (this._query.tags) {
@@ -770,13 +882,13 @@ export class Query {
         })
     }
 
-    private findReferences(_query) {
+    private findReferences(query) {
         return new Promise((resolve, reject) => {
             let pth
-            if (_query.content_type_uid === 'asset') {
-                pth = path.join(this.baseDir, _query.locale, 'assets', '_assets.json')
+            if (query.content_type_uid === 'asset') {
+                pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json')
             } else {
-                pth = path.join(this.baseDir,_query.locale, 'data', _query.content_type_uid, 'index.json')
+                pth = path.join(this.baseDir,query.locale, 'data', query.content_type_uid, 'index.json')
             }
             if (!fs.existsSync(pth)) {
                 return resolve([])
@@ -784,6 +896,9 @@ export class Query {
             return fs.readFile(pth, 'utf-8', (readError, data) => {
                 if (readError) {
                     return reject(readError)
+                }
+                if(!data){
+                    return resolve("File is empty")
                 }
                 data = JSON.parse(data)
                 data = (map(data, 'data') as any)
