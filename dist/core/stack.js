@@ -20,12 +20,9 @@ class Stack {
         this.baseDir;
         this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
-        console.log(this.config, "config");
     }
     connect(overrides = {}) {
-        console.log(overrides, "rides");
         this.config = lodash_1.merge(this.config, overrides);
-        console.log(this.config, "sdsdasdsada");
         return new Promise((resolve, reject) => {
             try {
                 if (!this.config['content-connector'].hasOwnProperty('base_dir')) {
