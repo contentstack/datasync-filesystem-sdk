@@ -10,10 +10,12 @@ app.listen(4000,()=>{
 Stack.connect(config).then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
-    Stack.contentType('product').entries()
-    //.includeCount().includeContentType()
+    Stack.contentType('product')
+    //.entries()
+    //.includeCount()
+    //.includeContentType()
     //.tags(['AI'])
-    .findOne()
+    .find()
     .then(function(result){
         res.json(result)
     })
