@@ -1,4 +1,12 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -16,6 +24,8 @@ const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const sift_1 = __importDefault(require("sift"));
 const utils_1 = require("./utils");
+const util_1 = require("util");
+const readFile = util_1.promisify(fs.readFile);
 const _extend = {
     compare(type) {
         return function (key, value) {
@@ -120,7 +130,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters.');
+            throw new Error('Kindly provide valid parameters.');
         }
     }
     where(key, value) {
@@ -130,7 +140,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters.');
+            throw new Error('Kindly provide valid parameters.');
         }
     }
     count() {
@@ -143,7 +153,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters');
+            throw new Error('Kindly provide valid parameters');
         }
     }
     tags(values) {
@@ -152,7 +162,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters');
+            throw new Error('Kindly provide valid parameters');
         }
     }
     includeCount() {
@@ -165,7 +175,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Argument should be a String.');
+            throw new Error('Argument should be a String.');
         }
     }
     includeReferences() {
@@ -182,7 +192,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters.');
+            throw new Error('Kindly provide valid parameters.');
         }
     }
     getQuery() {
@@ -199,7 +209,7 @@ class Query {
             return this;
         }
         else {
-            return console.error('Kindly provide valid parameters.');
+            throw new Error('Kindly provide valid parameters.');
         }
     }
     only(fields) {
@@ -228,30 +238,37 @@ class Query {
         let result;
         return new Promise((resolve, reject) => {
             let dataPath;
+            let schemaPath;
             if (this.type === 'asset') {
-                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
+                dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
             }
             else {
-                dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', contentTypeUid, 'index.json') : path.join(baseDir, this._query.locale, 'data', contentTypeUid, 'index.json');
+                dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json');
+                schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
             }
             if (!fs.existsSync(dataPath)) {
                 return reject(`${dataPath} didn't exist`);
             }
             else {
-                fs.readFile(dataPath, 'utf8', (err, data) => {
+                fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
                     if (err) {
                         return reject(err);
                     }
                     else {
+                        let finalRes = {
+                            content_type_uid: this.content_type_uid,
+                            locale: locale
+                        };
+                        let type = (this.type !== 'asset') ? 'entries' : 'assets';
+                        if (!data) {
+                            finalRes[type] = [];
+                            return resolve(finalRes);
+                        }
                         const entryData = JSON.parse(data);
                         let filteredEntryData = lodash_1.map(entryData, 'data');
-                        let type = "assets";
-                        if (this.type !== 'asset') {
-                            type = "entries";
-                        }
                         if (this._query.includeReferences) {
                             return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
-                                .then(() => {
+                                .then(() => __awaiter(this, void 0, void 0, function* () {
                                 const sortKeys = ['asc', 'desc'];
                                 const sortQuery = Object.keys(this._query)
                                     .filter((key) => sortKeys.includes(key))
@@ -277,13 +294,13 @@ class Query {
                                 else {
                                     result = filteredEntryData;
                                 }
-                                if (this._query.limit && this._query.limit < result.length) {
+                                if (this._query.limit) {
                                     const limit = this._query.limit;
                                     result = result.splice(0, limit);
                                 }
                                 if (this._query.skip) {
                                     const skip = this._query.skip;
-                                    result = result.splice(0, skip);
+                                    result = result.slice(skip);
                                 }
                                 if (this._query.only) {
                                     const only = this._query.only.toString().replace(/\./g, '/');
@@ -305,10 +322,32 @@ class Query {
                                     finalRes[type] = result;
                                 }
                                 if (this._query.include_count) {
-                                    finalRes['count'] = result.length;
+                                    if (result === undefined) {
+                                        finalRes['count'] = 0;
+                                    }
+                                    else if (this.single) {
+                                        finalRes['count'] = 1;
+                                    }
+                                    else {
+                                        finalRes['count'] = result.length;
+                                    }
                                 }
                                 if (this._query.include_content_type) {
-                                    finalRes['content_type'] = entryData[0].content_type;
+                                    if (!fs.existsSync(schemaPath)) {
+                                        return reject(`${schemaPath} didn't exist`);
+                                    }
+                                    else {
+                                        let contents;
+                                        if (fs.existsSync(schemaPath)) {
+                                            contents = yield readFile(schemaPath);
+                                            if (!contents) {
+                                                finalRes['content_type'] = null;
+                                            }
+                                            else {
+                                                finalRes['content_type'] = JSON.parse(contents);
+                                            }
+                                        }
+                                    }
                                 }
                                 if (this._query.tags) {
                                     result = sift_1.default({
@@ -320,7 +359,7 @@ class Query {
                                     finalRes['count'] = result.length;
                                 }
                                 return resolve(finalRes);
-                            })
+                            }))
                                 .catch(reject);
                         }
                         const sortKeys = ['asc', 'desc'];
@@ -348,13 +387,13 @@ class Query {
                         else {
                             result = filteredEntryData;
                         }
-                        if (this._query.limit && this._query.limit < result.length) {
+                        if (this._query.limit) {
                             const limit = this._query.limit;
                             result = result.splice(0, limit);
                         }
                         if (this._query.skip) {
                             const skip = this._query.skip;
-                            result = result.splice(0, skip);
+                            result = result.slice(skip);
                         }
                         if (this._query.only) {
                             const only = this._query.only.toString().replace(/\./g, '/');
@@ -365,13 +404,9 @@ class Query {
                             const except = json_mask_1.default(result, bukcet);
                             result = utils_1.difference(result, except);
                         }
-                        let finalRes = {
-                            content_type_uid: entryData[0].content_type_uid,
-                            locale: entryData[0].locale
-                        };
                         if (this.single) {
                             result = result[0];
-                            type = "entry";
+                            type = (this.type !== 'asset') ? "entry" : "asset";
                         }
                         if (this._query.count) {
                             finalRes['count'] = result.length;
@@ -391,7 +426,21 @@ class Query {
                             }
                         }
                         if (this._query.include_content_type) {
-                            finalRes['content_type'] = entryData[0].content_type;
+                            if (!fs.existsSync(schemaPath)) {
+                                return reject(`${schemaPath} didn't exist`);
+                            }
+                            else {
+                                let contents;
+                                if (fs.existsSync(schemaPath)) {
+                                    contents = yield readFile(schemaPath);
+                                    if (!contents) {
+                                        finalRes['content_type'] = null;
+                                    }
+                                    else {
+                                        finalRes['content_type'] = JSON.parse(contents);
+                                    }
+                                }
+                            }
                         }
                         if (this._query.tags) {
                             result = sift_1.default({ tags: { $in: this._query.tags } }, result);
@@ -400,7 +449,7 @@ class Query {
                         }
                         resolve(finalRes);
                     }
-                });
+                }));
             }
         });
     }
@@ -414,14 +463,14 @@ class Query {
             });
         });
     }
-    findReferences(_query) {
+    findReferences(query) {
         return new Promise((resolve, reject) => {
             let pth;
-            if (_query.content_type_uid === 'asset') {
-                pth = path.join(this.baseDir, _query.locale, 'assets', '_assets.json');
+            if (query.content_type_uid === 'asset') {
+                pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json');
             }
             else {
-                pth = path.join(this.baseDir, _query.locale, 'data', _query.content_type_uid, 'index.json');
+                pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
             }
             if (!fs.existsSync(pth)) {
                 return resolve([]);
@@ -429,6 +478,9 @@ class Query {
             return fs.readFile(pth, 'utf-8', (readError, data) => {
                 if (readError) {
                     return reject(readError);
+                }
+                if (!data) {
+                    return resolve("File is empty");
                 }
                 data = JSON.parse(data);
                 data = lodash_1.map(data, 'data');

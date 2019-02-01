@@ -16,11 +16,16 @@ let query = new query_1.Query();
 class Stack {
     constructor(...stack_arguments) {
         this._query = {};
+        this.single = false;
         this.baseDir;
         this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
+        console.log(this.config, "config");
     }
-    connect() {
+    connect(overrides = {}) {
+        console.log(overrides, "rides");
+        this.config = lodash_1.merge(this.config, overrides);
+        console.log(this.config, "sdsdasdsada");
         return new Promise((resolve, reject) => {
             try {
                 if (!this.config['content-connector'].hasOwnProperty('base_dir')) {
@@ -53,32 +58,22 @@ class Stack {
         }
         return this;
     }
-    entries(...val) {
+    entries() {
         const entry = query;
         this._entry = 'multiple';
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first");
         }
-        if (val.length > 0) {
-            if (arguments.length) {
-                for (let i = 0; i < arguments.length; i++) {
-                    entry['entry_uid'] = [];
-                    entry['entry_uid'] = entry['entry_uid'].concat(arguments[i]);
-                }
-            }
-            return lodash_1.merge(this, entry);
-        }
-        else {
-            return lodash_1.merge(entry, this);
-        }
+        return lodash_1.merge(entry, this);
     }
     find() {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
+        const locale = (!this._query.locale) ? masterLocale : this._query.locale;
         let result;
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json');
+                const dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`);
                 }
@@ -88,23 +83,59 @@ class Stack {
                             return reject(err);
                         }
                         else {
-                            const assetData = JSON.parse(data);
                             const finalRes = {};
+                            let type = (this.asset_uid) ? "asset" : "assets";
+                            if (this.single) {
+                                type = "asset";
+                            }
+                            if (!data) {
+                                if (type == "asset") {
+                                    finalRes[type] = null;
+                                }
+                                else {
+                                    finalRes[type] = [];
+                                }
+                                return resolve(finalRes);
+                            }
+                            const assetData = JSON.parse(data);
                             if (this.asset_uid) {
                                 result = lodash_1.find(assetData, { uid: this.asset_uid });
-                                finalRes['asset'] = result;
+                                finalRes[type] = result;
                             }
                             else {
                                 result = assetData;
-                                finalRes['assets'] = result;
+                                finalRes[type] = result;
+                            }
+                            if (this.single) {
+                                type = "asset";
+                                finalRes[type] = result[0];
                             }
                             resolve(finalRes);
                         }
                     });
                 }
             }
+            else if (this.type !== "asset" && !this._entry) {
+                const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json');
+                fs.readFile(dataPath, 'utf8', (err, data) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    else {
+                        const finalRes = {
+                            content_type_uid: this.content_type_uid,
+                        };
+                        if (!data) {
+                            return resolve(finalRes['content_type'] = null);
+                        }
+                        let schema = JSON.parse(data);
+                        finalRes['content_type'] = schema;
+                        return resolve(finalRes);
+                    }
+                });
+            }
             else {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', this.content_type_uid, 'index.json') : path.join(baseDir, this._query.locale, 'data', this.content_type_uid, 'index.json');
+                const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, 'index.json');
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`);
                 }
@@ -114,32 +145,48 @@ class Stack {
                             return reject(err);
                         }
                         else {
-                            const entryData = JSON.parse(data);
                             const finalRes = {
-                                content_type_uid: entryData[0].content_type_uid,
-                                locale: entryData[0].locale,
+                                content_type_uid: this.content_type_uid,
+                                locale: locale,
                             };
-                            if (Object.keys(this._query).length === 0) {
-                                result = lodash_1.map(entryData, 'content_type');
-                                finalRes['content_type'] = result;
+                            let type = (this._entry == 'single') ? 'entry' : 'entries';
+                            if (!data) {
+                                if (type == "entry") {
+                                    finalRes[type] = null;
+                                }
+                                else {
+                                    finalRes[type] = [];
+                                }
                                 return resolve(finalRes);
                             }
-                            else {
-                                result = lodash_1.map(entryData, 'data');
-                            }
-                            if (this._entry == 'multiple') {
-                                finalRes['entries'] = result;
-                                return resolve(finalRes);
-                            }
-                            else if (this._entry == 'single') {
+                            const entryData = JSON.parse(data);
+                            result = lodash_1.map(entryData, 'data');
+                            if (this._entry == 'single') {
                                 result = lodash_1.find(result, { uid: this.entry_uid });
-                                finalRes['entry'] = result;
+                                finalRes[type] = result;
                                 return resolve(finalRes);
                             }
+                            if (this.single) {
+                                type = "entry";
+                                finalRes[type] = result[0];
+                                return resolve(finalRes);
+                            }
+                            finalRes[type] = result;
+                            return resolve(finalRes);
                         }
                     });
                 }
             }
+        });
+    }
+    findOne() {
+        this.single = true;
+        return new Promise((resolve, reject) => {
+            this.find().then((result) => {
+                return resolve(result);
+            }).catch((error) => {
+                return reject(error);
+            });
         });
     }
     entry(uid) {
@@ -167,11 +214,7 @@ class Stack {
     assets() {
         this.type = 'asset';
         const asset = query;
-        return lodash_1.merge(this, asset);
-    }
-    query() {
-        const _query = query;
-        return lodash_1.merge(_query, this);
+        return lodash_1.merge(asset, this);
     }
 }
 exports.Stack = Stack;
