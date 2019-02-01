@@ -15,14 +15,19 @@ export class Stack {
     asset_uid: any;
     entry_uid: any
     _entry: string;
+    single: boolean = false;
 
     constructor(...stack_arguments) {
         this.baseDir
         this.masterLocale
         this.config = merge(defaultConfig, ...stack_arguments)
+        console.log(this.config,"config")
     }
 
-    public connect() {
+    public connect(overrides:Object = {}) {
+      console.log(overrides,"rides")
+        this.config = merge(this.config, overrides)
+        console.log(this.config,"sdsdasdsada")
         return new Promise((resolve, reject) => {
             try {
                 if (!this.config['content-connector'].hasOwnProperty('base_dir')) {
@@ -53,31 +58,23 @@ export class Stack {
         return this
     }
 
-    public entries(...val) {
+    public entries() {
         const entry = query
         this._entry = 'multiple'
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first")
         }
-        if (val.length > 0) {
-            if (arguments.length) {
-                for (let i = 0; i < arguments.length; i++) {
-                    entry['entry_uid'] = []
-                    entry['entry_uid']= entry['entry_uid'].concat(arguments[i])
-                }
-            }
-            return merge(this, entry)
-        } else {
-            return merge(entry, this)
-        }
+        return merge(entry, this)
     }
+    
     public find() {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
+        const locale = (!this._query.locale) ? masterLocale : this._query.locale
         let result
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'assets', '_assets.json') : path.join(baseDir, this._query.locale, 'assets', '_assets.json')
+                const dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`)
                 } else {
@@ -85,22 +82,61 @@ export class Stack {
                         if (err) {
                             return reject(err)
                         } else {
+                          const finalRes = {}
+                          let type = (this.asset_uid)? "asset": "assets"
+                          if(this.single){
+                            type="asset"
+                          }
+                          if(!data){
+                            if(type == "asset"){
+                              finalRes[type] =null
+                            }else{
+                              finalRes[type] =[]
+                            }
+                            return resolve(finalRes)
+                           }
                             const assetData = JSON.parse(data)
-                            const finalRes = {}
+                            
                             if (this.asset_uid){
                                 result = find(assetData, { uid: this.asset_uid })
-                                finalRes['asset'] = result
+                                finalRes[type] = result
                             }else{
                                 result = assetData
-                                finalRes['assets'] = result
+                                finalRes[type] = result
+                            }
+
+                            if(this.single){
+                              type="asset"
+                              finalRes[type] = result[0]
                             }
                             resolve(finalRes)
                         }
                     })
                 }
 
-            } else {
-                const dataPath = (!this._query.locale) ? path.join(baseDir, masterLocale, 'data', this.content_type_uid, 'index.json') : path.join(baseDir, this._query.locale, 'data', this.content_type_uid, 'index.json')
+            }
+            else if(this.type !== "asset" && !this._entry){
+              const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json')
+              fs.readFile(dataPath, 'utf8', (err, data) => {
+                if (err) {
+                    return reject(err)
+                } else {
+                  const finalRes = {
+                    content_type_uid: this.content_type_uid,
+                  }
+                  if(!data){
+                   return resolve(finalRes['content_type']=null)
+                  }
+                  let schema = JSON.parse(data)
+                  finalRes['content_type']= schema
+                  return resolve(finalRes)
+
+                }
+              })
+            } 
+            else {
+              
+                const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, 'index.json')
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`)
                 } else {
@@ -108,34 +144,51 @@ export class Stack {
                         if (err) {
                             return reject(err)
                         } else {
-                            const entryData = JSON.parse(data)
-                            const finalRes = {
-                                content_type_uid: entryData[0].content_type_uid,
-                                locale: entryData[0].locale,
+                          const finalRes = {
+                            content_type_uid: this.content_type_uid,
+                            locale: locale,
+                          }
+                          let type = (this._entry == 'single') ? 'entry': 'entries'
+                          if(!data){
+                            if(type == "entry"){
+                              finalRes[type]= null
+                            }else{
+                              finalRes[type]= []
                             }
-                           if(Object.keys(this._query).length ===0){
-                            result = map(entryData, 'content_type')
-                            finalRes['content_type'] = result
                             return resolve(finalRes)
-                           }else{
-                            result = map(entryData, 'data')
                            }
-                           
-                            
-                            if (this._entry == 'multiple') {
-                                finalRes['entries'] = result
-                                return resolve(finalRes)
-                            }else if (this._entry == 'single') {
+                            const entryData = JSON.parse(data)
+                            result = map(entryData, 'data')
+  
+                            if (this._entry == 'single') {
                                 result = find(result, { uid: this.entry_uid })
-                                finalRes['entry'] = result
+                                finalRes[type] = result
                                 return resolve(finalRes)
                             }
+                            if(this.single){
+                              type="entry"
+                              finalRes[type] = result[0]
+                              return resolve(finalRes)
+                            }
+                            finalRes[type] = result
+                            return resolve(finalRes)
                         }
                     })
                 }
             }
         })
     }
+
+    public findOne() {
+      this.single = true
+      return new Promise((resolve, reject) => {
+          this.find().then((result) => {
+              return resolve(result)
+          }).catch((error) => {
+              return reject(error)
+          })
+      })
+  }
 
     
     public entry(uid) {
@@ -165,15 +218,7 @@ export class Stack {
     public assets() {
         this.type = 'asset'
         const asset = query
-        return merge(this, asset)
+        return merge(asset, this)
     }
 
-   
-    public query() {
-        // if (typeof this._entry !== 'string' && this.type !== 'asset'){
-        //     throw new Error('Please call the entries() before query()')
-        // }
-        const _query = query
-        return merge(_query, this)
-    }
 }

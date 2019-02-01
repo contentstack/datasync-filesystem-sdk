@@ -1,3 +1,4 @@
+import { Query } from './query';
 export declare class Stack {
     baseDir: any;
     masterLocale: any;
@@ -8,13 +9,14 @@ export declare class Stack {
     asset_uid: any;
     entry_uid: any;
     _entry: string;
-    constructor(...stack_arguments: {});
-    connect(): any;
+    single: boolean;
+    constructor(...stack_arguments: any[]);
+    connect(overrides?: Object): Promise<{}>;
     contentType(uid: any): this;
-    entries(...val: {}): any;
-    find(): any;
-    entry(uid: any): any;
-    asset(uid: any): any;
-    assets(): any;
-    query(): any;
+    entries(): Query & this;
+    find(): Promise<{}>;
+    findOne(): Promise<{}>;
+    entry(uid: any): this & Query;
+    asset(uid: any): this & Query;
+    assets(): Query & this;
 }
