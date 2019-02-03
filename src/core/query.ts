@@ -1,16 +1,15 @@
 import * as fs from 'fs'
 import { default as mask } from 'json-mask'
-import { find, uniq, map, orderBy, filter } from 'lodash'
+import { cloneDeep, filter, find,  map, orderBy, uniq } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
+import { promisify } from 'util'
 import { checkCyclic, difference, mergeDeep } from './utils'
-import { promisify } from 'util';
 
-
-const readFile: any = promisify(fs.readFile);
+const readFile: any = promisify(fs.readFile)
 const _extend = {
     compare(type) {
-        return function (key, value) {
+        return function(key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query.file_size || {}
@@ -23,7 +22,7 @@ const _extend = {
     },
     contained(bool) {
         const type = (bool) ? '$in' : '$nin'
-        return function (key, value) {
+        return function(key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query[key] || {}
@@ -36,7 +35,7 @@ const _extend = {
         }
     },
     exists(bool) {
-        return function (key) {
+        return function(key) {
             if (key && typeof key === 'string') {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query[key] || {}
@@ -48,7 +47,7 @@ const _extend = {
         }
     },
     logical(type) {
-        return function () {
+        return function() {
             this._query.logical = this._query.logical || {}
             this._query.logical[type] = this._query.logical[type] || {}
             this._query.logical[type] = this._query.query
@@ -57,7 +56,7 @@ const _extend = {
         }
     },
     sort(type) {
-        return function (key) {
+        return function(key) {
             if (key && typeof key === 'string') {
                 this._query[type] = key
                 return this
@@ -67,7 +66,7 @@ const _extend = {
         }
     },
     pagination(type) {
-        return function (value) {
+        return function(value) {
             if (typeof value === 'number') {
                 this._query[type] = value
                 return this
@@ -105,9 +104,9 @@ export class Query {
     public baseDir: any
     public masterLocale: any
     public content_type_uid: any
+    public type: string
+    public single: boolean = false
     private _query: any
-    type: string;
-    single: boolean = false;
 
     constructor() {
         this._query = this._query || {}
@@ -518,7 +517,7 @@ export class Query {
      * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.includeContentType().find()
      *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries along contentType 
+     *         // ‘result’ contains a list of entries along contentType
      *       },function (error) {
      *          // error function
      *      })
@@ -580,7 +579,7 @@ export class Query {
      * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.only(["title","uid"]).find()
      *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries with field title and uid only 
+     *         // ‘result’ contains a list of entries with field title and uid only
      *       },function (error) {
      *          // error function
      *      })
@@ -603,7 +602,7 @@ export class Query {
      * @example let blogQuery = Stack().contentType('example').entries();
      *          let data = blogQuery.except(["title","uid"]).find()
      *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries without fields title and uid only 
+     *         // ‘result’ contains a list of entries without fields title and uid only
      *       },function (error) {
      *          // error function
      *      })
@@ -624,7 +623,7 @@ export class Query {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
         const contentTypeUid = this.content_type_uid
-        const locale = (!this._query.locale)? masterLocale : this._query.locale
+        const locale = (!this._query.locale) ? masterLocale : this._query.locale
         let result
         return new Promise((resolve, reject) => {
             let dataPath
@@ -635,7 +634,7 @@ export class Query {
                 dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
                 schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
             }
-            
+
             if (!fs.existsSync(dataPath)) {
                 return reject(`${dataPath} didn't exist`)
             } else {
@@ -644,24 +643,24 @@ export class Query {
                         return reject(err)
                     } else {
 
-                        let finalRes = {
+                        const finalRes = {
                             content_type_uid: this.content_type_uid,
-                            locale: locale
+                            locale,
                         }
-                        let type = (this.type !== 'asset')? 'entries':'assets'
-                        if(!data){
-                            finalRes[type]= []
+                        let type = (this.type !== 'asset') ? 'entries' : 'assets'
+                        if (!data){
+                            finalRes[type] = []
                             return resolve(finalRes)
                         }
                         const entryData = JSON.parse(data)
-                        let filteredEntryData = map(entryData, 'data')
-                        
+                        const filteredEntryData = map(entryData, 'data')
+
 
                         if (this._query.includeReferences) {
                             return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
                                 .then(async () => {
                                     const sortKeys: any = ['asc', 'desc']
-                                   
+
                                     const sortQuery: any = Object.keys(this._query)
                                         .filter((key) => sortKeys.includes(key))
                                         .reduce((obj, key) => {
@@ -689,7 +688,7 @@ export class Query {
                                         result = filteredEntryData
                                     }
 
-                                   
+
                                     if (this._query.limit) {
                                         const limit = this._query.limit
                                         result = result.splice(0, limit)
@@ -711,24 +710,24 @@ export class Query {
                                         result = difference(result, except)
                                     }
 
-                                    let finalRes = {
+                                    const finalRes = {
                                         content_type_uid: entryData[0].content_type_uid,
-                                        locale: entryData[0].locale
+                                        locale: entryData[0].locale,
                                     }
                                     // Misc: count() in itself is a method, and not part of find()
                                     if (this._query.count) {
-                                        finalRes['count'] = result.length
+                                        (finalRes as any).count = result.length
                                     } else {
                                         finalRes[type] = result
                                     }
 
                                     if (this._query.include_count) {
                                         if (result === undefined) {
-                                            finalRes['count'] = 0
+                                            (finalRes as any).count = 0
                                         } else if (this.single) {
-                                            finalRes['count'] = 1
+                                            (finalRes as any).count = 1
                                         } else {
-                                            finalRes['count'] = result.length
+                                            (finalRes as any).count = result.length
                                         }
                                     }
 
@@ -738,11 +737,11 @@ export class Query {
                                         } else {
                                             let contents
                                             if (fs.existsSync(schemaPath)) {
-                                                contents = await readFile(schemaPath);
-                                                if(!contents){
-                                                    finalRes['content_type']= null
+                                                contents = await readFile(schemaPath)
+                                                if (!contents){
+                                                    (finalRes as any).content_type = null
                                                 }else{
-                                                    finalRes['content_type'] = JSON.parse(contents)
+                                                    (finalRes as any).content_type = JSON.parse(contents)
                                                 }
                                               }
                                         }
@@ -751,21 +750,23 @@ export class Query {
                                     if (this._query.tags) {
                                         result = sift({
                                             tags: {
-                                                $in: this._query.tags
-                                            }
+                                                $in: this._query.tags,
+                                            },
                                         }, result)
                                         finalRes[type] = result
-                                        finalRes['count'] = result.length
+                                        (finalRes as any).count = result.length
                                     }
 
                                     return resolve(finalRes)
                                 })
                                 .catch(reject)
-                        }
+                        }else{
+
+                        
 
 
 
-                        //preprocess
+                        // preprocess
                         const sortKeys: any = ['asc', 'desc']
                         const sortQuery: any = Object.keys(this._query)
                             .filter((key) => sortKeys.includes(key))
@@ -818,27 +819,26 @@ export class Query {
 
                         if (this.single) {
                             result = result[0]
-                            
-                            type = (this.type !== 'asset') ?"entry":"asset"
+                            type = (this.type !== 'asset') ? 'entry' : 'asset'
                         }
 
-                       
 
-                        
-                        //post process
+
+
+                        // post process
                         if (this._query.count) {
-                            finalRes['count'] = result.length
+                            (finalRes as any).count = result.length
                         } else {
                             finalRes[type] = result
                         }
 
                         if (this._query.include_count) {
                             if (result === undefined) {
-                                finalRes['count'] = 0
+                                (finalRes as any).count = 0
                             } else if (this.single) {
-                                finalRes['count'] = 1
+                                (finalRes as any).count = 1
                             } else {
-                                finalRes['count'] = result.length
+                                (finalRes as any).count = result.length
                             }
                         }
 
@@ -848,11 +848,11 @@ export class Query {
                             } else {
                                 let contents
                                 if (fs.existsSync(schemaPath)) {
-                                    contents = await readFile(schemaPath);
-                                    if(!contents){
-                                        finalRes['content_type']= null
+                                    contents = await readFile(schemaPath)
+                                    if (!contents){
+                                        (finalRes as any).content_type = null
                                     }else{
-                                        finalRes['content_type'] = JSON.parse(contents)
+                                        (finalRes as any).content_type = JSON.parse(contents)
                                     }
                                   }
                             }
@@ -861,11 +861,12 @@ export class Query {
                         if (this._query.tags) {
                             result = sift({ tags: { $in: this._query.tags } }, result)
                             finalRes[type] = result
-                            finalRes['count'] = result.length
+                            (finalRes as any).count = result.length
                         }
 
                         resolve(finalRes)
                     }
+                }
                 })
             }
         })
@@ -888,7 +889,7 @@ export class Query {
             if (query.content_type_uid === 'asset') {
                 pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json')
             } else {
-                pth = path.join(this.baseDir,query.locale, 'data', query.content_type_uid, 'index.json')
+                pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
             }
             if (!fs.existsSync(pth)) {
                 return resolve([])
@@ -897,8 +898,8 @@ export class Query {
                 if (readError) {
                     return reject(readError)
                 }
-                if(!data){
-                    return resolve("File is empty")
+                if (!data){
+                    return resolve()
                 }
                 data = JSON.parse(data)
                 data = (map(data, 'data') as any)
@@ -907,87 +908,92 @@ export class Query {
         })
     }
 
-    private includeReferencesI(entry, locale, references, parentUid?) {
+    private includeReferencesI(entry, locale, references, parentUid ? ) {
         const self = this
-
         return new Promise((resolve, reject) => {
-            if (entry === null || typeof entry !== 'object') {
-                return resolve()
-            }
-
-            // current entry becomes the parent
-            if (entry.uid) {
-                parentUid = entry.uid
-            }
-
-            const referencesFound = []
-
-            // iterate over each key in the object
-            for (const prop in entry) {
-                if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    if (entry[prop] && entry[prop].reference_to) {
-                        if (entry[prop].values.length === 0) {
-                            entry[prop] = []
-                        } else {
-                            let uids = entry[prop].values
-                            if (typeof uids === 'string') {
-                                uids = [uids]
-                            }
-                            if (entry[prop].reference_to !== '_assets') {
-                                uids = filter(uids, (uid) => {
-                                    return !(checkCyclic(uid, references))
-                                })
-                            }
-                            if (uids.length) {
-                                const query = {
-                                    content_type_uid: entry[prop].reference_to,
-                                    locale,
-                                    uid: {
-                                        $in: uids,
-                                    },
-                                }
-
-                                referencesFound.push(new Promise((rs, rj) => {
-                                    return self.findReferences(query).then((entities) => {
-                                        if ((entities as any).length === 0) {
-                                            entry[prop] = []
-
-                                            return rs()
-                                        } else if (parentUid) {
-                                            references[parentUid] = references[parentUid] || []
-                                            references[parentUid] = uniq(references[parentUid].concat(map(entry[prop], 'uid')))
-                                        }
-                                        const referenceBucket = []
-                                        query.uid.$in.forEach((entityUid) => {
-                                            const elem = find(entities, (entity) => {
-                                                return (entity as any).uid === entityUid
-                                            })
-                                            if (elem) {
-                                                referenceBucket.push(elem)
-                                            }
-                                        })
-                                        // format the references in order
-                                        entry[prop] = entities
-
-                                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
-                                            .then(rs)
-                                            .catch(rj)
-                                    })
-                                }))
-                            }
-                        }
-                    } else {
-                        referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
+          if (entry === null || typeof entry !== 'object') {
+            return resolve()
+          }
+    
+          // current entry becomes the parent
+          if (entry.uid) {
+            parentUid = entry.uid
+          }
+    
+          // if (hasIn(references, parentUid)) {
+          //   return resolve()
+          // }
+    
+          const referencesFound = []
+    
+          // iterate over each key in the object
+          for (const prop in entry) {
+            if (entry[prop] !== null && typeof entry[prop] === 'object') {
+              if (entry[prop] && entry[prop].reference_to) {
+                if (entry[prop].values.length === 0) {
+                  entry[prop] = []
+                } else {
+                  let uids = entry[prop].values
+                  if (typeof uids === 'string') {
+                    uids = [uids]
+                  }
+                  if (entry[prop].reference_to !== '_assets') {
+                    uids = filter(uids, (uid) => {
+                      return !(checkCyclic(uid, references))
+                    })
+                  }
+                  if (uids.length) {
+                    const query = {
+                      content_type_uid: entry[prop].reference_to,
+                      locale,
+                      uid: {
+                        $in: uids,
+                      },
                     }
+    
+                    referencesFound.push(new Promise((rs, rj) => {
+                      return self.findReferences(query).then((entities) => {
+                        entities = cloneDeep(entities)
+                        if ((entities as any).length === 0) {
+                          entry[prop] = []
+    
+                          return rs()
+                        } else if (parentUid) {
+                          references[parentUid] = references[parentUid] || []
+                          references[parentUid] = uniq(references[parentUid].concat(map((entities as any), 'uid')))
+                        }
+                        const referenceBucket = []
+                        query.uid.$in.forEach((entityUid) => {
+                          const elem = find(entities, (entity) => {
+                            // console.log('918> ', entity.uid, ' :', entityUid)
+                            if((entity as any).uid === entityUid) {
+                              return entity
+                            }
+                          })
+                          if (elem) {
+                            referenceBucket.push(elem)
+                          }
+                        })
+    
+                        // format the references in order
+                        entry[prop] = referenceBucket
+    
+                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                          .then(rs)
+                          .catch(rj)
+                      })
+                    }))
+                  }
                 }
+              } else {
+                referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
+              }
             }
-
-            return Promise.all(referencesFound)
-                .then(resolve)
-                .catch(reject)
+          }
+    
+          return Promise.all(referencesFound)
+            .then(resolve)
+            .catch(reject)
         })
-    }
-
+      }
 }
-
-
