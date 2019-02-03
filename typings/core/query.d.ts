@@ -19,9 +19,9 @@ export declare class Query {
     baseDir: any;
     masterLocale: any;
     content_type_uid: any;
-    private _query;
     type: string;
     single: boolean;
+    private _query;
     constructor();
     equalTo(key: any, value: any): this;
     where(key: any, value: any): this;

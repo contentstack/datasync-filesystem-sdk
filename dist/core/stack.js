@@ -12,7 +12,7 @@ const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const default_1 = require("./default");
 const query_1 = require("./query");
-let query = new query_1.Query();
+const query = new query_1.Query();
 class Stack {
     constructor(...stack_arguments) {
         this._query = {};
@@ -81,12 +81,12 @@ class Stack {
                         }
                         else {
                             const finalRes = {};
-                            let type = (this.asset_uid) ? "asset" : "assets";
+                            let type = (this.asset_uid) ? 'asset' : 'assets';
                             if (this.single) {
-                                type = "asset";
+                                type = 'asset';
                             }
                             if (!data) {
-                                if (type == "asset") {
+                                if (type == 'asset') {
                                     finalRes[type] = null;
                                 }
                                 else {
@@ -104,7 +104,7 @@ class Stack {
                                 finalRes[type] = result;
                             }
                             if (this.single) {
-                                type = "asset";
+                                type = 'asset';
                                 finalRes[type] = result[0];
                             }
                             resolve(finalRes);
@@ -112,7 +112,7 @@ class Stack {
                     });
                 }
             }
-            else if (this.type !== "asset" && !this._entry) {
+            else if (this.type !== 'asset' && !this._entry) {
                 const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json');
                 fs.readFile(dataPath, 'utf8', (err, data) => {
                     if (err) {
@@ -123,10 +123,10 @@ class Stack {
                             content_type_uid: this.content_type_uid,
                         };
                         if (!data) {
-                            return resolve(finalRes['content_type'] = null);
+                            return resolve(finalRes.content_type = null);
                         }
-                        let schema = JSON.parse(data);
-                        finalRes['content_type'] = schema;
+                        const schema = JSON.parse(data);
+                        finalRes.content_type = schema;
                         return resolve(finalRes);
                     }
                 });
@@ -144,11 +144,11 @@ class Stack {
                         else {
                             const finalRes = {
                                 content_type_uid: this.content_type_uid,
-                                locale: locale,
+                                locale,
                             };
                             let type = (this._entry == 'single') ? 'entry' : 'entries';
                             if (!data) {
-                                if (type == "entry") {
+                                if (type == 'entry') {
                                     finalRes[type] = null;
                                 }
                                 else {
@@ -164,7 +164,7 @@ class Stack {
                                 return resolve(finalRes);
                             }
                             if (this.single) {
-                                type = "entry";
+                                type = 'entry';
                                 finalRes[type] = result[0];
                                 return resolve(finalRes);
                             }
@@ -192,7 +192,7 @@ class Stack {
             throw new Error("Please call contentType('uid') first");
         }
         if (uid && typeof uid === 'string') {
-            entry['entry_uid'] = uid;
+            entry.entry_uid = uid;
         }
         this._entry = 'single';
         return lodash_1.merge(this, entry);
@@ -201,7 +201,7 @@ class Stack {
         this.type = 'asset';
         const asset = query;
         if (uid && typeof uid === 'string') {
-            asset['asset_uid'] = uid;
+            asset.asset_uid = uid;
             return lodash_1.merge(this, asset);
         }
         else {
