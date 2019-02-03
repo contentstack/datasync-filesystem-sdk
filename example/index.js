@@ -11,9 +11,10 @@ Stack.connect(config).then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
     Stack.contentType('product')
-    //.entries()
+    .entries()
     //.includeCount()
     //.includeContentType()
+    .includeReferences()
     //.tags(['AI'])
     .find()
     .then(function(result){
