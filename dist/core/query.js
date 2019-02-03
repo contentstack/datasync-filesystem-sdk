@@ -23,8 +23,8 @@ const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const sift_1 = __importDefault(require("sift"));
-const utils_1 = require("./utils");
 const util_1 = require("util");
+const utils_1 = require("./utils");
 const readFile = util_1.promisify(fs.readFile);
 const _extend = {
     compare(type) {
@@ -255,9 +255,9 @@ class Query {
                         return reject(err);
                     }
                     else {
-                        let finalRes = {
+                        const finalRes = {
                             content_type_uid: this.content_type_uid,
-                            locale: locale
+                            locale,
                         };
                         let type = (this.type !== 'asset') ? 'entries' : 'assets';
                         if (!data) {
@@ -265,7 +265,7 @@ class Query {
                             return resolve(finalRes);
                         }
                         const entryData = JSON.parse(data);
-                        let filteredEntryData = lodash_1.map(entryData, 'data');
+                        const filteredEntryData = lodash_1.map(entryData, 'data');
                         if (this._query.includeReferences) {
                             return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
                                 .then(() => __awaiter(this, void 0, void 0, function* () {
@@ -311,25 +311,25 @@ class Query {
                                     const except = json_mask_1.default(result, bukcet);
                                     result = utils_1.difference(result, except);
                                 }
-                                let finalRes = {
+                                const finalRes = {
                                     content_type_uid: entryData[0].content_type_uid,
-                                    locale: entryData[0].locale
+                                    locale: entryData[0].locale,
                                 };
                                 if (this._query.count) {
-                                    finalRes['count'] = result.length;
+                                    finalRes.count = result.length;
                                 }
                                 else {
                                     finalRes[type] = result;
                                 }
                                 if (this._query.include_count) {
                                     if (result === undefined) {
-                                        finalRes['count'] = 0;
+                                        finalRes.count = 0;
                                     }
                                     else if (this.single) {
-                                        finalRes['count'] = 1;
+                                        finalRes.count = 1;
                                     }
                                     else {
-                                        finalRes['count'] = result.length;
+                                        finalRes.count = result.length;
                                     }
                                 }
                                 if (this._query.include_content_type) {
@@ -341,10 +341,10 @@ class Query {
                                         if (fs.existsSync(schemaPath)) {
                                             contents = yield readFile(schemaPath);
                                             if (!contents) {
-                                                finalRes['content_type'] = null;
+                                                finalRes.content_type = null;
                                             }
                                             else {
-                                                finalRes['content_type'] = JSON.parse(contents);
+                                                finalRes.content_type = JSON.parse(contents);
                                             }
                                         }
                                     }
@@ -352,102 +352,102 @@ class Query {
                                 if (this._query.tags) {
                                     result = sift_1.default({
                                         tags: {
-                                            $in: this._query.tags
-                                        }
+                                            $in: this._query.tags,
+                                        },
                                     }, result);
-                                    finalRes[type] = result;
-                                    finalRes['count'] = result.length;
+                                    finalRes[type] = result(finalRes).count = result.length;
                                 }
                                 return resolve(finalRes);
                             }))
                                 .catch(reject);
                         }
-                        const sortKeys = ['asc', 'desc'];
-                        const sortQuery = Object.keys(this._query)
-                            .filter((key) => sortKeys.includes(key))
-                            .reduce((obj, key) => {
-                            return Object.assign({}, obj, { [key]: this._query[key] });
-                        }, {});
-                        if (this._query.asc || this._query.desc) {
-                            const value = Object.values(sortQuery);
-                            const key = Object.keys(sortQuery);
-                            result = lodash_1.orderBy(filteredEntryData, value, key);
-                        }
-                        if (this._query.query && Object.keys(this._query.query).length > 0) {
-                            result = sift_1.default(this._query.query, filteredEntryData);
-                        }
-                        else if (this._query.logical) {
-                            const operator = Object.keys(this._query.logical)[0];
-                            const vals = Object.values(this._query.logical);
-                            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
-                            const logicalQuery = {};
-                            logicalQuery[operator] = values;
-                            result = sift_1.default(logicalQuery, filteredEntryData);
-                        }
                         else {
-                            result = filteredEntryData;
-                        }
-                        if (this._query.limit) {
-                            const limit = this._query.limit;
-                            result = result.splice(0, limit);
-                        }
-                        if (this._query.skip) {
-                            const skip = this._query.skip;
-                            result = result.slice(skip);
-                        }
-                        if (this._query.only) {
-                            const only = this._query.only.toString().replace(/\./g, '/');
-                            result = json_mask_1.default(result, only);
-                        }
-                        if (this._query.except) {
-                            const bukcet = this._query.except.toString().replace(/\./g, '/');
-                            const except = json_mask_1.default(result, bukcet);
-                            result = utils_1.difference(result, except);
-                        }
-                        if (this.single) {
-                            result = result[0];
-                            type = (this.type !== 'asset') ? "entry" : "asset";
-                        }
-                        if (this._query.count) {
-                            finalRes['count'] = result.length;
-                        }
-                        else {
-                            finalRes[type] = result;
-                        }
-                        if (this._query.include_count) {
-                            if (result === undefined) {
-                                finalRes['count'] = 0;
+                            const sortKeys = ['asc', 'desc'];
+                            const sortQuery = Object.keys(this._query)
+                                .filter((key) => sortKeys.includes(key))
+                                .reduce((obj, key) => {
+                                return Object.assign({}, obj, { [key]: this._query[key] });
+                            }, {});
+                            if (this._query.asc || this._query.desc) {
+                                const value = Object.values(sortQuery);
+                                const key = Object.keys(sortQuery);
+                                result = lodash_1.orderBy(filteredEntryData, value, key);
                             }
-                            else if (this.single) {
-                                finalRes['count'] = 1;
+                            if (this._query.query && Object.keys(this._query.query).length > 0) {
+                                result = sift_1.default(this._query.query, filteredEntryData);
+                            }
+                            else if (this._query.logical) {
+                                const operator = Object.keys(this._query.logical)[0];
+                                const vals = Object.values(this._query.logical);
+                                const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
+                                const logicalQuery = {};
+                                logicalQuery[operator] = values;
+                                result = sift_1.default(logicalQuery, filteredEntryData);
                             }
                             else {
-                                finalRes['count'] = result.length;
+                                result = filteredEntryData;
                             }
-                        }
-                        if (this._query.include_content_type) {
-                            if (!fs.existsSync(schemaPath)) {
-                                return reject(`${schemaPath} didn't exist`);
+                            if (this._query.limit) {
+                                const limit = this._query.limit;
+                                result = result.splice(0, limit);
+                            }
+                            if (this._query.skip) {
+                                const skip = this._query.skip;
+                                result = result.slice(skip);
+                            }
+                            if (this._query.only) {
+                                const only = this._query.only.toString().replace(/\./g, '/');
+                                result = json_mask_1.default(result, only);
+                            }
+                            if (this._query.except) {
+                                const bukcet = this._query.except.toString().replace(/\./g, '/');
+                                const except = json_mask_1.default(result, bukcet);
+                                result = utils_1.difference(result, except);
+                            }
+                            if (this.single) {
+                                result = result[0];
+                                type = (this.type !== 'asset') ? 'entry' : 'asset';
+                            }
+                            if (this._query.count) {
+                                finalRes.count = result.length;
                             }
                             else {
-                                let contents;
-                                if (fs.existsSync(schemaPath)) {
-                                    contents = yield readFile(schemaPath);
-                                    if (!contents) {
-                                        finalRes['content_type'] = null;
-                                    }
-                                    else {
-                                        finalRes['content_type'] = JSON.parse(contents);
+                                finalRes[type] = result;
+                            }
+                            if (this._query.include_count) {
+                                if (result === undefined) {
+                                    finalRes.count = 0;
+                                }
+                                else if (this.single) {
+                                    finalRes.count = 1;
+                                }
+                                else {
+                                    finalRes.count = result.length;
+                                }
+                            }
+                            if (this._query.include_content_type) {
+                                if (!fs.existsSync(schemaPath)) {
+                                    return reject(`${schemaPath} didn't exist`);
+                                }
+                                else {
+                                    let contents;
+                                    if (fs.existsSync(schemaPath)) {
+                                        contents = yield readFile(schemaPath);
+                                        if (!contents) {
+                                            finalRes.content_type = null;
+                                        }
+                                        else {
+                                            finalRes.content_type = JSON.parse(contents);
+                                        }
                                     }
                                 }
                             }
+                            if (this._query.tags) {
+                                result = sift_1.default({ tags: { $in: this._query.tags } }, result);
+                                finalRes[type] = result(finalRes).count = result.length;
+                            }
+                            resolve(finalRes);
                         }
-                        if (this._query.tags) {
-                            result = sift_1.default({ tags: { $in: this._query.tags } }, result);
-                            finalRes[type] = result;
-                            finalRes['count'] = result.length;
-                        }
-                        resolve(finalRes);
                     }
                 }));
             }
@@ -480,7 +480,7 @@ class Query {
                     return reject(readError);
                 }
                 if (!data) {
-                    return resolve("File is empty");
+                    return resolve();
                 }
                 data = JSON.parse(data);
                 data = lodash_1.map(data, 'data');
@@ -524,24 +524,27 @@ class Query {
                                 };
                                 referencesFound.push(new Promise((rs, rj) => {
                                     return self.findReferences(query).then((entities) => {
+                                        entities = lodash_1.cloneDeep(entities);
                                         if (entities.length === 0) {
                                             entry[prop] = [];
                                             return rs();
                                         }
                                         else if (parentUid) {
                                             references[parentUid] = references[parentUid] || [];
-                                            references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entry[prop], 'uid')));
+                                            references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entities, 'uid')));
                                         }
                                         const referenceBucket = [];
                                         query.uid.$in.forEach((entityUid) => {
                                             const elem = lodash_1.find(entities, (entity) => {
-                                                return entity.uid === entityUid;
+                                                if (entity.uid === entityUid) {
+                                                    return entity;
+                                                }
                                             });
                                             if (elem) {
                                                 referenceBucket.push(elem);
                                             }
                                         });
-                                        entry[prop] = entities;
+                                        entry[prop] = referenceBucket;
                                         return self.includeReferencesI(entry[prop], locale, references, parentUid)
                                             .then(rs)
                                             .catch(rj);
