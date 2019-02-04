@@ -7,4 +7,3 @@ class Contentstack {
     }
 }
 exports.Contentstack = Contentstack;
-//# sourceMappingURL=contentstack.js.map
