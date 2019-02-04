@@ -1,6 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
+exports._type = (val) => {
+    let __typeof = typeof val;
+    switch (__typeof) {
+        case 'object':
+            if (Array.isArray(val)) {
+                __typeof = 'array';
+            }
+            break;
+        default:
+    }
+    return __typeof;
+};
 exports.mergeDeep = (targett, sourcee) => {
     const self = this;
     const mergeRrcursive = (target, source) => {
@@ -51,4 +63,3 @@ const getParents = (child, mapping) => {
     }
     return parents;
 };
-//# sourceMappingURL=utils.js.map

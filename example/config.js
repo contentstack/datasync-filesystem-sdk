@@ -1,5 +1,5 @@
 module.exports = {
-    "content-connector": {
+    "options": {
       "base_dir": "../../_contents"
     },
     "locales": [

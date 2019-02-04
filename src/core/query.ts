@@ -1,6 +1,6 @@
 import * as fs from 'fs'
 import { default as mask } from 'json-mask'
-import { cloneDeep, filter, find,  map, orderBy, uniq } from 'lodash'
+import { cloneDeep, filter, find, map, orderBy, uniq } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
 import { promisify } from 'util'
@@ -9,7 +9,7 @@ import { checkCyclic, difference, mergeDeep } from './utils'
 const readFile: any = promisify(fs.readFile)
 const _extend = {
     compare(type) {
-        return function(key, value) {
+        return function (key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query.file_size || {}
@@ -22,7 +22,7 @@ const _extend = {
     },
     contained(bool) {
         const type = (bool) ? '$in' : '$nin'
-        return function(key, value) {
+        return function (key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query[key] || {}
@@ -35,7 +35,7 @@ const _extend = {
         }
     },
     exists(bool) {
-        return function(key) {
+        return function (key) {
             if (key && typeof key === 'string') {
                 this._query.query = this._query.query || {}
                 this._query.query[key] = this._query.query[key] || {}
@@ -47,7 +47,7 @@ const _extend = {
         }
     },
     logical(type) {
-        return function() {
+        return function () {
             this._query.logical = this._query.logical || {}
             this._query.logical[type] = this._query.logical[type] || {}
             this._query.logical[type] = this._query.query
@@ -56,7 +56,7 @@ const _extend = {
         }
     },
     sort(type) {
-        return function(key) {
+        return function (key) {
             if (key && typeof key === 'string') {
                 this._query[type] = key
                 return this
@@ -66,7 +66,7 @@ const _extend = {
         }
     },
     pagination(type) {
-        return function(value) {
+        return function (value) {
             if (typeof value === 'number') {
                 this._query[type] = value
                 return this
@@ -629,7 +629,7 @@ export class Query {
             let dataPath
             let schemaPath
             if (this.type === 'asset') {
-                dataPath =  path.join(baseDir, locale, 'assets', '_assets.json')
+                dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
             } else {
                 dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
                 schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
@@ -643,230 +643,33 @@ export class Query {
                         return reject(err)
                     } else {
 
-                        const finalRes = {
+                        const finalResult = {
                             content_type_uid: this.content_type_uid,
-                            locale,
+                            locale: locale,
                         }
+
                         let type = (this.type !== 'asset') ? 'entries' : 'assets'
-                        if (!data){
-                            finalRes[type] = []
-                            return resolve(finalRes)
+                        if (!data) {
+                            finalResult[type] = []
+                            return resolve(finalResult)
                         }
                         const entryData = JSON.parse(data)
-                        const filteredEntryData = map(entryData, 'data')
+                        const filteredData = map(entryData, 'data')
 
 
                         if (this._query.includeReferences) {
-                            return this.includeReferencesI(filteredEntryData, locale, {}, undefined)
+                            return this.includeReferencesI(filteredData, locale, {}, undefined)
                                 .then(async () => {
-                                    const sortKeys: any = ['asc', 'desc']
-
-                                    const sortQuery: any = Object.keys(this._query)
-                                        .filter((key) => sortKeys.includes(key))
-                                        .reduce((obj, key) => {
-                                            return {
-                                                ...obj,
-                                                [key]: this._query[key],
-                                            }
-                                        }, {})
-                                    if (this._query.asc || this._query.desc) {
-                                        const value: any = (Object as any).values(sortQuery)
-                                        const key: any = Object.keys(sortQuery)
-                                        result = orderBy(filteredEntryData, value, key)
-                                    }
-
-                                    if (this._query.query && Object.keys(this._query.query).length > 0) {
-                                        result = sift(this._query.query, filteredEntryData)
-                                    } else if (this._query.logical) {
-                                        const operator = Object.keys(this._query.logical)[0]
-                                        const vals: any = (Object as any).values(this._query.logical)
-                                        const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
-                                        const logicalQuery = {}
-                                        logicalQuery[operator] = values
-                                        result = sift(logicalQuery, filteredEntryData)
-                                    } else {
-                                        result = filteredEntryData
-                                    }
-
-
-                                    if (this._query.limit) {
-                                        const limit = this._query.limit
-                                        result = result.splice(0, limit)
-                                    }
-
-                                    if (this._query.skip) {
-                                        const skip = this._query.skip
-                                        result = result.slice(skip)
-                                    }
-
-                                    if (this._query.only) {
-                                        const only = this._query.only.toString().replace(/\./g, '/')
-                                        result = mask(result, only)
-                                    }
-
-                                    if (this._query.except) {
-                                        const bukcet = this._query.except.toString().replace(/\./g, '/')
-                                        const except = mask(result, bukcet)
-                                        result = difference(result, except)
-                                    }
-
-                                    const finalRes = {
-                                        content_type_uid: entryData[0].content_type_uid,
-                                        locale: entryData[0].locale,
-                                    }
-                                    // Misc: count() in itself is a method, and not part of find()
-                                    if (this._query.count) {
-                                        (finalRes as any).count = result.length
-                                    } else {
-                                        finalRes[type] = result
-                                    }
-
-                                    if (this._query.include_count) {
-                                        if (result === undefined) {
-                                            (finalRes as any).count = 0
-                                        } else if (this.single) {
-                                            (finalRes as any).count = 1
-                                        } else {
-                                            (finalRes as any).count = result.length
-                                        }
-                                    }
-
-                                    if (this._query.include_content_type) {
-                                        if (!fs.existsSync(schemaPath)) {
-                                            return reject(`${schemaPath} didn't exist`)
-                                        } else {
-                                            let contents
-                                            if (fs.existsSync(schemaPath)) {
-                                                contents = await readFile(schemaPath)
-                                                if (!contents){
-                                                    (finalRes as any).content_type = null
-                                                }else{
-                                                    (finalRes as any).content_type = JSON.parse(contents)
-                                                }
-                                              }
-                                        }
-                                    }
-
-                                    if (this._query.tags) {
-                                        result = sift({
-                                            tags: {
-                                                $in: this._query.tags,
-                                            },
-                                        }, result)
-                                        finalRes[type] = result
-                                        (finalRes as any).count = result.length
-                                    }
-
-                                    return resolve(finalRes)
+                                    result = this.processResult(filteredData, finalResult, type, schemaPath)
+                                    return resolve(result)
                                 })
                                 .catch(reject)
-                        }else{
-
-                        
-
-
-
-                        // preprocess
-                        const sortKeys: any = ['asc', 'desc']
-                        const sortQuery: any = Object.keys(this._query)
-                            .filter((key) => sortKeys.includes(key))
-                            .reduce((obj, key) => {
-                                return {
-                                    ...obj,
-                                    [key]: this._query[key],
-                                }
-                            }, {})
-
-                        if (this._query.asc || this._query.desc) {
-                            const value: any = (Object as any).values(sortQuery)
-                            const key: any = Object.keys(sortQuery)
-                            result = orderBy(filteredEntryData, value, key)
                         }
-
-                        if (this._query.query && Object.keys(this._query.query).length > 0) {
-                            result = sift(this._query.query, filteredEntryData)
-                        } else if (this._query.logical) {
-                            const operator = Object.keys(this._query.logical)[0]
-                            const vals: any = (Object as any).values(this._query.logical)
-                            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
-                            const logicalQuery = {}
-                            logicalQuery[operator] = values
-                            result = sift(logicalQuery, filteredEntryData)
-                        } else {
-                            result = filteredEntryData
+                        else {
+                            result = this.processResult(filteredData, finalResult, type, schemaPath)
+                            resolve(result)
                         }
-
-                        if (this._query.limit) {
-                            const limit = this._query.limit
-                            result = result.splice(0, limit)
-                        }
-
-                        if (this._query.skip) {
-                            const skip = this._query.skip
-                            result = result.slice(skip)
-                        }
-
-                        if (this._query.only) {
-                            const only = this._query.only.toString().replace(/\./g, '/')
-                            result = mask(result, only)
-                        }
-
-                        if (this._query.except) {
-                            const bukcet = this._query.except.toString().replace(/\./g, '/')
-                            const except = mask(result, bukcet)
-                            result = difference(result, except)
-                        }
-
-                        if (this.single) {
-                            result = result[0]
-                            type = (this.type !== 'asset') ? 'entry' : 'asset'
-                        }
-
-
-
-
-                        // post process
-                        if (this._query.count) {
-                            (finalRes as any).count = result.length
-                        } else {
-                            finalRes[type] = result
-                        }
-
-                        if (this._query.include_count) {
-                            if (result === undefined) {
-                                (finalRes as any).count = 0
-                            } else if (this.single) {
-                                (finalRes as any).count = 1
-                            } else {
-                                (finalRes as any).count = result.length
-                            }
-                        }
-
-                        if (this._query.include_content_type) {
-                            if (!fs.existsSync(schemaPath)) {
-                                return reject(`${schemaPath} didn't exist`)
-                            } else {
-                                let contents
-                                if (fs.existsSync(schemaPath)) {
-                                    contents = await readFile(schemaPath)
-                                    if (!contents){
-                                        (finalRes as any).content_type = null
-                                    }else{
-                                        (finalRes as any).content_type = JSON.parse(contents)
-                                    }
-                                  }
-                            }
-                        }
-
-                        if (this._query.tags) {
-                            result = sift({ tags: { $in: this._query.tags } }, result)
-                            finalRes[type] = result
-                            (finalRes as any).count = result.length
-                        }
-
-                        resolve(finalRes)
                     }
-                }
                 })
             }
         })
@@ -886,7 +689,7 @@ export class Query {
     private findReferences(query) {
         return new Promise((resolve, reject) => {
             let pth
-            if (query.content_type_uid === 'asset') {
+            if (query.content_type_uid === '_assets') {
                 pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json')
             } else {
                 pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
@@ -898,7 +701,7 @@ export class Query {
                 if (readError) {
                     return reject(readError)
                 }
-                if (!data){
+                if (!data) {
                     return resolve()
                 }
                 data = JSON.parse(data)
@@ -908,92 +711,184 @@ export class Query {
         })
     }
 
-    private includeReferencesI(entry, locale, references, parentUid ? ) {
+    private includeReferencesI(entry, locale, references, parentUid?) {
         const self = this
         return new Promise((resolve, reject) => {
-          if (entry === null || typeof entry !== 'object') {
-            return resolve()
-          }
-    
-          // current entry becomes the parent
-          if (entry.uid) {
-            parentUid = entry.uid
-          }
-    
-          // if (hasIn(references, parentUid)) {
-          //   return resolve()
-          // }
-    
-          const referencesFound = []
-    
-          // iterate over each key in the object
-          for (const prop in entry) {
-            if (entry[prop] !== null && typeof entry[prop] === 'object') {
-              if (entry[prop] && entry[prop].reference_to) {
-                if (entry[prop].values.length === 0) {
-                  entry[prop] = []
-                } else {
-                  let uids = entry[prop].values
-                  if (typeof uids === 'string') {
-                    uids = [uids]
-                  }
-                  if (entry[prop].reference_to !== '_assets') {
-                    uids = filter(uids, (uid) => {
-                      return !(checkCyclic(uid, references))
-                    })
-                  }
-                  if (uids.length) {
-                    const query = {
-                      content_type_uid: entry[prop].reference_to,
-                      locale,
-                      uid: {
-                        $in: uids,
-                      },
-                    }
-    
-                    referencesFound.push(new Promise((rs, rj) => {
-                      return self.findReferences(query).then((entities) => {
-                        entities = cloneDeep(entities)
-                        if ((entities as any).length === 0) {
-                          entry[prop] = []
-    
-                          return rs()
-                        } else if (parentUid) {
-                          references[parentUid] = references[parentUid] || []
-                          references[parentUid] = uniq(references[parentUid].concat(map((entities as any), 'uid')))
-                        }
-                        const referenceBucket = []
-                        query.uid.$in.forEach((entityUid) => {
-                          const elem = find(entities, (entity) => {
-                            // console.log('918> ', entity.uid, ' :', entityUid)
-                            if((entity as any).uid === entityUid) {
-                              return entity
-                            }
-                          })
-                          if (elem) {
-                            referenceBucket.push(elem)
-                          }
-                        })
-    
-                        // format the references in order
-                        entry[prop] = referenceBucket
-    
-                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
-                          .then(rs)
-                          .catch(rj)
-                      })
-                    }))
-                  }
-                }
-              } else {
-                referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
-              }
+            if (entry === null || typeof entry !== 'object') {
+                return resolve()
             }
-          }
-    
-          return Promise.all(referencesFound)
-            .then(resolve)
-            .catch(reject)
+
+            // current entry becomes the parent
+            if (entry.uid) {
+                parentUid = entry.uid
+            }
+
+            const referencesFound = []
+
+            // iterate over each key in the object
+            for (const prop in entry) {
+                if (entry[prop] !== null && typeof entry[prop] === 'object') {
+                    if (entry[prop] && entry[prop].reference_to) {
+                        if (entry[prop].values.length === 0) {
+                            entry[prop] = []
+                        } else {
+                            let uids = entry[prop].values
+                            if (typeof uids === 'string') {
+                                uids = [uids]
+                            }
+                            if (entry[prop].reference_to !== '_assets') {
+                                uids = filter(uids, (uid) => {
+                                    return !(checkCyclic(uid, references))
+                                })
+                            }
+                            if (uids.length) {
+                                const query = {
+                                    content_type_uid: entry[prop].reference_to,
+                                    locale,
+                                    uid: {
+                                        $in: uids,
+                                    },
+                                }
+
+                                referencesFound.push(new Promise((rs, rj) => {
+                                    return self.findReferences(query).then((entities) => {
+                                        entities = cloneDeep(entities)
+                                        if ((entities as any).length === 0) {
+                                            entry[prop] = []
+
+                                            return rs()
+                                        } else if (parentUid) {
+                                            references[parentUid] = references[parentUid] || []
+                                            references[parentUid] = uniq(references[parentUid].concat(map((entities as any), 'uid')))
+                                        }
+                                        const referenceBucket = []
+                                        query.uid.$in.forEach((entityUid) => {
+                                            const elem = find(entities, (entity) => {
+                                                return (entity as any).uid === entityUid
+                                            })
+                                            if (elem) {
+                                                referenceBucket.push(elem)
+                                            }
+                                        })
+
+                                        // format the references in order
+                                        entry[prop] = referenceBucket
+
+                                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                                            .then(rs)
+                                            .catch(rj)
+                                    })
+                                }))
+                            }
+                        }
+                    } else {
+                        referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
+                    }
+                }
+            }
+
+            return Promise.all(referencesFound)
+                .then(resolve)
+                .catch(reject)
         })
-      }
+    }
+
+    private async processResult(filteredData, finalResult, type, schemaPath) {
+        let result
+        const sortKeys: any = ['asc', 'desc']
+
+        const sortQuery: any = Object.keys(this._query)
+            .filter((key) => sortKeys.includes(key))
+            .reduce((obj, key) => {
+                return {
+                    ...obj,
+                    [key]: this._query[key],
+                }
+            }, {})
+        if (this._query.asc || this._query.desc) {
+            const value: any = (Object as any).values(sortQuery)
+            const key: any = Object.keys(sortQuery)
+            result = orderBy(filteredData, value, key)
+        }
+
+        if (this._query.query && Object.keys(this._query.query).length > 0) {
+            result = sift(this._query.query, filteredData)
+        } else if (this._query.logical) {
+            const operator = Object.keys(this._query.logical)[0]
+            const vals: any = (Object as any).values(this._query.logical)
+            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
+            const logicalQuery = {}
+            logicalQuery[operator] = values
+            result = sift(logicalQuery, filteredData)
+        } else {
+            result = filteredData
+        }
+
+
+        if (this._query.limit) {
+            const limit = this._query.limit
+            result = result.splice(0, limit)
+        }
+
+        if (this._query.skip) {
+            const skip = this._query.skip
+            result = result.slice(skip)
+        }
+
+        if (this._query.only) {
+            const only = this._query.only.toString().replace(/\./g, '/')
+            result = mask(result, only)
+        }
+
+        if (this._query.except) {
+            const bukcet = this._query.except.toString().replace(/\./g, '/')
+            const except = mask(result, bukcet)
+            result = difference(result, except)
+        }
+
+        if (this._query.count) {
+            (finalResult as any).count = result.length
+        } else {
+            finalResult[type] = result
+        }
+
+        if (this._query.include_count) {
+            if (result === undefined) {
+                (finalResult as any).count = 0
+            } else if (this.single) {
+                (finalResult as any).count = 1
+            } else {
+                (finalResult as any).count = result.length
+            }
+        }
+
+        if (this._query.include_content_type) {
+            if (!fs.existsSync(schemaPath)) {
+                return (`${schemaPath} didn't exist`)
+            } else {
+                let contents
+                if (fs.existsSync(schemaPath)) {
+                    contents = await readFile(schemaPath)
+                    if (!contents) {
+                        (finalResult as any).content_type = null
+                    } else {
+                        (finalResult as any).content_type = JSON.parse(contents)
+                    }
+                }
+            }
+        }
+
+        if (this._query.tags) {
+            result = sift({
+                tags: {
+                    $in: this._query.tags,
+                },
+            }, result)
+            finalResult[type] = result
+                (finalResult as any).count = result.length
+        }
+        this._query = null
+
+        return finalResult
+    }
 }

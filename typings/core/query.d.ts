@@ -41,4 +41,5 @@ export declare class Query {
     findOne(): Promise<{}>;
     private findReferences;
     private includeReferencesI;
+    private processResult;
 }
