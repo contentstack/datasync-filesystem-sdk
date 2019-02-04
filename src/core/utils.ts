@@ -1,5 +1,18 @@
 import {isEqual, isObject, transform, uniq} from 'lodash'
 
+export const  _type =(val)=> {
+    let  __typeof = typeof val;
+    switch (__typeof) {
+        case 'object':
+            if (Array.isArray(val)) {
+                (__typeof as any) = 'array';
+            }
+            break;
+        default:
+    }
+    return __typeof;
+}
+
 export const mergeDeep = (targett, sourcee) => {
     const self = this
     const mergeRrcursive = (target, source) => {
