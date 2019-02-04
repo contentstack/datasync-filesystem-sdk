@@ -12,9 +12,10 @@ app.get('/', (req,res)=>{
     //q7
     Stack.contentType('product')
     .entries()
-    //.includeCount()
-    //.includeContentType()
+    .includeCount()
+    .includeContentType()
     .includeReferences()
+    .containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
     .find()
     .then(function(result){

@@ -27,16 +27,16 @@ export class Stack {
         this.config = merge(this.config, overrides)
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config['content-connector'].hasOwnProperty('base_dir')) {
+                if (!this.config['options'].hasOwnProperty('base_dir')) {
                     throw new Error('Please provide base_dir to connect the filesystem.')
                 } else if (!this.config.hasOwnProperty('locales') || this.config.locales.length == 0){
                     throw new Error('Please provide locales with code and relative_url_prefix.\n Example ==> locales:[{code:"en-us",relative_ul_prefix:"/"}].')
-                } else if (!(fs.existsSync(this.config['content-connector'].base_dir))) {
-                    throw new Error(`${this.config['content-connector'].base_dir} didn't exits.`)
+                } else if (!(fs.existsSync(this.config['options'].base_dir))) {
+                    throw new Error(`${this.config['options'].base_dir} didn't exits.`)
                 } else {
-                    this.baseDir = this.config['content-connector'].base_dir
+                    this.baseDir = this.config['options'].base_dir
                     this.masterLocale = this.config.locales[0].code
-                    return resolve(this.config['content-connector'])
+                    return resolve(this.config['options'])
                 }
             } catch (error) {
                 reject(error)
@@ -79,34 +79,32 @@ export class Stack {
                         if (err) {
                             return reject(err)
                         } else {
-                          const finalRes = {}
+                          const finalResult = {}
                           let type = (this.asset_uid) ? 'asset' : 'assets'
-                          if (this.single){
-                            type = 'asset'
-                          }
+                          
                           if (!data){
                             if (type == 'asset'){
-                              finalRes[type] = null
+                              finalResult[type] = null
                             }else{
-                              finalRes[type] = []
+                              finalResult[type] = []
                             }
-                            return resolve(finalRes)
+                            return resolve(finalResult)
                            }
                           const assetData = JSON.parse(data)
 
                           if (this.asset_uid){
                                 result = find(assetData, { uid: this.asset_uid })
-                                finalRes[type] = result
+                                finalResult[type] = result
                             }else{
                                 result = assetData
-                                finalRes[type] = result
+                                finalResult[type] = result
                             }
 
                           if (this.single){
                               type = 'asset'
-                              finalRes[type] = result[0]
+                              finalResult[type] = result[0]
                             }
-                          resolve(finalRes)
+                          resolve(finalResult)
                         }
                     })
                 }
@@ -117,15 +115,15 @@ export class Stack {
                 if (err) {
                     return reject(err)
                 } else {
-                  const finalRes = {
+                  const finalResult = {
                     content_type_uid: this.content_type_uid,
                   }
                   if (!data){
-                   return resolve((finalRes as any).content_type = null)
+                   return resolve((finalResult as any).content_type = null)
                   }
                   const schema = JSON.parse(data);
-                  (finalRes as any).content_type = schema
-                  return resolve(finalRes)
+                  (finalResult as any).content_type = schema
+                  return resolve(finalResult)
 
                 }
               })
@@ -139,34 +137,34 @@ export class Stack {
                         if (err) {
                             return reject(err)
                         } else {
-                          const finalRes = {
+                          const finalResult = {
                             content_type_uid: this.content_type_uid,
                             locale,
                           }
                           let type = (this._entry == 'single') ? 'entry' : 'entries'
                           if (!data){
                             if (type == 'entry'){
-                              finalRes[type] = null
+                              finalResult[type] = null
                             }else{
-                              finalRes[type] = []
+                              finalResult[type] = []
                             }
-                            return resolve(finalRes)
+                            return resolve(finalResult)
                            }
                           const entryData = JSON.parse(data)
                           result = map(entryData, 'data')
 
                           if (this._entry == 'single') {
                                 result = find(result, { uid: this.entry_uid })
-                                finalRes[type] = result
-                                return resolve(finalRes)
+                                finalResult[type] = result
+                                return resolve(finalResult)
                             }
                           if (this.single){
                               type = 'entry'
-                              finalRes[type] = result[0]
-                              return resolve(finalRes)
+                              finalResult[type] = result[0]
+                              return resolve(finalResult)
                             }
-                          finalRes[type] = result
-                          return resolve(finalRes)
+                          finalResult[type] = result
+                          return resolve(finalResult)
                         }
                     })
                 }
@@ -183,7 +181,7 @@ export class Stack {
               return reject(error)
           })
       })
-  }
+    }
 
 
     public entry(uid) {
