@@ -1,5 +1,5 @@
 export declare const defaultConfig: {
-    'content-connector': {
+    'options': {
         base_dir: string;
     };
 };
