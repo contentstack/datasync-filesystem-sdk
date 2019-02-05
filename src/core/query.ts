@@ -1,3 +1,8 @@
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 import * as fs from 'fs'
 import { default as mask } from 'json-mask'
 import { cloneDeep, filter, find, map, orderBy, uniq } from 'lodash'
