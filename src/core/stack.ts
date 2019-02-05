@@ -1,4 +1,8 @@
-
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 import * as fs from 'fs'
 import {find, map, merge} from 'lodash'
 import * as path from 'path'

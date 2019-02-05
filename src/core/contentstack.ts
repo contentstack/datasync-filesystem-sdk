@@ -1,3 +1,8 @@
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 import {  Stack } from './stack'
 /**
  * @method Contentstack
