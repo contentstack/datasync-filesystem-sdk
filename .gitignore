@@ -11,6 +11,7 @@ node_modules/
 !tslint.json
 !tsconfig.json
 !.jsbeautifyrc
+!LICENSE
 !typings
 !typings/**
 !.babelrc
