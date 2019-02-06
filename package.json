@@ -8,6 +8,7 @@
     "build-ts": "npm run clean && tsc",
     "watch-ts": "npm run clean && tsc -w",
     "compile": "tsc",
+    "test": "jest --coverage",
     "prepare": "npm run compile",
     "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix"
   },
@@ -22,7 +23,10 @@
     "@types/lodash": "4.14.119",
     "@types/node": "^10.12.18",
     "@types/rimraf": "^2.0.2",
+    "babel-cli": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
     "express": "^4.16.4",
+    "jest": "^23.6.0",
     "rimraf": "^2.6.3",
     "tslint": "^5.12.1",
     "typescript": "^3.2.4"

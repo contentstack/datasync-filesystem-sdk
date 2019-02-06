@@ -8,10 +8,9 @@ import { default as mask } from 'json-mask'
 import { cloneDeep, filter, find, map, orderBy, uniq } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
-import { promisify } from 'util'
 import { checkCyclic, difference, mergeDeep } from './utils'
 
-const readFile: any = promisify(fs.readFile)
+
 const _extend = {
     compare(type) {
         return function (key, value) {
@@ -515,6 +514,11 @@ export class Query {
         return this
     }
 
+    public excludeReferences() {
+        this._query.excludeReferences = true
+        return this
+    }
+
     /**
      * @method includeContentType
      * @description Includes the total number of entries returned in the response.
@@ -624,59 +628,112 @@ export class Query {
         return this
     }
 
+    /**
+   * @summary
+   *  Wrapper, that allows querying on the entry's references.
+   * @note
+   *  This is a slow method, since it scans all documents and fires the `reference` query on them
+   *  Use `.query()` filters to reduce the total no of documents being scanned
+   * @returns {this} - Returns `stack's` instance
+   */
+    public queryReferences(query) {
+        if (query && typeof query === 'object') {
+            this._query.queryReferences = query
+            return this
+        }
+
+        throw new Error('Kindly pass a query object for \'.queryReferences()\'')
+    }
+
     public find() {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
         const contentTypeUid = this.content_type_uid
         const locale = (!this._query.locale) ? masterLocale : this._query.locale
-        let result
+
         return new Promise((resolve, reject) => {
-            let dataPath
-            let schemaPath
-            if (this.type === 'asset') {
-                dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
-            } else {
-                dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
-                schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
+            try {
+                let dataPath
+                let schemaPath
+                if (this.type === 'asset') {
+                    dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
+                } else {
+                    dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
+                    schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
+                }
+
+                if (!fs.existsSync(dataPath)) {
+                    return reject(`${dataPath} didn't exist`)
+                } else {
+                    fs.readFile(dataPath, 'utf8', async (err, data) => {
+                        if (err) {
+                            return reject(err)
+                        } else {
+
+                            const finalResult = {
+                                content_type_uid: this.content_type_uid,
+                                locale: locale,
+                            }
+
+                            let type = (this.type !== 'asset') ? 'entries' : 'assets'
+                            if (!data) {
+                                finalResult[type] = []
+                                return resolve(finalResult)
+                            }
+                            const entryData = JSON.parse(data)
+                            const filteredData = map(entryData, 'data')
+
+                            if (this._query.queryReferences) {
+                                return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
+                                    .then(resolve)
+                                    .catch(reject)
+                            }
+                            if (this._query.excludeReferences) {
+                                let preProcessedData = this.preProcess(filteredData)
+                                this.postProcessResult(finalResult,preProcessedData, type, schemaPath)
+                                    .then((result) => {
+                                        this._query = {}
+                                        return resolve(result)
+                                    }).catch(reject)
+
+                            }
+                            else {
+                                return this.includeReferencesI(filteredData, locale, {}, undefined)
+                                    .then(async () => {
+                                        let preProcessedData = this.preProcess(filteredData)
+                                        this.postProcessResult(finalResult, preProcessedData,type, schemaPath).then((result) => {
+                                            this._query = {}
+                                            return resolve(result)
+                                        })
+
+                                    })
+                                    .catch(reject)
+                            }
+                        }
+                    })
+                }
+            } catch (error) {
+                return reject(error)
+
             }
+        })
 
-            if (!fs.existsSync(dataPath)) {
-                return reject(`${dataPath} didn't exist`)
-            } else {
-                fs.readFile(dataPath, 'utf8', async (err, data) => {
-                    if (err) {
-                        return reject(err)
-                    } else {
+    }
+    private queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
+        return new Promise((resolve, reject) => {
 
-                        const finalResult = {
-                            content_type_uid: this.content_type_uid,
-                            locale: locale,
-                        }
+            return this.includeReferencesI(filteredData, locale, {}, undefined)
+                .then(async () => {
+                    let result = sift(this._query.queryReferences, filteredData)
 
-                        let type = (this.type !== 'asset') ? 'entries' : 'assets'
-                        if (!data) {
-                            finalResult[type] = []
-                            return resolve(finalResult)
-                        }
-                        const entryData = JSON.parse(data)
-                        const filteredData = map(entryData, 'data')
+                    this.postProcessResult(finalResult, result,type, schemaPath).then((res) => {
+                        this._query = {}
+                        return resolve(res)
+                    })
 
-
-                        if (this._query.includeReferences) {
-                            return this.includeReferencesI(filteredData, locale, {}, undefined)
-                                .then(async () => {
-                                    result = this.processResult(filteredData, finalResult, type, schemaPath)
-                                    return resolve(result)
-                                })
-                                .catch(reject)
-                        }
-                        else {
-                            result = this.processResult(filteredData, finalResult, type, schemaPath)
-                            resolve(result)
-                        }
-                    }
                 })
-            }
+                .catch(reject)
+
         })
     }
 
@@ -733,7 +790,8 @@ export class Query {
             // iterate over each key in the object
             for (const prop in entry) {
                 if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    if (entry[prop] && entry[prop].reference_to) {
+                    if (entry[prop] && entry[prop].reference_to && ((!(this.includeReferences)
+                        && entry[prop].reference_to === '_assets') || this.includeReferences)) {
                         if (entry[prop].values.length === 0) {
                             entry[prop] = []
                         } else {
@@ -797,8 +855,7 @@ export class Query {
                 .catch(reject)
         })
     }
-
-    private async processResult(filteredData, finalResult, type, schemaPath) {
+    private preProcess(filteredData){
         let result
         const sortKeys: any = ['asc', 'desc']
 
@@ -829,15 +886,14 @@ export class Query {
             result = filteredData
         }
 
+        if (this._query.skip) {
+            const skip = this._query.skip
+            result = filteredData.slice(skip)
+        }
 
         if (this._query.limit) {
             const limit = this._query.limit
-            result = result.splice(0, limit)
-        }
-
-        if (this._query.skip) {
-            const skip = this._query.skip
-            result = result.slice(skip)
+            result = filteredData.splice(0, limit)
         }
 
         if (this._query.only) {
@@ -851,49 +907,59 @@ export class Query {
             result = difference(result, except)
         }
 
-        if (this._query.count) {
-            (finalResult as any).count = result.length
-        } else {
-            finalResult[type] = result
-        }
+        return result
+    }
+    private postProcessResult(finalResult,result, type, schemaPath) {
+        return new Promise((resolve, reject) => {
+            try {
 
-        if (this._query.include_count) {
-            if (result === undefined) {
-                (finalResult as any).count = 0
-            } else if (this.single) {
-                (finalResult as any).count = 1
-            } else {
-                (finalResult as any).count = result.length
-            }
-        }
+                
+                if (this._query.count) {
+                    (finalResult as any).count = result.length
+                } else {
+                    finalResult[type] = result
+                }
 
-        if (this._query.include_content_type) {
-            if (!fs.existsSync(schemaPath)) {
-                return (`${schemaPath} didn't exist`)
-            } else {
-                let contents
-                if (fs.existsSync(schemaPath)) {
-                    contents = await readFile(schemaPath)
-                    if (!contents) {
-                        (finalResult as any).content_type = null
+                if (this._query.include_count) {
+                    if (result === undefined) {
+                        (finalResult as any).count = 0
+                    } else if (this.single) {
+                        (finalResult as any).count = 1
                     } else {
-                        (finalResult as any).content_type = JSON.parse(contents)
+                        (finalResult as any).count = result.length
                     }
                 }
+
+                if (this._query.include_content_type) {
+                    if (!fs.existsSync(schemaPath)) {
+                        return (`${schemaPath} didn't exist`)
+                    } else {
+                        let contents
+                        if (fs.existsSync(schemaPath)) {
+                            contents = fs.readFileSync(schemaPath)
+                            if (!contents) {
+                                (finalResult as any).content_type = null
+                            } else {
+                                (finalResult as any).content_type = JSON.parse(contents)
+                            }
+                        }
+                    }
+                }
+
+                if (this._query.tags) {
+                    result = sift({
+                        tags: {
+                            $in: this._query.tags,
+                        },
+                    }, result)
+                    finalResult[type] = result
+                        (finalResult as any).count = result.length
+                }
+
+                return resolve(finalResult)
+            } catch (error) {
+                reject(error)
             }
-        }
-
-        if (this._query.tags) {
-            result = sift({
-                tags: {
-                    $in: this._query.tags,
-                },
-            }, result)
-            finalResult[type] = result
-                (finalResult as any).count = result.length
-        }
-        this._query = null
-
-        return finalResult
+        })
     }
 }

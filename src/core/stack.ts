@@ -3,12 +3,13 @@
  * copyright (c) Contentstack LLC
  * MIT Licensed
  */
+
 import * as fs from 'fs'
 import {find, map, merge} from 'lodash'
 import * as path from 'path'
 import { defaultConfig  } from './default'
 import { Query } from './query'
-const query = new Query()
+
 export class Stack {
     public baseDir: any
     public masterLocale: any
@@ -49,18 +50,18 @@ export class Stack {
     }
 
     public contentType(uid) {
-        if (this.baseDir == undefined){
-            throw new Error('Please call the Stack.connect() first')
-        }
+        const stack = new Stack(this.config)
+        stack.baseDir = this.baseDir
+        stack.masterLocale = this.masterLocale
         if (uid && typeof uid === 'string') {
-            this.content_type_uid = uid
-            this.type = 'contentType'
+            stack.content_type_uid = uid
+            stack.type = 'contentType'
         }
-        return this
+        return stack
     }
 
     public entries() {
-        const entry = query
+        const entry = new Query()
         this._entry = 'multiple'
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first")
@@ -189,7 +190,7 @@ export class Stack {
 
 
     public entry(uid) {
-        const entry = query
+        const entry = new Query()
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first")
         }
@@ -203,7 +204,7 @@ export class Stack {
 
     public asset(uid) {
         this.type = 'asset'
-        const asset = query
+        const asset = new Query()
         if (uid && typeof uid === 'string') {
             (asset as any).asset_uid = uid
             return merge(this, asset)
@@ -214,7 +215,7 @@ export class Stack {
 
     public assets() {
         this.type = 'asset'
-        const asset = query
+        const asset = new Query()
         return merge(asset, this)
     }
 

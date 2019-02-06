@@ -31,15 +31,19 @@ export declare class Query {
     includeCount(): this;
     language(language_code: any): this;
     includeReferences(): this;
+    excludeReferences(): this;
     includeContentType(): this;
     addParam(key: any, value: any): this;
     getQuery(): any;
     regex(key: any, value: any, options: any): this;
     only(fields: any): this;
     except(fields: any): this;
+    queryReferences(query: any): this;
     find(): Promise<{}>;
+    private queryOnReferences;
     findOne(): Promise<{}>;
     private findReferences;
     private includeReferencesI;
-    private processResult;
+    private preProcess;
+    private postProcessResult;
 }
