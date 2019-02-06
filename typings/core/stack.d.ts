@@ -1,3 +1,8 @@
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 import { Query } from './query';
 export declare class Stack {
     baseDir: any;
@@ -12,7 +17,7 @@ export declare class Stack {
     single: boolean;
     constructor(...stack_arguments: any[]);
     connect(overrides?: Object): Promise<{}>;
-    contentType(uid: any): this;
+    contentType(uid: any): Stack;
     entries(): Query & this;
     find(): Promise<{}>;
     findOne(): Promise<{}>;

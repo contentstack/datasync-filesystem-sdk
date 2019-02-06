@@ -27,9 +27,7 @@ function connect () {
   })
 }
 
-function close () {
-  return Stack.close()
-}
+
 
 function find (contentType = 'blogs') {
   return new Promise((resolve, reject) => {
