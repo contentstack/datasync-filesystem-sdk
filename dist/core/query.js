@@ -23,9 +23,7 @@ const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const sift_1 = __importDefault(require("sift"));
-const util_1 = require("util");
 const utils_1 = require("./utils");
-const readFile = util_1.promisify(fs.readFile);
 const _extend = {
     compare(type) {
         return function (key, value) {
@@ -182,6 +180,10 @@ class Query {
         this._query.includeReferences = true;
         return this;
     }
+    excludeReferences() {
+        this._query.excludeReferences = true;
+        return this;
+    }
     includeContentType() {
         this._query.include_content_type = true;
         return this;
@@ -230,57 +232,93 @@ class Query {
         this._query.except = fields;
         return this;
     }
+    queryReferences(query) {
+        if (query && typeof query === 'object') {
+            this._query.queryReferences = query;
+            return this;
+        }
+        throw new Error('Kindly pass a query object for \'.queryReferences()\'');
+    }
     find() {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
         const contentTypeUid = this.content_type_uid;
         const locale = (!this._query.locale) ? masterLocale : this._query.locale;
-        let result;
         return new Promise((resolve, reject) => {
-            let dataPath;
-            let schemaPath;
-            if (this.type === 'asset') {
-                dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
-            }
-            else {
-                dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json');
-                schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
-            }
-            if (!fs.existsSync(dataPath)) {
-                return reject(`${dataPath} didn't exist`);
-            }
-            else {
-                fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
-                    if (err) {
-                        return reject(err);
-                    }
-                    else {
-                        const finalResult = {
-                            content_type_uid: this.content_type_uid,
-                            locale: locale,
-                        };
-                        let type = (this.type !== 'asset') ? 'entries' : 'assets';
-                        if (!data) {
-                            finalResult[type] = [];
-                            return resolve(finalResult);
-                        }
-                        const entryData = JSON.parse(data);
-                        const filteredData = lodash_1.map(entryData, 'data');
-                        if (this._query.includeReferences) {
-                            return this.includeReferencesI(filteredData, locale, {}, undefined)
-                                .then(() => __awaiter(this, void 0, void 0, function* () {
-                                result = this.processResult(filteredData, finalResult, type, schemaPath);
-                                return resolve(result);
-                            }))
-                                .catch(reject);
+            try {
+                let dataPath;
+                let schemaPath;
+                if (this.type === 'asset') {
+                    dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
+                }
+                else {
+                    dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json');
+                    schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
+                }
+                if (!fs.existsSync(dataPath)) {
+                    return reject(`${dataPath} didn't exist`);
+                }
+                else {
+                    fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
+                        if (err) {
+                            return reject(err);
                         }
                         else {
-                            result = this.processResult(filteredData, finalResult, type, schemaPath);
-                            resolve(result);
+                            const finalResult = {
+                                content_type_uid: this.content_type_uid,
+                                locale: locale,
+                            };
+                            let type = (this.type !== 'asset') ? 'entries' : 'assets';
+                            if (!data) {
+                                finalResult[type] = [];
+                                return resolve(finalResult);
+                            }
+                            const entryData = JSON.parse(data);
+                            const filteredData = lodash_1.map(entryData, 'data');
+                            if (this._query.queryReferences) {
+                                return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
+                                    .then(resolve)
+                                    .catch(reject);
+                            }
+                            if (this._query.excludeReferences) {
+                                let preProcessedData = this.preProcess(filteredData);
+                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                                    .then((result) => {
+                                    this._query = {};
+                                    return resolve(result);
+                                }).catch(reject);
+                            }
+                            else {
+                                return this.includeReferencesI(filteredData, locale, {}, undefined)
+                                    .then(() => __awaiter(this, void 0, void 0, function* () {
+                                    let preProcessedData = this.preProcess(filteredData);
+                                    this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
+                                        this._query = {};
+                                        return resolve(result);
+                                    });
+                                }))
+                                    .catch(reject);
+                            }
                         }
-                    }
-                }));
+                    }));
+                }
             }
+            catch (error) {
+                return reject(error);
+            }
+        });
+    }
+    queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
+        return new Promise((resolve, reject) => {
+            return this.includeReferencesI(filteredData, locale, {}, undefined)
+                .then(() => __awaiter(this, void 0, void 0, function* () {
+                let result = sift_1.default(this._query.queryReferences, filteredData);
+                this.postProcessResult(finalResult, result, type, schemaPath).then((res) => {
+                    this._query = {};
+                    return resolve(res);
+                });
+            }))
+                .catch(reject);
         });
     }
     findOne() {
@@ -330,7 +368,8 @@ class Query {
             const referencesFound = [];
             for (const prop in entry) {
                 if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    if (entry[prop] && entry[prop].reference_to) {
+                    if (entry[prop] && entry[prop].reference_to && ((!(this.includeReferences)
+                        && entry[prop].reference_to === '_assets') || this.includeReferences)) {
                         if (entry[prop].values.length === 0) {
                             entry[prop] = [];
                         }
@@ -391,95 +430,102 @@ class Query {
                 .catch(reject);
         });
     }
-    processResult(filteredData, finalResult, type, schemaPath) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let result;
-            const sortKeys = ['asc', 'desc'];
-            const sortQuery = Object.keys(this._query)
-                .filter((key) => sortKeys.includes(key))
-                .reduce((obj, key) => {
-                return Object.assign({}, obj, { [key]: this._query[key] });
-            }, {});
-            if (this._query.asc || this._query.desc) {
-                const value = Object.values(sortQuery);
-                const key = Object.keys(sortQuery);
-                result = lodash_1.orderBy(filteredData, value, key);
-            }
-            if (this._query.query && Object.keys(this._query.query).length > 0) {
-                result = sift_1.default(this._query.query, filteredData);
-            }
-            else if (this._query.logical) {
-                const operator = Object.keys(this._query.logical)[0];
-                const vals = Object.values(this._query.logical);
-                const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
-                const logicalQuery = {};
-                logicalQuery[operator] = values;
-                result = sift_1.default(logicalQuery, filteredData);
-            }
-            else {
-                result = filteredData;
-            }
-            if (this._query.limit) {
-                const limit = this._query.limit;
-                result = result.splice(0, limit);
-            }
-            if (this._query.skip) {
-                const skip = this._query.skip;
-                result = result.slice(skip);
-            }
-            if (this._query.only) {
-                const only = this._query.only.toString().replace(/\./g, '/');
-                result = json_mask_1.default(result, only);
-            }
-            if (this._query.except) {
-                const bukcet = this._query.except.toString().replace(/\./g, '/');
-                const except = json_mask_1.default(result, bukcet);
-                result = utils_1.difference(result, except);
-            }
-            if (this._query.count) {
-                finalResult.count = result.length;
-            }
-            else {
-                finalResult[type] = result;
-            }
-            if (this._query.include_count) {
-                if (result === undefined) {
-                    finalResult.count = 0;
-                }
-                else if (this.single) {
-                    finalResult.count = 1;
-                }
-                else {
+    preProcess(filteredData) {
+        let result;
+        const sortKeys = ['asc', 'desc'];
+        const sortQuery = Object.keys(this._query)
+            .filter((key) => sortKeys.includes(key))
+            .reduce((obj, key) => {
+            return Object.assign({}, obj, { [key]: this._query[key] });
+        }, {});
+        if (this._query.asc || this._query.desc) {
+            const value = Object.values(sortQuery);
+            const key = Object.keys(sortQuery);
+            result = lodash_1.orderBy(filteredData, value, key);
+        }
+        if (this._query.query && Object.keys(this._query.query).length > 0) {
+            result = sift_1.default(this._query.query, filteredData);
+        }
+        else if (this._query.logical) {
+            const operator = Object.keys(this._query.logical)[0];
+            const vals = Object.values(this._query.logical);
+            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
+            const logicalQuery = {};
+            logicalQuery[operator] = values;
+            result = sift_1.default(logicalQuery, filteredData);
+        }
+        else {
+            result = filteredData;
+        }
+        if (this._query.skip) {
+            const skip = this._query.skip;
+            result = filteredData.slice(skip);
+        }
+        if (this._query.limit) {
+            const limit = this._query.limit;
+            result = filteredData.splice(0, limit);
+        }
+        if (this._query.only) {
+            const only = this._query.only.toString().replace(/\./g, '/');
+            result = json_mask_1.default(result, only);
+        }
+        if (this._query.except) {
+            const bukcet = this._query.except.toString().replace(/\./g, '/');
+            const except = json_mask_1.default(result, bukcet);
+            result = utils_1.difference(result, except);
+        }
+        return result;
+    }
+    postProcessResult(finalResult, result, type, schemaPath) {
+        return new Promise((resolve, reject) => {
+            try {
+                if (this._query.count) {
                     finalResult.count = result.length;
                 }
-            }
-            if (this._query.include_content_type) {
-                if (!fs.existsSync(schemaPath)) {
-                    return (`${schemaPath} didn't exist`);
-                }
                 else {
-                    let contents;
-                    if (fs.existsSync(schemaPath)) {
-                        contents = yield readFile(schemaPath);
-                        if (!contents) {
-                            finalResult.content_type = null;
-                        }
-                        else {
-                            finalResult.content_type = JSON.parse(contents);
+                    finalResult[type] = result;
+                }
+                if (this._query.include_count) {
+                    if (result === undefined) {
+                        finalResult.count = 0;
+                    }
+                    else if (this.single) {
+                        finalResult.count = 1;
+                    }
+                    else {
+                        finalResult.count = result.length;
+                    }
+                }
+                if (this._query.include_content_type) {
+                    if (!fs.existsSync(schemaPath)) {
+                        return (`${schemaPath} didn't exist`);
+                    }
+                    else {
+                        let contents;
+                        if (fs.existsSync(schemaPath)) {
+                            contents = fs.readFileSync(schemaPath);
+                            if (!contents) {
+                                finalResult.content_type = null;
+                            }
+                            else {
+                                finalResult.content_type = JSON.parse(contents);
+                            }
                         }
                     }
                 }
+                if (this._query.tags) {
+                    result = sift_1.default({
+                        tags: {
+                            $in: this._query.tags,
+                        },
+                    }, result);
+                    finalResult[type] = result(finalResult).count = result.length;
+                }
+                return resolve(finalResult);
             }
-            if (this._query.tags) {
-                result = sift_1.default({
-                    tags: {
-                        $in: this._query.tags,
-                    },
-                }, result);
-                finalResult[type] = result(finalResult).count = result.length;
+            catch (error) {
+                reject(error);
             }
-            this._query = null;
-            return finalResult;
         });
     }
 }

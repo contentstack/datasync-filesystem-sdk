@@ -1,4 +1,9 @@
 "use strict";
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 var __importStar = (this && this.__importStar) || function (mod) {
     if (mod && mod.__esModule) return mod;
     var result = {};
@@ -12,7 +17,6 @@ const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const default_1 = require("./default");
 const query_1 = require("./query");
-const query = new query_1.Query();
 class Stack {
     constructor(...stack_arguments) {
         this._query = {};
@@ -46,17 +50,17 @@ class Stack {
         });
     }
     contentType(uid) {
-        if (this.baseDir == undefined) {
-            throw new Error('Please call the Stack.connect() first');
-        }
+        const stack = new Stack(this.config);
+        stack.baseDir = this.baseDir;
+        stack.masterLocale = this.masterLocale;
         if (uid && typeof uid === 'string') {
-            this.content_type_uid = uid;
-            this.type = 'contentType';
+            stack.content_type_uid = uid;
+            stack.type = 'contentType';
         }
-        return this;
+        return stack;
     }
     entries() {
-        const entry = query;
+        const entry = new query_1.Query();
         this._entry = 'multiple';
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first");
@@ -184,7 +188,7 @@ class Stack {
         });
     }
     entry(uid) {
-        const entry = query;
+        const entry = new query_1.Query();
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first");
         }
@@ -196,7 +200,7 @@ class Stack {
     }
     asset(uid) {
         this.type = 'asset';
-        const asset = query;
+        const asset = new query_1.Query();
         if (uid && typeof uid === 'string') {
             asset.asset_uid = uid;
             return lodash_1.merge(this, asset);
@@ -207,7 +211,7 @@ class Stack {
     }
     assets() {
         this.type = 'asset';
-        const asset = query;
+        const asset = new query_1.Query();
         return lodash_1.merge(asset, this);
     }
 }

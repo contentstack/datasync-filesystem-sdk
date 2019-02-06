@@ -15,7 +15,10 @@ app.get('/', (req,res)=>{
     .includeCount()
     .includeContentType()
     .includeReferences()
-    .containedIn("category.uid",["bltd0f51996c27a61cc"])
+    .skip(2)
+    .limit(5)
+    //.queryReferences({})
+    //.containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
     .find()
     .then(function(result){
