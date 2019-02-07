@@ -9,7 +9,9 @@ import { cloneDeep, filter, find, map, orderBy, uniq } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
 import { checkCyclic, difference, mergeDeep } from './utils'
+import { promisify } from 'util'
 
+const readFile: any = promisify(fs.readFile);
 
 const _extend = {
     compare(type) {
@@ -380,9 +382,7 @@ export class Query {
 
     public equalTo(key, value) {
         if (key && typeof key === 'string') {
-            this._query.query = this._query.query || {}
             this._query.query[key] = value
-
             return this
         } else {
             throw new Error('Kindly provide valid parameters.')
@@ -404,15 +404,14 @@ export class Query {
      * @returns {Query}
      */
 
-    public where(key, value) {
-        if (key && typeof key === 'string') {
-            this._query.query = this._query.query || {}
-            this._query.query[key] = value
-            return this
-        } else {
-            throw new Error('Kindly provide valid parameters.')
+    public where(expr) {
+        if (!(expr)) {
+            throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'')
         }
+        this._query.query.$where = expr
+        return this
     }
+
 
     /**
      * @method count
@@ -438,9 +437,9 @@ export class Query {
      * @param {object} query - RAW (JSON) queries
      * @returns {Query}
      */
-    public query(query) {
-        if (typeof query === 'object') {
-            this._query.query = mergeDeep(this._query.query, query)
+    public query(userQuery) {
+        if (typeof userQuery === 'object') {
+            this._query.query = mergeDeep(this._query.query, userQuery)
             return this
         } else {
             throw new Error('Kindly provide valid parameters')
@@ -537,14 +536,6 @@ export class Query {
         return this
     }
 
-    public addParam(key, value) {
-        if (key && value && typeof key === 'string' && typeof value === 'string') {
-            this._query[key] = value
-            return this
-        } else {
-            throw new Error('Kindly provide valid parameters.')
-        }
-    }
 
     /**
      * @method getQuery
@@ -553,7 +544,7 @@ export class Query {
      * @returns {Query}
      */
     public getQuery() {
-        return this._query.query || {}
+        return this._query.query
     }
 
     /**
@@ -570,12 +561,12 @@ export class Query {
      * blogQuery.regex('title','^Demo', 'i')
      * @returns {Query}
      */
-    public regex(key, value, options) {
+    public regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
             this._query.query[key] = {
                 $regex: value,
+                $options: options
             }
-            if (options) { this._query.query[key].$options = options }
             return this
         } else {
             throw new Error('Kindly provide valid parameters.')
@@ -598,10 +589,8 @@ export class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'only()\'')
         }
-        this._query.query = this._query.query || {}
         this._query.only = this._query.only || {}
         this._query.only = fields
-
         return this
     }
 
@@ -621,7 +610,6 @@ export class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'except()\'')
         }
-        this._query.query = this._query.query || {}
         this._query.except = this._query.except || {}
         this._query.except = fields
 
@@ -680,17 +668,18 @@ export class Query {
                                 finalResult[type] = []
                                 return resolve(finalResult)
                             }
-                            const entryData = JSON.parse(data)
-                            const filteredData = map(entryData, 'data')
+                            data = JSON.parse(data)
+                            const filteredData = map(data, 'data')
 
                             if (this._query.queryReferences) {
                                 return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
                                     .then(resolve)
                                     .catch(reject)
                             }
+
                             if (this._query.excludeReferences) {
                                 let preProcessedData = this.preProcess(filteredData)
-                                this.postProcessResult(finalResult,preProcessedData, type, schemaPath)
+                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
                                     .then((result) => {
                                         this._query = {}
                                         return resolve(result)
@@ -701,11 +690,10 @@ export class Query {
                                 return this.includeReferencesI(filteredData, locale, {}, undefined)
                                     .then(async () => {
                                         let preProcessedData = this.preProcess(filteredData)
-                                        this.postProcessResult(finalResult, preProcessedData,type, schemaPath).then((result) => {
+                                        this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
                                             this._query = {}
                                             return resolve(result)
                                         })
-
                                     })
                                     .catch(reject)
                             }
@@ -719,14 +707,15 @@ export class Query {
         })
 
     }
+
     private queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
         return new Promise((resolve, reject) => {
 
             return this.includeReferencesI(filteredData, locale, {}, undefined)
                 .then(async () => {
                     let result = sift(this._query.queryReferences, filteredData)
-
-                    this.postProcessResult(finalResult, result,type, schemaPath).then((res) => {
+                    let preProcessedData = this.preProcess(result)
+                    this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
                         this._query = {}
                         return resolve(res)
                     })
@@ -824,18 +813,21 @@ export class Query {
                                             references[parentUid] = references[parentUid] || []
                                             references[parentUid] = uniq(references[parentUid].concat(map((entities as any), 'uid')))
                                         }
-                                        const referenceBucket = []
-                                        query.uid.$in.forEach((entityUid) => {
-                                            const elem = find(entities, (entity) => {
-                                                return (entity as any).uid === entityUid
+                                        if (typeof entry[prop].values === 'string') {
+                                            entry[prop] = ((entities === null) || (entities as any).length === 0) ? null : entities[0]
+                                        } else {
+                                            // format the references in order
+                                            const referenceBucket = []
+                                            query.uid.$in.forEach((entityUid) => {
+                                                const elem = find(entities, (entity) => {
+                                                    return (entity as any).uid === entityUid
+                                                })
+                                                if (elem) {
+                                                    referenceBucket.push(elem)
+                                                }
                                             })
-                                            if (elem) {
-                                                referenceBucket.push(elem)
-                                            }
-                                        })
-
-                                        // format the references in order
-                                        entry[prop] = referenceBucket
+                                            entry[prop] = referenceBucket
+                                        }
 
                                         return self.includeReferencesI(entry[prop], locale, references, parentUid)
                                             .then(rs)
@@ -855,7 +847,8 @@ export class Query {
                 .catch(reject)
         })
     }
-    private preProcess(filteredData){
+
+    private preProcess(filteredData) {
         let result
         const sortKeys: any = ['asc', 'desc']
 
@@ -886,14 +879,12 @@ export class Query {
             result = filteredData
         }
 
-        if (this._query.skip) {
-            const skip = this._query.skip
-            result = filteredData.slice(skip)
-        }
-
-        if (this._query.limit) {
-            const limit = this._query.limit
-            result = filteredData.splice(0, limit)
+        if ((this._query.skip) && ((this._query.limit))) {
+            result = result.splice(this._query.skip, this._query.limit)
+        } else if ((this._query.skip)) {
+            result = result.slice(this._query.skip)
+        } else if (this._query.limit) {
+            result = result.splice(0, this._query.limit)
         }
 
         if (this._query.only) {
@@ -907,17 +898,28 @@ export class Query {
             result = difference(result, except)
         }
 
+        if (this._query.tags) {
+            result = sift({
+                tags: {
+                    $in: this._query.tags,
+                },
+            }, result)
+        }
+
         return result
     }
-    private postProcessResult(finalResult,result, type, schemaPath) {
+
+    private postProcessResult(finalResult, result, type, schemaPath) {
         return new Promise((resolve, reject) => {
             try {
-
-                
                 if (this._query.count) {
                     (finalResult as any).count = result.length
                 } else {
                     finalResult[type] = result
+                }
+
+                if (this.single) {
+                    finalResult[type] = result[0]
                 }
 
                 if (this._query.include_count) {
@@ -932,33 +934,22 @@ export class Query {
 
                 if (this._query.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
-                        return (`${schemaPath} didn't exist`)
-                    } else {
-                        let contents
-                        if (fs.existsSync(schemaPath)) {
-                            contents = fs.readFileSync(schemaPath)
-                            if (!contents) {
-                                (finalResult as any).content_type = null
-                            } else {
-                                (finalResult as any).content_type = JSON.parse(contents)
-                            }
-                        }
+                        return reject(`content type not found`)
                     }
+                    let contents
+                    readFile(schemaPath).then((data) => {
+                        contents = JSON.parse(data);
+                        (finalResult as any).content_type = contents
+                        return resolve(finalResult)
+                    }).catch(() => {
+                        (finalResult as any).content_type = null
+                        return resolve(finalResult)
+                    })
+                } else {
+                    return resolve(finalResult)
                 }
-
-                if (this._query.tags) {
-                    result = sift({
-                        tags: {
-                            $in: this._query.tags,
-                        },
-                    }, result)
-                    finalResult[type] = result
-                        (finalResult as any).count = result.length
-                }
-
-                return resolve(finalResult)
             } catch (error) {
-                reject(error)
+                return reject(error)
             }
         })
     }

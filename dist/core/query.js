@@ -24,6 +24,8 @@ const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const sift_1 = __importDefault(require("sift"));
 const utils_1 = require("./utils");
+const util_1 = require("util");
+const readFile = util_1.promisify(fs.readFile);
 const _extend = {
     compare(type) {
         return function (key, value) {
@@ -123,7 +125,6 @@ class Query {
     }
     equalTo(key, value) {
         if (key && typeof key === 'string') {
-            this._query.query = this._query.query || {};
             this._query.query[key] = value;
             return this;
         }
@@ -131,23 +132,20 @@ class Query {
             throw new Error('Kindly provide valid parameters.');
         }
     }
-    where(key, value) {
-        if (key && typeof key === 'string') {
-            this._query.query = this._query.query || {};
-            this._query.query[key] = value;
-            return this;
+    where(expr) {
+        if (!(expr)) {
+            throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'');
         }
-        else {
-            throw new Error('Kindly provide valid parameters.');
-        }
+        this._query.query.$where = expr;
+        return this;
     }
     count() {
         this._query.count = true;
         return this;
     }
-    query(query) {
-        if (typeof query === 'object') {
-            this._query.query = utils_1.mergeDeep(this._query.query, query);
+    query(userQuery) {
+        if (typeof userQuery === 'object') {
+            this._query.query = utils_1.mergeDeep(this._query.query, userQuery);
             return this;
         }
         else {
@@ -188,26 +186,15 @@ class Query {
         this._query.include_content_type = true;
         return this;
     }
-    addParam(key, value) {
-        if (key && value && typeof key === 'string' && typeof value === 'string') {
-            this._query[key] = value;
-            return this;
-        }
-        else {
-            throw new Error('Kindly provide valid parameters.');
-        }
-    }
     getQuery() {
-        return this._query.query || {};
+        return this._query.query;
     }
-    regex(key, value, options) {
+    regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
             this._query.query[key] = {
                 $regex: value,
+                $options: options
             };
-            if (options) {
-                this._query.query[key].$options = options;
-            }
             return this;
         }
         else {
@@ -218,7 +205,6 @@ class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'only()\'');
         }
-        this._query.query = this._query.query || {};
         this._query.only = this._query.only || {};
         this._query.only = fields;
         return this;
@@ -227,7 +213,6 @@ class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'except()\'');
         }
-        this._query.query = this._query.query || {};
         this._query.except = this._query.except || {};
         this._query.except = fields;
         return this;
@@ -273,8 +258,8 @@ class Query {
                                 finalResult[type] = [];
                                 return resolve(finalResult);
                             }
-                            const entryData = JSON.parse(data);
-                            const filteredData = lodash_1.map(entryData, 'data');
+                            data = JSON.parse(data);
+                            const filteredData = lodash_1.map(data, 'data');
                             if (this._query.queryReferences) {
                                 return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
                                     .then(resolve)
@@ -313,7 +298,8 @@ class Query {
             return this.includeReferencesI(filteredData, locale, {}, undefined)
                 .then(() => __awaiter(this, void 0, void 0, function* () {
                 let result = sift_1.default(this._query.queryReferences, filteredData);
-                this.postProcessResult(finalResult, result, type, schemaPath).then((res) => {
+                let preProcessedData = this.preProcess(result);
+                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
                     this._query = {};
                     return resolve(res);
                 });
@@ -402,16 +388,21 @@ class Query {
                                             references[parentUid] = references[parentUid] || [];
                                             references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entities, 'uid')));
                                         }
-                                        const referenceBucket = [];
-                                        query.uid.$in.forEach((entityUid) => {
-                                            const elem = lodash_1.find(entities, (entity) => {
-                                                return entity.uid === entityUid;
+                                        if (typeof entry[prop].values === 'string') {
+                                            entry[prop] = ((entities === null) || entities.length === 0) ? null : entities[0];
+                                        }
+                                        else {
+                                            const referenceBucket = [];
+                                            query.uid.$in.forEach((entityUid) => {
+                                                const elem = lodash_1.find(entities, (entity) => {
+                                                    return entity.uid === entityUid;
+                                                });
+                                                if (elem) {
+                                                    referenceBucket.push(elem);
+                                                }
                                             });
-                                            if (elem) {
-                                                referenceBucket.push(elem);
-                                            }
-                                        });
-                                        entry[prop] = referenceBucket;
+                                            entry[prop] = referenceBucket;
+                                        }
                                         return self.includeReferencesI(entry[prop], locale, references, parentUid)
                                             .then(rs)
                                             .catch(rj);
@@ -457,13 +448,14 @@ class Query {
         else {
             result = filteredData;
         }
-        if (this._query.skip) {
-            const skip = this._query.skip;
-            result = filteredData.slice(skip);
+        if ((this._query.skip) && ((this._query.limit))) {
+            result = result.splice(this._query.skip, this._query.limit);
         }
-        if (this._query.limit) {
-            const limit = this._query.limit;
-            result = filteredData.splice(0, limit);
+        else if ((this._query.skip)) {
+            result = result.slice(this._query.skip);
+        }
+        else if (this._query.limit) {
+            result = result.splice(0, this._query.limit);
         }
         if (this._query.only) {
             const only = this._query.only.toString().replace(/\./g, '/');
@@ -473,6 +465,13 @@ class Query {
             const bukcet = this._query.except.toString().replace(/\./g, '/');
             const except = json_mask_1.default(result, bukcet);
             result = utils_1.difference(result, except);
+        }
+        if (this._query.tags) {
+            result = sift_1.default({
+                tags: {
+                    $in: this._query.tags,
+                },
+            }, result);
         }
         return result;
     }
@@ -484,6 +483,9 @@ class Query {
                 }
                 else {
                     finalResult[type] = result;
+                }
+                if (this.single) {
+                    finalResult[type] = result[0];
                 }
                 if (this._query.include_count) {
                     if (result === undefined) {
@@ -498,33 +500,24 @@ class Query {
                 }
                 if (this._query.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
-                        return (`${schemaPath} didn't exist`);
+                        return reject(`content type not found`);
                     }
-                    else {
-                        let contents;
-                        if (fs.existsSync(schemaPath)) {
-                            contents = fs.readFileSync(schemaPath);
-                            if (!contents) {
-                                finalResult.content_type = null;
-                            }
-                            else {
-                                finalResult.content_type = JSON.parse(contents);
-                            }
-                        }
-                    }
+                    let contents;
+                    readFile(schemaPath).then((data) => {
+                        contents = JSON.parse(data);
+                        finalResult.content_type = contents;
+                        return resolve(finalResult);
+                    }).catch(() => {
+                        finalResult.content_type = null;
+                        return resolve(finalResult);
+                    });
                 }
-                if (this._query.tags) {
-                    result = sift_1.default({
-                        tags: {
-                            $in: this._query.tags,
-                        },
-                    }, result);
-                    finalResult[type] = result(finalResult).count = result.length;
+                else {
+                    return resolve(finalResult);
                 }
-                return resolve(finalResult);
             }
             catch (error) {
-                reject(error);
+                return reject(error);
             }
         });
     }
