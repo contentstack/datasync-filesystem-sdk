@@ -10,12 +10,12 @@ export declare class Stack {
     config: any;
     content_type_uid: string;
     type: string;
-    _query: any;
+    q: any;
     asset_uid: any;
     entry_uid: any;
     single: boolean;
-    _entry: boolean;
-    constructor(...stack_arguments: any[]);
+    isEntry: boolean;
+    constructor(...stackArguments: any[]);
     connect(overrides?: Object): Promise<{}>;
     contentType(uid: any): Stack;
     entries(): Query & this;

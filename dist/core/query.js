@@ -26,13 +26,13 @@ const sift_1 = __importDefault(require("sift"));
 const utils_1 = require("./utils");
 const util_1 = require("util");
 const readFile = util_1.promisify(fs.readFile);
-const _extend = {
+const extend = {
     compare(type) {
         return function (key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
-                this._query.query = this._query.query || {};
-                this._query.query[key] = this._query.query.file_size || {};
-                this._query.query[key][type] = value;
+                this.q.query = this.q.query || {};
+                this.q.query[key] = this.q.query.file_size || {};
+                this.q.query[key][type] = value;
                 return this;
             }
             else {
@@ -44,10 +44,10 @@ const _extend = {
         const type = (bool) ? '$in' : '$nin';
         return function (key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
-                this._query.query = this._query.query || {};
-                this._query.query[key] = this._query.query[key] || {};
-                this._query.query[key][type] = this._query.query[key][type] || [];
-                this._query.query[key][type] = this._query.query[key][type].concat(value);
+                this.q.query = this.q.query || {};
+                this.q.query[key] = this.q.query[key] || {};
+                this.q.query[key][type] = this.q.query[key][type] || [];
+                this.q.query[key][type] = this.q.query[key][type].concat(value);
                 return this;
             }
             else {
@@ -58,9 +58,9 @@ const _extend = {
     exists(bool) {
         return function (key) {
             if (key && typeof key === 'string') {
-                this._query.query = this._query.query || {};
-                this._query.query[key] = this._query.query[key] || {};
-                this._query.query[key].$exists = bool;
+                this.q.query = this.q.query || {};
+                this.q.query[key] = this.q.query[key] || {};
+                this.q.query[key].$exists = bool;
                 return this;
             }
             else {
@@ -70,17 +70,17 @@ const _extend = {
     },
     logical(type) {
         return function () {
-            this._query.logical = this._query.logical || {};
-            this._query.logical[type] = this._query.logical[type] || {};
-            this._query.logical[type] = this._query.query;
-            delete this._query.query;
+            this.q.logical = this.q.logical || {};
+            this.q.logical[type] = this.q.logical[type] || {};
+            this.q.logical[type] = this.q.query;
+            delete this.q.query;
             return this;
         };
     },
     sort(type) {
         return function (key) {
             if (key && typeof key === 'string') {
-                this._query[type] = key;
+                this.q[type] = key;
                 return this;
             }
             else {
@@ -91,7 +91,7 @@ const _extend = {
     pagination(type) {
         return function (value) {
             if (typeof value === 'number') {
-                this._query[type] = value;
+                this.q[type] = value;
                 return this;
             }
             else {
@@ -103,29 +103,29 @@ const _extend = {
 class Query {
     constructor() {
         this.single = false;
-        this._query = this._query || {};
-        this._query.query = this._query.query || {};
-        this.lessThan = _extend.compare('$lt');
-        this.lessThanOrEqualTo = _extend.compare('$lte');
-        this.greaterThan = _extend.compare('$gt');
-        this.greaterThanOrEqualTo = _extend.compare('$gte');
-        this.notEqualTo = _extend.compare('$ne');
-        this.containedIn = _extend.contained(true);
-        this.notContainedIn = _extend.contained(false);
-        this.exists = _extend.exists(true);
-        this.notExists = _extend.exists(false);
-        this.ascending = _extend.sort('asc');
-        this.descending = _extend.sort('desc');
-        this.skip = _extend.pagination('skip');
-        this.limit = _extend.pagination('limit');
-        this.or = _extend.logical('$or');
-        this.nor = _extend.logical('$nor');
-        this.not = _extend.logical('$not');
-        this.and = _extend.logical('$and');
+        this.q = this.q || {};
+        this.q.query = this.q.query || {};
+        this.lessThan = extend.compare('$lt');
+        this.lessThanOrEqualTo = extend.compare('$lte');
+        this.greaterThan = extend.compare('$gt');
+        this.greaterThanOrEqualTo = extend.compare('$gte');
+        this.notEqualTo = extend.compare('$ne');
+        this.containedIn = extend.contained(true);
+        this.notContainedIn = extend.contained(false);
+        this.exists = extend.exists(true);
+        this.notExists = extend.exists(false);
+        this.ascending = extend.sort('asc');
+        this.descending = extend.sort('desc');
+        this.skip = extend.pagination('skip');
+        this.limit = extend.pagination('limit');
+        this.or = extend.logical('$or');
+        this.nor = extend.logical('$nor');
+        this.not = extend.logical('$not');
+        this.and = extend.logical('$and');
     }
     equalTo(key, value) {
         if (key && typeof key === 'string') {
-            this._query.query[key] = value;
+            this.q.query[key] = value;
             return this;
         }
         else {
@@ -136,16 +136,16 @@ class Query {
         if (!(expr)) {
             throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'');
         }
-        this._query.query.$where = expr;
+        this.q.query.$where = expr;
         return this;
     }
     count() {
-        this._query.count = true;
+        this.q.count = true;
         return this;
     }
     query(userQuery) {
         if (typeof userQuery === 'object') {
-            this._query.query = utils_1.mergeDeep(this._query.query, userQuery);
+            this.q.query = utils_1.mergeDeep(this.q.query, userQuery);
             return this;
         }
         else {
@@ -154,7 +154,7 @@ class Query {
     }
     tags(values) {
         if (Array.isArray(values)) {
-            this._query.tags = values;
+            this.q.tags = values;
             return this;
         }
         else {
@@ -162,12 +162,12 @@ class Query {
         }
     }
     includeCount() {
-        this._query.include_count = true;
+        this.q.include_count = true;
         return this;
     }
     language(language_code) {
         if (language_code && typeof language_code === 'string') {
-            this._query.locale = language_code;
+            this.q.locale = language_code;
             return this;
         }
         else {
@@ -175,23 +175,23 @@ class Query {
         }
     }
     includeReferences() {
-        this._query.includeReferences = true;
+        this.q.includeReferences = true;
         return this;
     }
     excludeReferences() {
-        this._query.excludeReferences = true;
+        this.q.excludeReferences = true;
         return this;
     }
     includeContentType() {
-        this._query.include_content_type = true;
+        this.q.include_content_type = true;
         return this;
     }
     getQuery() {
-        return this._query.query;
+        return this.q.query;
     }
     regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
-            this._query.query[key] = {
+            this.q.query[key] = {
                 $regex: value,
                 $options: options
             };
@@ -205,21 +205,21 @@ class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'only()\'');
         }
-        this._query.only = this._query.only || {};
-        this._query.only = fields;
+        this.q.only = this.q.only || {};
+        this.q.only = fields;
         return this;
     }
     except(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'except()\'');
         }
-        this._query.except = this._query.except || {};
-        this._query.except = fields;
+        this.q.except = this.q.except || {};
+        this.q.except = fields;
         return this;
     }
     queryReferences(query) {
         if (query && typeof query === 'object') {
-            this._query.queryReferences = query;
+            this.q.queryReferences = query;
             return this;
         }
         throw new Error('Kindly pass a query object for \'.queryReferences()\'');
@@ -228,7 +228,7 @@ class Query {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
         const contentTypeUid = this.content_type_uid;
-        const locale = (!this._query.locale) ? masterLocale : this._query.locale;
+        const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
                 let dataPath;
@@ -258,16 +258,16 @@ class Query {
                     }
                     data = JSON.parse(data);
                     const filteredData = lodash_1.map(data, 'data');
-                    if (this._query.queryReferences) {
+                    if (this.q.queryReferences) {
                         return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
                             .then(resolve)
                             .catch(reject);
                     }
-                    if (this._query.excludeReferences) {
+                    if (this.q.excludeReferences) {
                         let preProcessedData = this.preProcess(filteredData);
                         this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
                             .then((result) => {
-                            this._query = {};
+                            this.q = {};
                             return resolve(result);
                         }).catch(reject);
                     }
@@ -276,7 +276,7 @@ class Query {
                             .then(() => __awaiter(this, void 0, void 0, function* () {
                             let preProcessedData = this.preProcess(filteredData);
                             this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
-                                this._query = {};
+                                this.q = {};
                                 return resolve(result);
                             });
                         }))
@@ -293,10 +293,10 @@ class Query {
         return new Promise((resolve, reject) => {
             return this.includeReferencesI(filteredData, locale, {}, undefined)
                 .then(() => __awaiter(this, void 0, void 0, function* () {
-                let result = sift_1.default(this._query.queryReferences, filteredData);
+                let result = sift_1.default(this.q.queryReferences, filteredData);
                 let preProcessedData = this.preProcess(result);
                 this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
-                    this._query = {};
+                    this.q = {};
                     return resolve(res);
                 });
             }))
@@ -420,22 +420,22 @@ class Query {
     preProcess(filteredData) {
         let result;
         const sortKeys = ['asc', 'desc'];
-        const sortQuery = Object.keys(this._query)
+        const sortQuery = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
             .reduce((obj, key) => {
-            return Object.assign({}, obj, { [key]: this._query[key] });
+            return Object.assign({}, obj, { [key]: this.q[key] });
         }, {});
-        if (this._query.asc || this._query.desc) {
+        if (this.q.asc || this.q.desc) {
             const value = Object.values(sortQuery);
             const key = Object.keys(sortQuery);
             result = lodash_1.orderBy(filteredData, value, key);
         }
-        if (this._query.query && Object.keys(this._query.query).length > 0) {
-            result = sift_1.default(this._query.query, filteredData);
+        if (this.q.query && Object.keys(this.q.query).length > 0) {
+            result = sift_1.default(this.q.query, filteredData);
         }
-        else if (this._query.logical) {
-            const operator = Object.keys(this._query.logical)[0];
-            const vals = Object.values(this._query.logical);
+        else if (this.q.logical) {
+            const operator = Object.keys(this.q.logical)[0];
+            const vals = Object.values(this.q.logical);
             const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
             const logicalQuery = {};
             logicalQuery[operator] = values;
@@ -444,28 +444,28 @@ class Query {
         else {
             result = filteredData;
         }
-        if ((this._query.skip) && ((this._query.limit))) {
-            result = result.splice(this._query.skip, this._query.limit);
+        if ((this.q.skip) && ((this.q.limit))) {
+            result = result.splice(this.q.skip, this.q.limit);
         }
-        else if ((this._query.skip)) {
-            result = result.slice(this._query.skip);
+        else if ((this.q.skip)) {
+            result = result.slice(this.q.skip);
         }
-        else if (this._query.limit) {
-            result = result.splice(0, this._query.limit);
+        else if (this.q.limit) {
+            result = result.splice(0, this.q.limit);
         }
-        if (this._query.only) {
-            const only = this._query.only.toString().replace(/\./g, '/');
+        if (this.q.only) {
+            const only = this.q.only.toString().replace(/\./g, '/');
             result = json_mask_1.default(result, only);
         }
-        if (this._query.except) {
-            const bukcet = this._query.except.toString().replace(/\./g, '/');
+        if (this.q.except) {
+            const bukcet = this.q.except.toString().replace(/\./g, '/');
             const except = json_mask_1.default(result, bukcet);
             result = utils_1.difference(result, except);
         }
-        if (this._query.tags) {
+        if (this.q.tags) {
             result = sift_1.default({
                 tags: {
-                    $in: this._query.tags,
+                    $in: this.q.tags,
                 },
             }, result);
         }
@@ -474,7 +474,7 @@ class Query {
     postProcessResult(finalResult, result, type, schemaPath) {
         return new Promise((resolve, reject) => {
             try {
-                if (this._query.count) {
+                if (this.q.count) {
                     finalResult.count = result.length;
                 }
                 else {
@@ -483,7 +483,7 @@ class Query {
                 if (this.single) {
                     finalResult[type] = result[0];
                 }
-                if (this._query.include_count) {
+                if (this.q.include_count) {
                     if (result === undefined) {
                         finalResult.count = 0;
                     }
@@ -494,7 +494,7 @@ class Query {
                         finalResult.count = result.length;
                     }
                 }
-                if (this._query.include_content_type) {
+                if (this.q.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
                         return reject(`content type not found`);
                     }

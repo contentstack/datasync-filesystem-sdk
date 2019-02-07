@@ -18,13 +18,13 @@ const path = __importStar(require("path"));
 const default_1 = require("./default");
 const query_1 = require("./query");
 class Stack {
-    constructor(...stack_arguments) {
-        this._query = {};
+    constructor(...stackArguments) {
+        this.q = {};
         this.single = false;
-        this._entry = false;
+        this.isEntry = false;
         this.baseDir;
         this.masterLocale;
-        this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
+        this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
     }
     connect(overrides = {}) {
         this.config = lodash_1.merge(this.config, overrides);
@@ -65,7 +65,7 @@ class Stack {
     }
     entries() {
         const entry = new query_1.Query();
-        this._entry = true;
+        this.isEntry = true;
         if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first");
         }
@@ -74,7 +74,7 @@ class Stack {
     find() {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
-        const locale = (!this._query.locale) ? masterLocale : this._query.locale;
+        const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         let result;
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
@@ -103,7 +103,7 @@ class Stack {
                     });
                 }
             }
-            else if (this.type !== 'asset' && !this._entry) {
+            else if (this.type !== 'asset' && !this.isEntry) {
                 const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json');
                 if (!fs.existsSync(dataPath)) {
                     return reject(`content type not found`);
@@ -165,7 +165,7 @@ class Stack {
     }
     entry(uid) {
         const entry = new query_1.Query();
-        this._entry = true;
+        this.isEntry = true;
         if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first");
         }
