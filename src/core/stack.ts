@@ -34,7 +34,7 @@ export class Stack {
             try {
                 if (!this.config['options'].hasOwnProperty('base_dir')) {
                     throw new Error('Please provide base_dir to connect the filesystem.')
-                } else if (!this.config.hasOwnProperty('locales') || this.config.locales.length == 0) {
+                } else if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.\n Example ==> locales:[{code:"en-us",relative_ul_prefix:"/"}].')
                 } else if (!(fs.existsSync(this.config['options'].base_dir))) {
                     throw new Error(`${this.config['options'].base_dir} didn't exits.`)
@@ -66,7 +66,7 @@ export class Stack {
     public entries() {
         const entry = new Query()
         this._entry= true
-        if (this.type == undefined) {
+        if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first")
         }
         return merge(entry, this)
@@ -172,7 +172,7 @@ export class Stack {
     public entry(uid) {
         const entry = new Query()
         this._entry= true
-        if (this.type == undefined) {
+        if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first")
         }
         if (uid && typeof uid === 'string') {

@@ -33,7 +33,7 @@ class Stack {
                 if (!this.config['options'].hasOwnProperty('base_dir')) {
                     throw new Error('Please provide base_dir to connect the filesystem.');
                 }
-                else if (!this.config.hasOwnProperty('locales') || this.config.locales.length == 0) {
+                else if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.\n Example ==> locales:[{code:"en-us",relative_ul_prefix:"/"}].');
                 }
                 else if (!(fs.existsSync(this.config['options'].base_dir))) {
@@ -66,7 +66,7 @@ class Stack {
     entries() {
         const entry = new query_1.Query();
         this._entry = true;
-        if (this.type == undefined) {
+        if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first");
         }
         return lodash_1.merge(entry, this);
@@ -166,7 +166,7 @@ class Stack {
     entry(uid) {
         const entry = new query_1.Query();
         this._entry = true;
-        if (this.type == undefined) {
+        if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first");
         }
         if (uid && typeof uid === 'string') {

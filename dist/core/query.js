@@ -243,50 +243,46 @@ class Query {
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`);
                 }
-                else {
-                    fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
-                        if (err) {
-                            return reject(err);
-                        }
-                        else {
-                            const finalResult = {
-                                content_type_uid: this.content_type_uid,
-                                locale: locale,
-                            };
-                            let type = (this.type !== 'asset') ? 'entries' : 'assets';
-                            if (!data) {
-                                finalResult[type] = [];
-                                return resolve(finalResult);
-                            }
-                            data = JSON.parse(data);
-                            const filteredData = lodash_1.map(data, 'data');
-                            if (this._query.queryReferences) {
-                                return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
-                                    .then(resolve)
-                                    .catch(reject);
-                            }
-                            if (this._query.excludeReferences) {
-                                let preProcessedData = this.preProcess(filteredData);
-                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                                    .then((result) => {
-                                    this._query = {};
-                                    return resolve(result);
-                                }).catch(reject);
-                            }
-                            else {
-                                return this.includeReferencesI(filteredData, locale, {}, undefined)
-                                    .then(() => __awaiter(this, void 0, void 0, function* () {
-                                    let preProcessedData = this.preProcess(filteredData);
-                                    this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
-                                        this._query = {};
-                                        return resolve(result);
-                                    });
-                                }))
-                                    .catch(reject);
-                            }
-                        }
-                    }));
-                }
+                fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
+                    if (err) {
+                        return reject(err);
+                    }
+                    const finalResult = {
+                        content_type_uid: this.content_type_uid,
+                        locale: locale,
+                    };
+                    let type = (this.type !== 'asset') ? 'entries' : 'assets';
+                    if (!data) {
+                        finalResult[type] = [];
+                        return resolve(finalResult);
+                    }
+                    data = JSON.parse(data);
+                    const filteredData = lodash_1.map(data, 'data');
+                    if (this._query.queryReferences) {
+                        return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
+                            .then(resolve)
+                            .catch(reject);
+                    }
+                    if (this._query.excludeReferences) {
+                        let preProcessedData = this.preProcess(filteredData);
+                        this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                            .then((result) => {
+                            this._query = {};
+                            return resolve(result);
+                        }).catch(reject);
+                    }
+                    else {
+                        return this.includeReferencesI(filteredData, locale, {}, undefined)
+                            .then(() => __awaiter(this, void 0, void 0, function* () {
+                            let preProcessedData = this.preProcess(filteredData);
+                            this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
+                                this._query = {};
+                                return resolve(result);
+                            });
+                        }))
+                            .catch(reject);
+                    }
+                }));
             }
             catch (error) {
                 return reject(error);
