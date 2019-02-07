@@ -67,7 +67,7 @@ export class Stack {
         const entry = new Query()
         this.isEntry = true
         if (this.type === undefined) {
-            throw new Error("Please call contentType('uid') first")
+            throw new Error('Please call contentType(\'uid\') first')
         }
         return merge(entry, this)
     }
@@ -173,7 +173,7 @@ export class Stack {
         const entry = new Query()
         this.isEntry = true
         if (this.type === undefined) {
-            throw new Error("Please call contentType('uid') first")
+            throw new Error('Please call contentType(\'uid\') first')
         }
         if (uid && typeof uid === 'string') {
             (entry as any).entry_uid = uid
