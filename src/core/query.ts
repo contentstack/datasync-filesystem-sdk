@@ -629,7 +629,6 @@ export class Query {
             this._query.queryReferences = query
             return this
         }
-
         throw new Error('Kindly pass a query object for \'.queryReferences()\'')
     }
 
@@ -652,11 +651,13 @@ export class Query {
 
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`)
-                } else {
+                }
+                
                     fs.readFile(dataPath, 'utf8', async (err, data) => {
                         if (err) {
                             return reject(err)
-                        } else {
+                        } 
+                        
 
                             const finalResult = {
                                 content_type_uid: this.content_type_uid,
@@ -697,9 +698,9 @@ export class Query {
                                     })
                                     .catch(reject)
                             }
-                        }
+                        
                     })
-                }
+                
             } catch (error) {
                 return reject(error)
 
