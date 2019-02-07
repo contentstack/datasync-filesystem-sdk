@@ -13,7 +13,7 @@ exports._type = (val) => {
     }
     return __typeof;
 };
-exports.mergeDeep = (targett, sourcee) => {
+exports.mergeDeep = (target, source) => {
     const self = this;
     const mergeRrcursive = (target, source) => {
         for (const key in source) {
@@ -28,10 +28,10 @@ exports.mergeDeep = (targett, sourcee) => {
             }
         }
     };
-    mergeRrcursive(targett, sourcee);
-    return targett;
+    mergeRrcursive(target, source);
+    return target;
 };
-exports.difference = (obj, basee) => {
+exports.difference = (obj, base) => {
     const changes = (object, base) => {
         return lodash_1.transform(object, (result, value, key) => {
             if (!lodash_1.isEqual(value, base[key])) {
@@ -39,7 +39,7 @@ exports.difference = (obj, basee) => {
             }
         });
     };
-    return changes(obj, basee);
+    return changes(obj, base);
 };
 exports.checkCyclic = (uid, mapping) => {
     let flag = false;

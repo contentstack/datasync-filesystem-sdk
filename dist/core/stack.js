@@ -21,6 +21,7 @@ class Stack {
     constructor(...stack_arguments) {
         this._query = {};
         this.single = false;
+        this._entry = false;
         this.baseDir;
         this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stack_arguments);
@@ -53,7 +54,10 @@ class Stack {
         const stack = new Stack(this.config);
         stack.baseDir = this.baseDir;
         stack.masterLocale = this.masterLocale;
-        if (uid && typeof uid === 'string') {
+        if (!uid) {
+            throw new Error("Please provide valid uid");
+        }
+        else if (uid && typeof uid === 'string') {
             stack.content_type_uid = uid;
             stack.type = 'contentType';
         }
@@ -61,7 +65,7 @@ class Stack {
     }
     entries() {
         const entry = new query_1.Query();
-        this._entry = 'multiple';
+        this._entry = true;
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first");
         }
@@ -76,104 +80,76 @@ class Stack {
             if (this.type == 'asset') {
                 const dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`);
+                    return reject(`asset not found`);
                 }
                 else {
                     fs.readFile(dataPath, 'utf8', (err, data) => {
                         if (err) {
                             return reject(err);
                         }
-                        else {
-                            const finalResult = {};
-                            let type = (this.asset_uid) ? 'asset' : 'assets';
-                            if (!data) {
-                                if (type == 'asset') {
-                                    finalResult[type] = null;
-                                }
-                                else {
-                                    finalResult[type] = [];
-                                }
-                                return resolve(finalResult);
-                            }
-                            const assetData = JSON.parse(data);
-                            if (this.asset_uid) {
-                                result = lodash_1.find(assetData, { uid: this.asset_uid });
-                                finalResult[type] = result;
-                            }
-                            else {
-                                result = assetData;
-                                finalResult[type] = result;
-                            }
-                            if (this.single) {
-                                type = 'asset';
-                                finalResult[type] = result[0];
-                            }
-                            resolve(finalResult);
+                        const finalResult = {};
+                        if (!data) {
+                            finalResult.asset = null;
+                            return resolve(finalResult);
                         }
+                        const assetData = JSON.parse(data);
+                        if (!this.asset_uid) {
+                            finalResult.assets = [];
+                            return resolve(finalResult);
+                        }
+                        result = lodash_1.find(assetData, { uid: this.asset_uid });
+                        finalResult.asset = result;
+                        return resolve(finalResult);
                     });
                 }
             }
             else if (this.type !== 'asset' && !this._entry) {
                 const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json');
+                if (!fs.existsSync(dataPath)) {
+                    return reject(`content type not found`);
+                }
                 fs.readFile(dataPath, 'utf8', (err, data) => {
                     if (err) {
                         return reject(err);
                     }
-                    else {
-                        const finalResult = {
-                            content_type_uid: this.content_type_uid,
-                        };
-                        if (!data) {
-                            return resolve(finalResult.content_type = null);
-                        }
-                        const schema = JSON.parse(data);
-                        finalResult.content_type = schema;
-                        return resolve(finalResult);
+                    const finalResult = {
+                        content_type_uid: this.content_type_uid,
+                    };
+                    if (!data) {
+                        return resolve(finalResult.content_type = null);
                     }
+                    const schema = JSON.parse(data);
+                    finalResult.content_type = schema;
+                    return resolve(finalResult);
                 });
             }
             else {
                 const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, 'index.json');
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`);
+                    return reject(`content type not found`);
                 }
-                else {
-                    fs.readFile(dataPath, 'utf8', (err, data) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        else {
-                            const finalResult = {
-                                content_type_uid: this.content_type_uid,
-                                locale,
-                            };
-                            let type = (this._entry == 'single') ? 'entry' : 'entries';
-                            if (!data) {
-                                if (type == 'entry') {
-                                    finalResult[type] = null;
-                                }
-                                else {
-                                    finalResult[type] = [];
-                                }
-                                return resolve(finalResult);
-                            }
-                            const entryData = JSON.parse(data);
-                            result = lodash_1.map(entryData, 'data');
-                            if (this._entry == 'single') {
-                                result = lodash_1.find(result, { uid: this.entry_uid });
-                                finalResult[type] = result;
-                                return resolve(finalResult);
-                            }
-                            if (this.single) {
-                                type = 'entry';
-                                finalResult[type] = result[0];
-                                return resolve(finalResult);
-                            }
-                            finalResult[type] = result;
-                            return resolve(finalResult);
-                        }
-                    });
-                }
+                fs.readFile(dataPath, 'utf8', (err, data) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    const finalResult = {
+                        content_type_uid: this.content_type_uid,
+                        locale,
+                    };
+                    if (!data) {
+                        finalResult.entry = null;
+                        return resolve(finalResult);
+                    }
+                    const entryData = JSON.parse(data);
+                    result = lodash_1.map(entryData, 'data');
+                    if (!this.entry_uid) {
+                        finalResult.entries = [];
+                        return resolve(finalResult);
+                    }
+                    result = lodash_1.find(result, { uid: this.entry_uid });
+                    finalResult.entry = result;
+                    return resolve(finalResult);
+                });
             }
         });
     }
@@ -189,13 +165,13 @@ class Stack {
     }
     entry(uid) {
         const entry = new query_1.Query();
+        this._entry = true;
         if (this.type == undefined) {
             throw new Error("Please call contentType('uid') first");
         }
         if (uid && typeof uid === 'string') {
             entry.entry_uid = uid;
         }
-        this._entry = 'single';
         return lodash_1.merge(this, entry);
     }
     asset(uid) {
@@ -203,11 +179,8 @@ class Stack {
         const asset = new query_1.Query();
         if (uid && typeof uid === 'string') {
             asset.asset_uid = uid;
-            return lodash_1.merge(this, asset);
         }
-        else {
-            throw new Error('Please provide valid single asset uid');
-        }
+        return lodash_1.merge(this, asset);
     }
     assets() {
         this.type = 'asset';
