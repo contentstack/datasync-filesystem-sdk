@@ -21,7 +21,7 @@ export declare class Query {
     content_type_uid: any;
     type: string;
     single: boolean;
-    private _query;
+    private q;
     constructor();
     equalTo(key: any, value: any): this;
     where(expr: any): this;
