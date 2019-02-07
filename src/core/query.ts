@@ -577,7 +577,7 @@ export class Query {
      * @method only
      * @example blogQuery.only([title,uid])
      * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.only(["title","uid"]).find()
+     *          let data = blogQuery.only(['title','uid']).find()
      *          data.then(function(result) {
      *         // ‘result’ contains a list of entries with field title and uid only
      *       },function (error) {
@@ -598,7 +598,7 @@ export class Query {
      * @method except
      * @example blogQuery.except([title,uid])
      * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.except(["title","uid"]).find()
+     *          let data = blogQuery.except(['title','uid']).find()
      *          data.then(function(result) {
      *         // ‘result’ contains a list of entries without fields title and uid only
      *       },function (error) {

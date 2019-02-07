@@ -67,7 +67,7 @@ class Stack {
         const entry = new query_1.Query();
         this.isEntry = true;
         if (this.type === undefined) {
-            throw new Error("Please call contentType('uid') first");
+            throw new Error('Please call contentType(\'uid\') first');
         }
         return lodash_1.merge(entry, this);
     }
@@ -167,7 +167,7 @@ class Stack {
         const entry = new query_1.Query();
         this.isEntry = true;
         if (this.type === undefined) {
-            throw new Error("Please call contentType('uid') first");
+            throw new Error('Please call contentType(\'uid\') first');
         }
         if (uid && typeof uid === 'string') {
             entry.entry_uid = uid;
