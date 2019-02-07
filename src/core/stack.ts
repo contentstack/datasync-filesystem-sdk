@@ -16,16 +16,16 @@ export class Stack {
     public config: any
     public content_type_uid: string
     public type: string
-    public _query: any = {}
+    public q: any = {}
     public asset_uid: any
     public entry_uid: any
     public single: boolean = false
-    public _entry: boolean =false;
+    public isEntry: boolean = false;
 
-    constructor(...stack_arguments) {
+    constructor(...stackArguments) {
         this.baseDir
         this.masterLocale
-        this.config = merge(defaultConfig, ...stack_arguments)
+        this.config = merge(defaultConfig, ...stackArguments)
     }
 
     public connect(overrides: Object = {}) {
@@ -53,7 +53,7 @@ export class Stack {
         const stack = new Stack(this.config)
         stack.baseDir = this.baseDir
         stack.masterLocale = this.masterLocale
-        if (!uid){
+        if (!uid) {
             throw new Error("Please provide valid uid")
         }
         else if (uid && typeof uid === 'string') {
@@ -65,7 +65,7 @@ export class Stack {
 
     public entries() {
         const entry = new Query()
-        this._entry= true
+        this.isEntry = true
         if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first")
         }
@@ -75,7 +75,7 @@ export class Stack {
     public find() {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
-        const locale = (!this._query.locale) ? masterLocale : this._query.locale
+        const locale = (!this.q.locale) ? masterLocale : this.q.locale
         let result
         return new Promise((resolve, reject) => {
             if (this.type == 'asset') {
@@ -105,7 +105,7 @@ export class Stack {
                     })
                 }
 
-            } else if (this.type !== 'asset' && !this._entry) {
+            } else if (this.type !== 'asset' && !this.isEntry) {
                 const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json')
                 if (!fs.existsSync(dataPath)) {
                     return reject(`content type not found`)
@@ -171,7 +171,7 @@ export class Stack {
 
     public entry(uid) {
         const entry = new Query()
-        this._entry= true
+        this.isEntry = true
         if (this.type === undefined) {
             throw new Error("Please call contentType('uid') first")
         }

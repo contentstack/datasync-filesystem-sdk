@@ -13,13 +13,13 @@ import { promisify } from 'util'
 
 const readFile: any = promisify(fs.readFile);
 
-const _extend = {
+const extend = {
     compare(type) {
         return function (key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
-                this._query.query = this._query.query || {}
-                this._query.query[key] = this._query.query.file_size || {}
-                this._query.query[key][type] = value
+                this.q.query = this.q.query || {}
+                this.q.query[key] = this.q.query.file_size || {}
+                this.q.query[key][type] = value
                 return this
             } else {
                 console.error('Kindly provide valid parameters.')
@@ -30,10 +30,10 @@ const _extend = {
         const type = (bool) ? '$in' : '$nin'
         return function (key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
-                this._query.query = this._query.query || {}
-                this._query.query[key] = this._query.query[key] || {}
-                this._query.query[key][type] = this._query.query[key][type] || []
-                this._query.query[key][type] = this._query.query[key][type].concat(value)
+                this.q.query = this.q.query || {}
+                this.q.query[key] = this.q.query[key] || {}
+                this.q.query[key][type] = this.q.query[key][type] || []
+                this.q.query[key][type] = this.q.query[key][type].concat(value)
                 return this
             } else {
                 console.error('Kindly provide valid parameters.')
@@ -43,9 +43,9 @@ const _extend = {
     exists(bool) {
         return function (key) {
             if (key && typeof key === 'string') {
-                this._query.query = this._query.query || {}
-                this._query.query[key] = this._query.query[key] || {}
-                this._query.query[key].$exists = bool
+                this.q.query = this.q.query || {}
+                this.q.query[key] = this.q.query[key] || {}
+                this.q.query[key].$exists = bool
                 return this
             } else {
                 console.error('Kindly provide valid parameters.')
@@ -54,17 +54,17 @@ const _extend = {
     },
     logical(type) {
         return function () {
-            this._query.logical = this._query.logical || {}
-            this._query.logical[type] = this._query.logical[type] || {}
-            this._query.logical[type] = this._query.query
-            delete this._query.query
+            this.q.logical = this.q.logical || {}
+            this.q.logical[type] = this.q.logical[type] || {}
+            this.q.logical[type] = this.q.query
+            delete this.q.query
             return this
         }
     },
     sort(type) {
         return function (key) {
             if (key && typeof key === 'string') {
-                this._query[type] = key
+                this.q[type] = key
                 return this
             } else {
                 console.error('Argument should be a string.')
@@ -74,7 +74,7 @@ const _extend = {
     pagination(type) {
         return function (value) {
             if (typeof value === 'number') {
-                this._query[type] = value
+                this.q[type] = value
                 return this
             } else {
                 console.error('Argument should be a number.')
@@ -112,11 +112,11 @@ export class Query {
     public content_type_uid: any
     public type: string
     public single: boolean = false
-    private _query: any
+    private q: any
 
     constructor() {
-        this._query = this._query || {}
-        this._query.query = this._query.query || {}
+        this.q = this.q || {}
+        this.q.query = this.q.query || {}
 
         /**
           * @method lessThan
@@ -132,7 +132,7 @@ export class Query {
           *      })
           * @returns {query}
           */
-        this.lessThan = _extend.compare('$lt')
+        this.lessThan = extend.compare('$lt')
 
         /**
           * @method lessThanOrEqualTo
@@ -148,7 +148,7 @@ export class Query {
           *      })
           * @returns {query}
           */
-        this.lessThanOrEqualTo = _extend.compare('$lte')
+        this.lessThanOrEqualTo = extend.compare('$lte')
 
         /**
         * @method greaterThan
@@ -165,7 +165,7 @@ export class Query {
         *                     })
         * @returns {query}
         */
-        this.greaterThan = _extend.compare('$gt')
+        this.greaterThan = extend.compare('$gt')
 
         /**
          * @method greaterThanOrEqualTo
@@ -181,7 +181,7 @@ export class Query {
          *      })
          * @returns {query}
          */
-        this.greaterThanOrEqualTo = _extend.compare('$gte')
+        this.greaterThanOrEqualTo = extend.compare('$gte')
 
         /**
          * @method notEqualTo
@@ -198,7 +198,7 @@ export class Query {
          *      })
          * @returns {Query}
          */
-        this.notEqualTo = _extend.compare('$ne')
+        this.notEqualTo = extend.compare('$ne')
 
         /**
          * @method containedIn
@@ -214,7 +214,7 @@ export class Query {
          *      })
          * @returns {Query}
          */
-        this.containedIn = _extend.contained(true)
+        this.containedIn = extend.contained(true)
 
         /**
           * @method notContainedIn
@@ -230,7 +230,7 @@ export class Query {
           *      })
           * @returns {Query}
           */
-        this.notContainedIn = _extend.contained(false)
+        this.notContainedIn = extend.contained(false)
 
         /**
         * @method exists
@@ -246,7 +246,7 @@ export class Query {
         *      })
         * @returns {Query}
         */
-        this.exists = _extend.exists(true)
+        this.exists = extend.exists(true)
 
         /**
         * @method notExists
@@ -262,7 +262,7 @@ export class Query {
         *      })
         * @returns {Query}
         */
-        this.notExists = _extend.exists(false)
+        this.notExists = extend.exists(false)
 
         /**
         * @method ascending
@@ -277,7 +277,7 @@ export class Query {
         *      })
         * @returns {Query}
         */
-        this.ascending = _extend.sort('asc')
+        this.ascending = extend.sort('asc')
 
         /**
          * @method descending
@@ -292,7 +292,7 @@ export class Query {
          *      })
          * @returns {Query}
          */
-        this.descending = _extend.sort('desc')
+        this.descending = extend.sort('desc')
 
 
         /**
@@ -309,7 +309,7 @@ export class Query {
         *      })
         * @returns {Query}
         */
-        this.skip = _extend.pagination('skip')
+        this.skip = extend.pagination('skip')
 
         /**
         * @method limit
@@ -324,7 +324,7 @@ export class Query {
         *      })
         * @returns {Query}
         */
-        this.limit = _extend.pagination('limit')
+        this.limit = extend.pagination('limit')
 
         /**
         * @method or
@@ -342,9 +342,9 @@ export class Query {
         * blogQuery.or(Query1, Query2)
         * @returns {Query}
         */
-        this.or = _extend.logical('$or')
-        this.nor = _extend.logical('$nor')
-        this.not = _extend.logical('$not')
+        this.or = extend.logical('$or')
+        this.nor = extend.logical('$nor')
+        this.not = extend.logical('$not')
 
         /**
          * @method and
@@ -362,7 +362,7 @@ export class Query {
          * blogQuery.and(Query1, Query2)
          * @returns {Query}
          */
-        this.and = _extend.logical('$and')
+        this.and = extend.logical('$and')
     }
 
     /**
@@ -382,7 +382,7 @@ export class Query {
 
     public equalTo(key, value) {
         if (key && typeof key === 'string') {
-            this._query.query[key] = value
+            this.q.query[key] = value
             return this
         } else {
             throw new Error('Kindly provide valid parameters.')
@@ -408,7 +408,7 @@ export class Query {
         if (!(expr)) {
             throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'')
         }
-        this._query.query.$where = expr
+        this.q.query.$where = expr
         return this
     }
 
@@ -427,7 +427,7 @@ export class Query {
      * @returns {Query}
      */
     public count() {
-        this._query.count = true
+        this.q.count = true
         return this
     }
 
@@ -439,7 +439,7 @@ export class Query {
      */
     public query(userQuery) {
         if (typeof userQuery === 'object') {
-            this._query.query = mergeDeep(this._query.query, userQuery)
+            this.q.query = mergeDeep(this.q.query, userQuery)
             return this
         } else {
             throw new Error('Kindly provide valid parameters')
@@ -461,7 +461,7 @@ export class Query {
      */
     public tags(values) {
         if (Array.isArray(values)) {
-            this._query.tags = values
+            this.q.tags = values
             return this
         } else {
             throw new Error('Kindly provide valid parameters')
@@ -482,7 +482,7 @@ export class Query {
      * @returns {Query}
      */
     public includeCount() {
-        this._query.include_count = true
+        this.q.include_count = true
         return this
     }
 
@@ -501,7 +501,7 @@ export class Query {
      */
     public language(language_code) {
         if (language_code && typeof language_code === 'string') {
-            this._query.locale = language_code
+            this.q.locale = language_code
             return this
         } else {
             throw new Error('Argument should be a String.')
@@ -509,12 +509,12 @@ export class Query {
     }
 
     public includeReferences() {
-        this._query.includeReferences = true
+        this.q.includeReferences = true
         return this
     }
 
     public excludeReferences() {
-        this._query.excludeReferences = true
+        this.q.excludeReferences = true
         return this
     }
 
@@ -532,7 +532,7 @@ export class Query {
      * @returns {Query}
      */
     public includeContentType() {
-        this._query.include_content_type = true
+        this.q.include_content_type = true
         return this
     }
 
@@ -544,7 +544,7 @@ export class Query {
      * @returns {Query}
      */
     public getQuery() {
-        return this._query.query
+        return this.q.query
     }
 
     /**
@@ -563,7 +563,7 @@ export class Query {
      */
     public regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
-            this._query.query[key] = {
+            this.q.query[key] = {
                 $regex: value,
                 $options: options
             }
@@ -589,8 +589,8 @@ export class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'only()\'')
         }
-        this._query.only = this._query.only || {}
-        this._query.only = fields
+        this.q.only = this.q.only || {}
+        this.q.only = fields
         return this
     }
 
@@ -610,8 +610,8 @@ export class Query {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
             throw new Error('Kindly provide valid \'field\' values for \'except()\'')
         }
-        this._query.except = this._query.except || {}
-        this._query.except = fields
+        this.q.except = this.q.except || {}
+        this.q.except = fields
 
         return this
     }
@@ -626,7 +626,7 @@ export class Query {
    */
     public queryReferences(query) {
         if (query && typeof query === 'object') {
-            this._query.queryReferences = query
+            this.q.queryReferences = query
             return this
         }
         throw new Error('Kindly pass a query object for \'.queryReferences()\'')
@@ -636,7 +636,7 @@ export class Query {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
         const contentTypeUid = this.content_type_uid
-        const locale = (!this._query.locale) ? masterLocale : this._query.locale
+        const locale = (!this.q.locale) ? masterLocale : this.q.locale
 
         return new Promise((resolve, reject) => {
             try {
@@ -652,55 +652,55 @@ export class Query {
                 if (!fs.existsSync(dataPath)) {
                     return reject(`${dataPath} didn't exist`)
                 }
-                
-                    fs.readFile(dataPath, 'utf8', async (err, data) => {
-                        if (err) {
-                            return reject(err)
-                        } 
-                        
 
-                            const finalResult = {
-                                content_type_uid: this.content_type_uid,
-                                locale: locale,
-                            }
+                fs.readFile(dataPath, 'utf8', async (err, data) => {
+                    if (err) {
+                        return reject(err)
+                    }
 
-                            let type = (this.type !== 'asset') ? 'entries' : 'assets'
-                            if (!data) {
-                                finalResult[type] = []
-                                return resolve(finalResult)
-                            }
-                            data = JSON.parse(data)
-                            const filteredData = map(data, 'data')
 
-                            if (this._query.queryReferences) {
-                                return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
-                                    .then(resolve)
-                                    .catch(reject)
-                            }
+                    const finalResult = {
+                        content_type_uid: this.content_type_uid,
+                        locale: locale,
+                    }
 
-                            if (this._query.excludeReferences) {
+                    let type = (this.type !== 'asset') ? 'entries' : 'assets'
+                    if (!data) {
+                        finalResult[type] = []
+                        return resolve(finalResult)
+                    }
+                    data = JSON.parse(data)
+                    const filteredData = map(data, 'data')
+
+                    if (this.q.queryReferences) {
+                        return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
+                            .then(resolve)
+                            .catch(reject)
+                    }
+
+                    if (this.q.excludeReferences) {
+                        let preProcessedData = this.preProcess(filteredData)
+                        this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                            .then((result) => {
+                                this.q = {}
+                                return resolve(result)
+                            }).catch(reject)
+
+                    }
+                    else {
+                        return this.includeReferencesI(filteredData, locale, {}, undefined)
+                            .then(async () => {
                                 let preProcessedData = this.preProcess(filteredData)
-                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                                    .then((result) => {
-                                        this._query = {}
-                                        return resolve(result)
-                                    }).catch(reject)
+                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
+                                    this.q = {}
+                                    return resolve(result)
+                                })
+                            })
+                            .catch(reject)
+                    }
 
-                            }
-                            else {
-                                return this.includeReferencesI(filteredData, locale, {}, undefined)
-                                    .then(async () => {
-                                        let preProcessedData = this.preProcess(filteredData)
-                                        this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
-                                            this._query = {}
-                                            return resolve(result)
-                                        })
-                                    })
-                                    .catch(reject)
-                            }
-                        
-                    })
-                
+                })
+
             } catch (error) {
                 return reject(error)
 
@@ -714,10 +714,10 @@ export class Query {
 
             return this.includeReferencesI(filteredData, locale, {}, undefined)
                 .then(async () => {
-                    let result = sift(this._query.queryReferences, filteredData)
+                    let result = sift(this.q.queryReferences, filteredData)
                     let preProcessedData = this.preProcess(result)
                     this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
-                        this._query = {}
+                        this.q = {}
                         return resolve(res)
                     })
 
@@ -853,25 +853,25 @@ export class Query {
         let result
         const sortKeys: any = ['asc', 'desc']
 
-        const sortQuery: any = Object.keys(this._query)
+        const sortQuery: any = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
             .reduce((obj, key) => {
                 return {
                     ...obj,
-                    [key]: this._query[key],
+                    [key]: this.q[key],
                 }
             }, {})
-        if (this._query.asc || this._query.desc) {
+        if (this.q.asc || this.q.desc) {
             const value: any = (Object as any).values(sortQuery)
             const key: any = Object.keys(sortQuery)
             result = orderBy(filteredData, value, key)
         }
 
-        if (this._query.query && Object.keys(this._query.query).length > 0) {
-            result = sift(this._query.query, filteredData)
-        } else if (this._query.logical) {
-            const operator = Object.keys(this._query.logical)[0]
-            const vals: any = (Object as any).values(this._query.logical)
+        if (this.q.query && Object.keys(this.q.query).length > 0) {
+            result = sift(this.q.query, filteredData)
+        } else if (this.q.logical) {
+            const operator = Object.keys(this.q.logical)[0]
+            const vals: any = (Object as any).values(this.q.logical)
             const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
             const logicalQuery = {}
             logicalQuery[operator] = values
@@ -880,29 +880,29 @@ export class Query {
             result = filteredData
         }
 
-        if ((this._query.skip) && ((this._query.limit))) {
-            result = result.splice(this._query.skip, this._query.limit)
-        } else if ((this._query.skip)) {
-            result = result.slice(this._query.skip)
-        } else if (this._query.limit) {
-            result = result.splice(0, this._query.limit)
+        if ((this.q.skip) && ((this.q.limit))) {
+            result = result.splice(this.q.skip, this.q.limit)
+        } else if ((this.q.skip)) {
+            result = result.slice(this.q.skip)
+        } else if (this.q.limit) {
+            result = result.splice(0, this.q.limit)
         }
 
-        if (this._query.only) {
-            const only = this._query.only.toString().replace(/\./g, '/')
+        if (this.q.only) {
+            const only = this.q.only.toString().replace(/\./g, '/')
             result = mask(result, only)
         }
 
-        if (this._query.except) {
-            const bukcet = this._query.except.toString().replace(/\./g, '/')
+        if (this.q.except) {
+            const bukcet = this.q.except.toString().replace(/\./g, '/')
             const except = mask(result, bukcet)
             result = difference(result, except)
         }
 
-        if (this._query.tags) {
+        if (this.q.tags) {
             result = sift({
                 tags: {
-                    $in: this._query.tags,
+                    $in: this.q.tags,
                 },
             }, result)
         }
@@ -913,7 +913,7 @@ export class Query {
     private postProcessResult(finalResult, result, type, schemaPath) {
         return new Promise((resolve, reject) => {
             try {
-                if (this._query.count) {
+                if (this.q.count) {
                     (finalResult as any).count = result.length
                 } else {
                     finalResult[type] = result
@@ -923,7 +923,7 @@ export class Query {
                     finalResult[type] = result[0]
                 }
 
-                if (this._query.include_count) {
+                if (this.q.include_count) {
                     if (result === undefined) {
                         (finalResult as any).count = 0
                     } else if (this.single) {
@@ -933,7 +933,7 @@ export class Query {
                     }
                 }
 
-                if (this._query.include_content_type) {
+                if (this.q.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
                         return reject(`content type not found`)
                     }
