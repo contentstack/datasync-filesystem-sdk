@@ -13,8 +13,8 @@ export declare class Stack {
     _query: any;
     asset_uid: any;
     entry_uid: any;
-    _entry: string;
     single: boolean;
+    _entry: boolean;
     constructor(...stack_arguments: any[]);
     connect(overrides?: Object): Promise<{}>;
     contentType(uid: any): Stack;
