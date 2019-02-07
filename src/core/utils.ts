@@ -18,7 +18,7 @@ export const  _type =(val)=> {
     return __typeof;
 }
 
-export const mergeDeep = (targett, sourcee) => {
+export const mergeDeep = (target, source) => {
     const self = this
     const mergeRrcursive = (target, source) => {
         for (const key in source) {
@@ -31,12 +31,12 @@ export const mergeDeep = (targett, sourcee) => {
             }
         }
     }
-    mergeRrcursive(targett, sourcee)
+    mergeRrcursive(target, source)
 
-    return targett
+    return target
 }
 
-export const difference = (obj, basee) => {
+export const difference = (obj, base) => {
     const changes = (object, base) => {
         return transform(object, (result, value, key) => {
             if (!isEqual(value, base[key])) {
@@ -45,7 +45,7 @@ export const difference = (obj, basee) => {
         })
     }
 
-    return changes(obj, basee)
+    return changes(obj, base)
 }
 
 export const checkCyclic = (uid, mapping) => {
