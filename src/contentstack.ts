@@ -9,6 +9,7 @@ import {  Stack } from './stack'
  * @description Creates an instance of `Contentstack`.
  * @api public
  */
+
 export class Contentstack {
  /**
 	 * @method Stack
@@ -23,7 +24,7 @@ export class Contentstack {
 	 *
 	 * @returns {Stack}
 	 */
-  public Stack(...stackArguments) {
+  public static Stack(...stackArguments) {
     return new Stack(...stackArguments)
   }
 }
