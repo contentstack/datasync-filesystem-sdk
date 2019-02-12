@@ -1,4 +1,4 @@
 import { Stack } from './stack';
 export declare class Contentstack {
-    Stack(...stackArguments: any[]): Stack;
+    static Stack(...stackArguments: any[]): Stack;
 }
