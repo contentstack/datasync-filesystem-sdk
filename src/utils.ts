@@ -3,6 +3,7 @@
  * copyright (c) Contentstack LLC
  * MIT Licensed
  */
+
 import {isEqual, isObject, transform, uniq} from 'lodash'
 
 export const difference = (obj, baseObj) => {
