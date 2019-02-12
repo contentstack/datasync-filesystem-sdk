@@ -1,0 +1,234 @@
+{
+    "created_at": "2018-07-17T05:09:10.263Z",
+    "updated_at": "2019-01-27T15:22:23.597Z",
+    "title": "Product",
+    "uid": "product",
+    "_version": 4,
+    "inbuilt_class": false,
+    "schema": [
+        {
+            "display_name": "Title",
+            "uid": "title",
+            "data_type": "text",
+            "mandatory": true,
+            "unique": true,
+            "field_metadata": {
+                "_default": true
+            },
+            "multiple": false
+        },
+        {
+            "display_name": "URL",
+            "uid": "url",
+            "data_type": "text",
+            "mandatory": false,
+            "field_metadata": {
+                "_default": true
+            },
+            "multiple": false,
+            "unique": false
+        },
+        {
+            "data_type": "file",
+            "display_name": "Image Thumbnails",
+            "uid": "image_thumbnails",
+            "extensions": [],
+            "field_metadata": {
+                "description": "",
+                "rich_text_type": "standard"
+            },
+            "multiple": true,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "text",
+            "display_name": "Product title",
+            "uid": "product_title",
+            "field_metadata": {
+                "description": "",
+                "default_value": ""
+            },
+            "format": "",
+            "error_messages": {
+                "format": ""
+            },
+            "multiple": false,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "text",
+            "display_name": "Price title",
+            "uid": "price_title",
+            "field_metadata": {
+                "description": "",
+                "default_value": ""
+            },
+            "format": "",
+            "error_messages": {
+                "format": ""
+            },
+            "multiple": false,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "text",
+            "display_name": "Price",
+            "uid": "price",
+            "field_metadata": {
+                "description": "",
+                "default_value": ""
+            },
+            "format": "",
+            "error_messages": {
+                "format": ""
+            },
+            "multiple": false,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "text",
+            "display_name": "Product description",
+            "uid": "product_description",
+            "field_metadata": {
+                "description": "",
+                "default_value": "",
+                "multiline": true
+            },
+            "format": "",
+            "error_messages": {
+                "format": ""
+            },
+            "multiple": false,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "reference",
+            "display_name": "Category",
+            "reference_to": "categories",
+            "field_metadata": {
+                "ref_multiple": false
+            },
+            "uid": "category",
+            "multiple": false,
+            "mandatory": false,
+            "unique": false
+        },
+        {
+            "data_type": "reference",
+            "display_name": "Related Products",
+            "reference_to": "product",
+            "field_metadata": {
+                "ref_multiple": true
+            },
+            "uid": "related_products",
+            "mandatory": false,
+            "multiple": false,
+            "unique": false
+        }
+    ],
+    "last_activity": {
+        "environments": [
+            {
+                "uid": "blt1b06d5cbcc2c1e8c",
+                "details": [
+                    {
+                        "locale": "en-us",
+                        "time": "2019-01-27T15:24:04.714Z"
+                    }
+                ]
+            }
+        ]
+    },
+    "maintain_revisions": true,
+    "description": "",
+    "options": {
+        "is_page": true,
+        "singleton": false,
+        "title": "title",
+        "sub_title": [],
+        "url_pattern": "/:title",
+        "url_prefix": "/"
+    },
+    "abilities": {
+        "get_one_object": true,
+        "get_all_objects": true,
+        "create_object": true,
+        "update_object": true,
+        "delete_object": true,
+        "delete_all_objects": true
+    },
+    "DEFAULT_ACL": {
+        "others": {
+            "read": false,
+            "create": false
+        },
+        "users": [
+            {
+                "uid": "blt85ea5bbf4f48c0a1",
+                "read": true,
+                "sub_acl": {
+                    "read": true
+                }
+            }
+        ]
+    },
+    "SYS_ACL": {
+        "others": {
+            "read": false,
+            "create": false,
+            "update": false,
+            "delete": false,
+            "sub_acl": {
+                "read": false,
+                "create": false,
+                "update": false,
+                "delete": false,
+                "publish": false
+            }
+        },
+        "roles": [
+            {
+                "uid": "blt71f19865a76e36f3",
+                "read": true,
+                "sub_acl": {
+                    "create": true,
+                    "read": true,
+                    "update": true,
+                    "delete": true,
+                    "publish": true
+                },
+                "update": true,
+                "delete": true
+            },
+            {
+                "uid": "blt0819cd8f4f98ea41",
+                "read": true,
+                "sub_acl": {
+                    "create": true,
+                    "read": true,
+                    "update": true,
+                    "delete": true,
+                    "publish": true
+                }
+            },
+            {
+                "uid": "blt546f8f43becae74a",
+                "read": true,
+                "sub_acl": {
+                    "create": true,
+                    "read": true,
+                    "update": true,
+                    "delete": true,
+                    "publish": true
+                },
+                "update": true,
+                "delete": true
+            }
+        ]
+    }
+}
