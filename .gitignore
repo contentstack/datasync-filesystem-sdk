@@ -13,6 +13,7 @@ node_modules/
 !.gitignore
 !.npmignore
 !package.json
+!jest.config.js
 !tslint.json
 !tsconfig.json
 !.jsbeautifyrc
