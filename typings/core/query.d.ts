@@ -18,7 +18,7 @@ export declare class Query {
     and: () => any;
     baseDir: any;
     masterLocale: any;
-    content_type_uid: any;
+    contentTypeUid: any;
     type: string;
     single: boolean;
     private q;
@@ -29,7 +29,7 @@ export declare class Query {
     query(userQuery: any): this;
     tags(values: any): this;
     includeCount(): this;
-    language(language_code: any): this;
+    language(languageCode: any): this;
     includeReferences(): this;
     excludeReferences(): this;
     includeContentType(): this;
@@ -39,8 +39,8 @@ export declare class Query {
     except(fields: any): this;
     queryReferences(query: any): this;
     find(): Promise<{}>;
-    private queryOnReferences;
     findOne(): Promise<{}>;
+    private queryOnReferences;
     private findReferences;
     private includeReferencesI;
     private preProcess;
