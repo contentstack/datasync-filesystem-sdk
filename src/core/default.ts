@@ -4,8 +4,8 @@
  * MIT Licensed
  */
 export const defaultConfig = {
-    'options': {
-      base_dir: './_contents'
-    }
+  contentStore: {
+      baseDir: './_contents',
+    },
   }
 

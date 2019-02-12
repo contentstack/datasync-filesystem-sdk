@@ -8,20 +8,20 @@ export declare class Stack {
     baseDir: any;
     masterLocale: any;
     config: any;
-    content_type_uid: string;
+    contentTypeUid: string;
     type: string;
     q: any;
-    asset_uid: any;
-    entry_uid: any;
+    assetUid: any;
+    entryUid: any;
     single: boolean;
     isEntry: boolean;
     constructor(...stackArguments: any[]);
-    connect(overrides?: Object): Promise<{}>;
+    connect(overrides?: object): Promise<{}>;
     contentType(uid: any): Stack;
     entries(): Query & this;
     find(): Promise<{}>;
     findOne(): Promise<{}>;
-    entry(uid: any): this & Query;
-    asset(uid: any): this & Query;
+    entry(uid?: any): Query & this;
+    asset(uid?: any): Query & this;
     assets(): Query & this;
 }
