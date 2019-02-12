@@ -35,7 +35,8 @@ class Stack {
                     throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
                 else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
-                    throw new Error(`${this.config.contentStore.baseDir} didn't exits.`);
+                    console.log(fs.existsSync(this.config.contentStore.baseDir), path.resolve(this.config.contentStore.baseDir));
+                    throw new Error(`${this.config.contentStore.baseDir} didn't exists.`);
                 }
                 else {
                     this.baseDir = this.config.contentStore.baseDir;
