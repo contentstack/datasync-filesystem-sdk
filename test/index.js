@@ -1,75 +1,25 @@
+const Contentstack = require('../dist/contentstack').Contentstack
 
-describe('contentStore key test', () => {
-    const cms = require('../dist')
-
-    const stack = cms.Stack({
-        api_key: '',
-        access_token: '',
-        'contentStore': {
-            'baseDir': '../_contents'
+const Stack = Contentstack.Stack({
+    api_key: '',
+    access_token: '',
+    'contentStore': {
+        'baseDir': './test/testData'
+    },
+    locales: [
+        {
+            code: 'en-us',
+            relative_url_prefix: '/'
         },
-        // locales: [
-        //     {
-        //         code: 'en-us',
-        //         relative_url_prefix: '/'
-        //     },
-        //     {
-        //         code: 'es-es',
-        //         relative_url_prefix: '/es/'
-        //     }
-        // ]
-
-    })
-        return test('contentStore test', () => {
-            stack.connect().then((res) => {
-
-        }).catch((error) => {
-            console.log(error)
-            expect(error).toBe(error)
-        })
-    })
+        {
+            code: 'es-es',
+            relative_url_prefix: '/es/'
+        }
+    ]
 
 })
 
-// describe('locale key test', () => {
-//     const Stack = Contentstack.Stack({
-//         'contentStore': {
-//             'baseDir': '../_contents'
-//         }
-//     })
-//     return test('locale test', () => {
-//         Stack.connect().then((res) => {
-
-//         }).catch((error) => {
-//             console.log(error)
-//             expect(error).toBe(error)
-//         })
-//     })
-
-// })
-
 describe('core', () => {
-    const Contentstack = require('../dist')
-
-    const Stack = Contentstack.Stack({
-        api_key: '',
-        access_token: '',
-        'contentStore': {
-            'baseDir': './test/testData'
-        },
-        locales: [
-            {
-                code: 'en-us',
-                relative_url_prefix: '/'
-            },
-            {
-                code: 'es-es',
-                relative_url_prefix: '/es/'
-            }
-        ]
-
-    })
-
     beforeAll(() => {
         
         return new Promise(async (resolve, reject) => {
@@ -123,8 +73,6 @@ describe('core', () => {
           ).toEqual({ 'created_at': { '$lt': '2017-07-20' } });
 
     })
-
-
 
     test('get all entries from contentType of product', () => {
         return Stack.contentType('product')

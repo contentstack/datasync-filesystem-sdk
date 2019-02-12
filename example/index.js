@@ -1,6 +1,7 @@
 var express = require('express')
 var app = express()
-var Contentstack = require('../dist/index')
+const Contentstack = require('../dist/contentstack').Contentstack
+
 var config = require('./config')
 var Stack = Contentstack.Stack({"api_key":"","token":""})
 app.listen(4000,()=>{
