@@ -22,27 +22,25 @@ class Stack {
         this.q = {};
         this.single = false;
         this.isEntry = false;
-        this.baseDir;
-        this.masterLocale;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
     }
     connect(overrides = {}) {
         this.config = lodash_1.merge(this.config, overrides);
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config['options'].hasOwnProperty('base_dir')) {
-                    throw new Error('Please provide base_dir to connect the filesystem.');
+                if (!this.config.contentStore.hasOwnProperty('baseDir')) {
+                    throw new Error('Please provide baseDir to connect the filesystem.');
                 }
                 else if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
-                    throw new Error('Please provide locales with code and relative_url_prefix.\n Example ==> locales:[{code:"en-us",relative_ul_prefix:"/"}].');
+                    throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
-                else if (!(fs.existsSync(this.config['options'].base_dir))) {
-                    throw new Error(`${this.config['options'].base_dir} didn't exits.`);
+                else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
+                    throw new Error(`${this.config.contentStore.baseDir} didn't exits.`);
                 }
                 else {
-                    this.baseDir = this.config['options'].base_dir;
+                    this.baseDir = this.config.contentStore.baseDir;
                     this.masterLocale = this.config.locales[0].code;
-                    return resolve(this.config['options']);
+                    return resolve(this.config.contentStore);
                 }
             }
             catch (error) {
@@ -55,10 +53,10 @@ class Stack {
         stack.baseDir = this.baseDir;
         stack.masterLocale = this.masterLocale;
         if (!uid) {
-            throw new Error("Please provide valid uid");
+            throw new Error('Please provide valid uid');
         }
         else if (uid && typeof uid === 'string') {
-            stack.content_type_uid = uid;
+            stack.contentTypeUid = uid;
             stack.type = 'contentType';
         }
         return stack;
@@ -77,63 +75,41 @@ class Stack {
         const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         let result;
         return new Promise((resolve, reject) => {
-            if (this.type == 'asset') {
+            if (this.type === 'asset') {
                 const dataPath = path.join(baseDir, locale, 'assets', '_assets.json');
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`asset not found`);
-                }
-                else {
-                    fs.readFile(dataPath, 'utf8', (err, data) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        const finalResult = {};
-                        if (!data) {
-                            finalResult.asset = null;
-                            return resolve(finalResult);
-                        }
-                        const assetData = JSON.parse(data);
-                        if (!this.asset_uid) {
-                            finalResult.assets = [];
-                            return resolve(finalResult);
-                        }
-                        result = lodash_1.find(assetData, { uid: this.asset_uid });
-                        finalResult.asset = result;
-                        return resolve(finalResult);
-                    });
-                }
-            }
-            else if (this.type !== 'asset' && !this.isEntry) {
-                const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, '_schema.json');
-                if (!fs.existsSync(dataPath)) {
-                    return reject(`content type not found`);
+                    return reject('asset not found');
                 }
                 fs.readFile(dataPath, 'utf8', (err, data) => {
                     if (err) {
                         return reject(err);
                     }
-                    const finalResult = {
-                        content_type_uid: this.content_type_uid,
-                    };
+                    const finalResult = {};
                     if (!data) {
-                        return resolve(finalResult.content_type = null);
+                        finalResult.asset = null;
+                        return resolve(finalResult);
                     }
-                    const schema = JSON.parse(data);
-                    finalResult.content_type = schema;
+                    const assetData = JSON.parse(data);
+                    if (!this.assetUid) {
+                        finalResult.assets = [];
+                        return resolve(finalResult);
+                    }
+                    result = lodash_1.find(assetData, { uid: this.assetUid });
+                    finalResult.asset = result;
                     return resolve(finalResult);
                 });
             }
             else {
-                const dataPath = path.join(baseDir, locale, 'data', this.content_type_uid, 'index.json');
+                const dataPath = path.join(baseDir, locale, 'data', this.contentTypeUid, 'index.json');
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`content type not found`);
+                    return reject('content type not found');
                 }
                 fs.readFile(dataPath, 'utf8', (err, data) => {
                     if (err) {
                         return reject(err);
                     }
                     const finalResult = {
-                        content_type_uid: this.content_type_uid,
+                        content_type_uid: this.contentTypeUid,
                         locale,
                     };
                     if (!data) {
@@ -142,11 +118,11 @@ class Stack {
                     }
                     const entryData = JSON.parse(data);
                     result = lodash_1.map(entryData, 'data');
-                    if (!this.entry_uid) {
+                    if (!this.entryUid) {
                         finalResult.entries = [];
                         return resolve(finalResult);
                     }
-                    result = lodash_1.find(result, { uid: this.entry_uid });
+                    result = lodash_1.find(result, { uid: this.entryUid });
                     finalResult.entry = result;
                     return resolve(finalResult);
                 });
@@ -171,16 +147,20 @@ class Stack {
         }
         if (uid && typeof uid === 'string') {
             entry.entry_uid = uid;
+            return lodash_1.merge(this, entry);
         }
-        return lodash_1.merge(this, entry);
+        this.single = true;
+        return lodash_1.merge(entry, this);
     }
     asset(uid) {
         this.type = 'asset';
         const asset = new query_1.Query();
         if (uid && typeof uid === 'string') {
             asset.asset_uid = uid;
+            return lodash_1.merge(this, asset);
         }
-        return lodash_1.merge(this, asset);
+        this.single = true;
+        return lodash_1.merge(asset, this);
     }
     assets() {
         this.type = 'asset';

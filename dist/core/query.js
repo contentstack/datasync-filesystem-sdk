@@ -23,8 +23,8 @@ const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
 const path = __importStar(require("path"));
 const sift_1 = __importDefault(require("sift"));
-const utils_1 = require("./utils");
 const util_1 = require("util");
+const utils_1 = require("./utils");
 const readFile = util_1.promisify(fs.readFile);
 const extend = {
     compare(type) {
@@ -35,9 +35,7 @@ const extend = {
                 this.q.query[key][type] = value;
                 return this;
             }
-            else {
-                console.error('Kindly provide valid parameters.');
-            }
+            throw new Error('Kindly provide valid parameters.');
         };
     },
     contained(bool) {
@@ -50,9 +48,7 @@ const extend = {
                 this.q.query[key][type] = this.q.query[key][type].concat(value);
                 return this;
             }
-            else {
-                console.error('Kindly provide valid parameters.');
-            }
+            throw new Error('Kindly provide valid parameters.');
         };
     },
     exists(bool) {
@@ -63,9 +59,7 @@ const extend = {
                 this.q.query[key].$exists = bool;
                 return this;
             }
-            else {
-                console.error('Kindly provide valid parameters.');
-            }
+            throw new Error('Kindly provide valid parameters.');
         };
     },
     logical(type) {
@@ -83,9 +77,7 @@ const extend = {
                 this.q[type] = key;
                 return this;
             }
-            else {
-                console.error('Argument should be a string.');
-            }
+            throw new Error('Argument should be a string.');
         };
     },
     pagination(type) {
@@ -94,9 +86,7 @@ const extend = {
                 this.q[type] = value;
                 return this;
             }
-            else {
-                console.error('Argument should be a number.');
-            }
+            throw new Error('Argument should be a number.');
         };
     },
 };
@@ -128,16 +118,14 @@ class Query {
             this.q.query[key] = value;
             return this;
         }
-        else {
-            throw new Error('Kindly provide valid parameters.');
-        }
+        throw new Error('Kindly provide valid parameters.');
     }
     where(expr) {
-        if (!(expr)) {
-            throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'');
+        if (expr) {
+            this.q.query.$where = expr;
+            return this;
         }
-        this.q.query.$where = expr;
-        return this;
+        throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'');
     }
     count() {
         this.q.count = true;
@@ -145,34 +133,28 @@ class Query {
     }
     query(userQuery) {
         if (typeof userQuery === 'object') {
-            this.q.query = utils_1.mergeDeep(this.q.query, userQuery);
+            this.q.query = lodash_1.merge(this.q.query, userQuery);
             return this;
         }
-        else {
-            throw new Error('Kindly provide valid parameters');
-        }
+        throw new Error('Kindly provide valid parameters');
     }
     tags(values) {
         if (Array.isArray(values)) {
             this.q.tags = values;
             return this;
         }
-        else {
-            throw new Error('Kindly provide valid parameters');
-        }
+        throw new Error('Kindly provide valid parameters');
     }
     includeCount() {
         this.q.include_count = true;
         return this;
     }
-    language(language_code) {
-        if (language_code && typeof language_code === 'string') {
-            this.q.locale = language_code;
+    language(languageCode) {
+        if (languageCode && typeof languageCode === 'string') {
+            this.q.locale = languageCode;
             return this;
         }
-        else {
-            throw new Error('Argument should be a String.');
-        }
+        throw new Error('Argument should be a String.');
     }
     includeReferences() {
         this.q.includeReferences = true;
@@ -192,14 +174,12 @@ class Query {
     regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
             this.q.query[key] = {
+                $options: options,
                 $regex: value,
-                $options: options
             };
             return this;
         }
-        else {
-            throw new Error('Kindly provide valid parameters.');
-        }
+        throw new Error('Kindly provide valid parameters.');
     }
     only(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
@@ -227,7 +207,7 @@ class Query {
     find() {
         const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
-        const contentTypeUid = this.content_type_uid;
+        const contentTypeUid = this.contentTypeUid;
         const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
@@ -241,17 +221,17 @@ class Query {
                     schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
                 }
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`);
+                    return reject('content-type or entry not found');
                 }
                 fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
                     if (err) {
                         return reject(err);
                     }
                     const finalResult = {
-                        content_type_uid: this.content_type_uid,
-                        locale: locale,
+                        content_type_uid: this.contentTypeUid,
+                        locale,
                     };
-                    let type = (this.type !== 'asset') ? 'entries' : 'assets';
+                    const type = (this.type !== 'asset') ? 'entries' : 'assets';
                     if (!data) {
                         finalResult[type] = [];
                         return resolve(finalResult);
@@ -264,7 +244,7 @@ class Query {
                             .catch(reject);
                     }
                     if (this.q.excludeReferences) {
-                        let preProcessedData = this.preProcess(filteredData);
+                        const preProcessedData = this.preProcess(filteredData);
                         this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
                             .then((result) => {
                             this.q = {};
@@ -274,8 +254,9 @@ class Query {
                     else {
                         return this.includeReferencesI(filteredData, locale, {}, undefined)
                             .then(() => __awaiter(this, void 0, void 0, function* () {
-                            let preProcessedData = this.preProcess(filteredData);
-                            this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
+                            const preProcessedData = this.preProcess(filteredData);
+                            this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                                .then((result) => {
                                 this.q = {};
                                 return resolve(result);
                             });
@@ -289,20 +270,6 @@ class Query {
             }
         });
     }
-    queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
-        return new Promise((resolve, reject) => {
-            return this.includeReferencesI(filteredData, locale, {}, undefined)
-                .then(() => __awaiter(this, void 0, void 0, function* () {
-                let result = sift_1.default(this.q.queryReferences, filteredData);
-                let preProcessedData = this.preProcess(result);
-                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
-                    this.q = {};
-                    return resolve(res);
-                });
-            }))
-                .catch(reject);
-        });
-    }
     findOne() {
         this.single = true;
         return new Promise((resolve, reject) => {
@@ -311,6 +278,20 @@ class Query {
             }).catch((error) => {
                 return reject(error);
             });
+        });
+    }
+    queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
+        return new Promise((resolve, reject) => {
+            return this.includeReferencesI(filteredData, locale, {}, undefined)
+                .then(() => __awaiter(this, void 0, void 0, function* () {
+                const result = sift_1.default(this.q.queryReferences, filteredData);
+                const preProcessedData = this.preProcess(result);
+                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
+                    this.q = {};
+                    return resolve(res);
+                });
+            }))
+                .catch(reject);
         });
     }
     findReferences(query) {
@@ -334,6 +315,7 @@ class Query {
                 }
                 data = JSON.parse(data);
                 data = lodash_1.map(data, 'data');
+                data = sift_1.default(query.query, data);
                 return resolve(data);
             });
         });
@@ -369,8 +351,10 @@ class Query {
                                 const query = {
                                     content_type_uid: entry[prop].reference_to,
                                     locale,
-                                    uid: {
-                                        $in: uids,
+                                    query: {
+                                        uid: {
+                                            $in: uids,
+                                        },
                                     },
                                 };
                                 referencesFound.push(new Promise((rs, rj) => {
@@ -382,14 +366,16 @@ class Query {
                                         }
                                         else if (parentUid) {
                                             references[parentUid] = references[parentUid] || [];
-                                            references[parentUid] = lodash_1.uniq(references[parentUid].concat(lodash_1.map(entities, 'uid')));
+                                            references[parentUid] = lodash_1.uniq(references[parentUid]
+                                                .concat(lodash_1.map(entities, 'uid')));
                                         }
                                         if (typeof entry[prop].values === 'string') {
-                                            entry[prop] = ((entities === null) || entities.length === 0) ? null : entities[0];
+                                            entry[prop] = ((entities === null) || entities.length === 0) ? null
+                                                : entities[0];
                                         }
                                         else {
                                             const referenceBucket = [];
-                                            query.uid.$in.forEach((entityUid) => {
+                                            query.query.uid.$in.forEach((entityUid) => {
                                                 const elem = lodash_1.find(entities, (entity) => {
                                                     return entity.uid === entityUid;
                                                 });
@@ -481,6 +467,8 @@ class Query {
                     finalResult[type] = result;
                 }
                 if (this.single) {
+                    delete finalResult[type];
+                    type = (type === 'entries') ? 'entry' : 'asset';
                     finalResult[type] = result[0];
                 }
                 if (this.q.include_count) {
@@ -496,7 +484,7 @@ class Query {
                 }
                 if (this.q.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
-                        return reject(`content type not found`);
+                        return reject('content type not found');
                     }
                     let contents;
                     readFile(schemaPath).then((data) => {
