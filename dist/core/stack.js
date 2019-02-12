@@ -28,14 +28,10 @@ class Stack {
         this.config = lodash_1.merge(this.config, overrides);
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.contentStore.hasOwnProperty('baseDir')) {
-                    throw new Error('Please provide baseDir to connect the filesystem.');
-                }
-                else if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
+                if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
                 else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
-                    console.log(fs.existsSync(this.config.contentStore.baseDir), path.resolve(this.config.contentStore.baseDir));
                     throw new Error(`${this.config.contentStore.baseDir} didn't exists.`);
                 }
                 else {
@@ -91,10 +87,6 @@ class Stack {
                         return resolve(finalResult);
                     }
                     const assetData = JSON.parse(data);
-                    if (!this.assetUid) {
-                        finalResult.assets = [];
-                        return resolve(finalResult);
-                    }
                     result = lodash_1.find(assetData, { uid: this.assetUid });
                     finalResult.asset = result;
                     return resolve(finalResult);
@@ -119,10 +111,6 @@ class Stack {
                     }
                     const entryData = JSON.parse(data);
                     result = lodash_1.map(entryData, 'data');
-                    if (!this.entryUid) {
-                        finalResult.entries = [];
-                        return resolve(finalResult);
-                    }
                     result = lodash_1.find(result, { uid: this.entryUid });
                     finalResult.entry = result;
                     return resolve(finalResult);
@@ -147,7 +135,7 @@ class Stack {
             throw new Error('Please call contentType(\'uid\') first');
         }
         if (uid && typeof uid === 'string') {
-            entry.entry_uid = uid;
+            entry.entryUid = uid;
             return lodash_1.merge(this, entry);
         }
         this.single = true;
@@ -157,7 +145,7 @@ class Stack {
         this.type = 'asset';
         const asset = new query_1.Query();
         if (uid && typeof uid === 'string') {
-            asset.asset_uid = uid;
+            asset.assetUid = uid;
             return lodash_1.merge(this, asset);
         }
         this.single = true;
