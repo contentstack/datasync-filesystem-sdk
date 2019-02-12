@@ -30,12 +30,9 @@ export class Stack {
         this.config = merge(this.config, overrides)
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.contentStore.hasOwnProperty('baseDir')) {
-                    throw new Error('Please provide baseDir to connect the filesystem.')
-                } else if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
+                if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.')
                 } else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
-                    console.log(fs.existsSync(this.config.contentStore.baseDir), path.resolve(this.config.contentStore.baseDir))
                     throw new Error(`${this.config.contentStore.baseDir} didn't exists.`)
                 } else {
                     this.baseDir = this.config.contentStore.baseDir
@@ -99,11 +96,6 @@ export class Stack {
                             return resolve(finalResult)
                         }
                         const assetData = JSON.parse(data)
-                        if (!this.assetUid) {
-                            (finalResult as any).assets = []
-
-                            return resolve(finalResult)
-                        }
                         result = find(assetData, { uid: this.assetUid });
                         (finalResult as any).asset = result
 
@@ -131,12 +123,6 @@ export class Stack {
                     }
                     const entryData = JSON.parse(data)
                     result = map(entryData, 'data')
-
-                    if (!this.entryUid) {
-                        (finalResult as any).entries = []
-
-                        return resolve(finalResult)
-                    }
                     result = find(result, { uid: this.entryUid });
                     (finalResult as any).entry = result
 
@@ -167,7 +153,7 @@ export class Stack {
             throw new Error('Please call contentType(\'uid\') first')
         }
         if (uid && typeof uid === 'string') {
-            (entry as any).entry_uid = uid
+            (entry as any).entryUid = uid
 
             return merge(this, entry)
         }
@@ -181,7 +167,7 @@ export class Stack {
         this.type = 'asset'
         const asset = new Query()
         if (uid && typeof uid === 'string') {
-            (asset as any).asset_uid = uid
+            (asset as any).assetUid = uid
 
             return merge(this, asset)
         }

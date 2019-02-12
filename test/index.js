@@ -1,35 +1,35 @@
 
-// describe('contentStore key test', () => {
-//     const Contentstack = require('../dist')
+describe('contentStore key test', () => {
+    const cms = require('../dist')
 
-//     const Stack = Contentstack.Stack({
-//         api_key: '',
-//         access_token: '',
-//         'contentStore': {
-//             'baseDir': '../_contents'
-//         },
-//         // locales: [
-//         //     {
-//         //         code: 'en-us',
-//         //         relative_url_prefix: '/'
-//         //     },
-//         //     {
-//         //         code: 'es-es',
-//         //         relative_url_prefix: '/es/'
-//         //     }
-//         // ]
+    const stack = cms.Stack({
+        api_key: '',
+        access_token: '',
+        'contentStore': {
+            'baseDir': '../_contents'
+        },
+        // locales: [
+        //     {
+        //         code: 'en-us',
+        //         relative_url_prefix: '/'
+        //     },
+        //     {
+        //         code: 'es-es',
+        //         relative_url_prefix: '/es/'
+        //     }
+        // ]
 
-//     })
-//         return test('contentStore test', () => {
-//         Stack.connect().then((res) => {
+    })
+        return test('contentStore test', () => {
+            stack.connect().then((res) => {
 
-//         }).catch((error) => {
-//             console.log(error)
-//             expect(error).toBe(error)
-//         })
-//     })
+        }).catch((error) => {
+            console.log(error)
+            expect(error).toBe(error)
+        })
+    })
 
-// })
+})
 
 // describe('locale key test', () => {
 //     const Stack = Contentstack.Stack({
@@ -86,6 +86,45 @@ describe('core', () => {
     test('initialize stack', () => {
         expect(Contentstack.Stack()).toHaveProperty('connect')
     })
+
+    test('call contentType() without uid', () => {
+        expect(() => {
+            return Stack
+            .contentType()
+            .entries()
+            .find()
+          }).toThrow();
+    })
+
+    test('call entries() directly', () => {
+        expect(() => {
+            return Stack
+            .entries()
+            .find()
+          }).toThrow();
+
+    })
+
+    test('call entry() directly', () => {
+        expect(() => {
+            return Stack
+            .entry()
+            .find()
+          }).toThrow()
+
+    })
+
+    test('getQuery()', () => {
+        expect(
+            Stack.contentType('product')
+            .entry()
+            .lessThan('created_at','2017-07-20')
+            .getQuery()
+          ).toEqual({ 'created_at': { '$lt': '2017-07-20' } });
+
+    })
+
+
 
     test('get all entries from contentType of product', () => {
         return Stack.contentType('product')
@@ -420,7 +459,7 @@ describe('core', () => {
     })
 
     test('get all assets', () => {
-        return Stack.contentType('product')
+        return Stack
             .assets()
             .find()
             .then(function (result) {
@@ -430,8 +469,19 @@ describe('core', () => {
             })
     })
 
+    test('get first asset using asset()', () => {
+        return Stack
+            .asset()
+            .find()
+            .then(function (result) {
+                expect(result).toHaveProperty('assets')
+            }).catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
     test('get asset with uid', () => {
-        return Stack.contentType('product')
+        return Stack
             .asset('bltf45225d5a0af61d9')
             .find()
             .then(function (result) {
@@ -441,16 +491,6 @@ describe('core', () => {
             })
     })
 
-    test('call asset() without uid', () => {
-        return Stack.contentType('product')
-            .asset()
-            .find()
-            .then(function (result) {
-                expect(result).toHaveProperty('assets')
-            }).catch((error) => {
-                expect(error).toBe(error)
-            })
-    })
 
     test('get entry with uid', () => {
         return Stack.contentType('product')
