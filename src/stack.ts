@@ -28,6 +28,7 @@ export class Stack {
 
     public connect(overrides: object = {}) {
         this.config = merge(this.config, overrides)
+
         return new Promise((resolve, reject) => {
             try {
                 if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
