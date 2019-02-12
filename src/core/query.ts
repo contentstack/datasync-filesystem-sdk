@@ -5,80 +5,85 @@
  */
 import * as fs from 'fs'
 import { default as mask } from 'json-mask'
-import { cloneDeep, filter, find, map, orderBy, uniq } from 'lodash'
+import { cloneDeep, filter, find, map, merge, orderBy, uniq } from 'lodash'
 import * as path from 'path'
 import { default as sift } from 'sift'
-import { checkCyclic, difference, mergeDeep } from './utils'
 import { promisify } from 'util'
+import { checkCyclic, difference } from './utils'
 
-const readFile: any = promisify(fs.readFile);
+const readFile: any = promisify(fs.readFile)
 
 const extend = {
     compare(type) {
-        return function (key, value) {
+        return function(key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
                 this.q.query = this.q.query || {}
                 this.q.query[key] = this.q.query.file_size || {}
                 this.q.query[key][type] = value
+
                 return this
-            } else {
-                console.error('Kindly provide valid parameters.')
             }
+            throw new Error('Kindly provide valid parameters.')
+
         }
     },
     contained(bool) {
         const type = (bool) ? '$in' : '$nin'
-        return function (key, value) {
+
+        return function(key, value) {
             if (key && value && typeof key === 'string' && Array.isArray(value)) {
                 this.q.query = this.q.query || {}
                 this.q.query[key] = this.q.query[key] || {}
                 this.q.query[key][type] = this.q.query[key][type] || []
                 this.q.query[key][type] = this.q.query[key][type].concat(value)
+
                 return this
-            } else {
-                console.error('Kindly provide valid parameters.')
             }
+            throw new Error('Kindly provide valid parameters.')
         }
     },
     exists(bool) {
-        return function (key) {
+        return function(key) {
             if (key && typeof key === 'string') {
                 this.q.query = this.q.query || {}
                 this.q.query[key] = this.q.query[key] || {}
                 this.q.query[key].$exists = bool
+
                 return this
-            } else {
-                console.error('Kindly provide valid parameters.')
             }
+            throw new Error('Kindly provide valid parameters.')
         }
     },
     logical(type) {
-        return function () {
+        return function() {
             this.q.logical = this.q.logical || {}
             this.q.logical[type] = this.q.logical[type] || {}
             this.q.logical[type] = this.q.query
             delete this.q.query
+
             return this
         }
     },
     sort(type) {
-        return function (key) {
+        return function(key) {
             if (key && typeof key === 'string') {
                 this.q[type] = key
+
                 return this
-            } else {
-                console.error('Argument should be a string.')
             }
+            throw new Error('Argument should be a string.')
+
         }
     },
     pagination(type) {
-        return function (value) {
+        return function(value) {
             if (typeof value === 'number') {
                 this.q[type] = value
+
                 return this
-            } else {
-                console.error('Argument should be a number.')
             }
+            throw new Error('Argument should be a number.')
+
         }
     },
 }
@@ -109,7 +114,7 @@ export class Query {
     public and: () => any
     public baseDir: any
     public masterLocale: any
-    public content_type_uid: any
+    public contentTypeUid: any
     public type: string
     public single: boolean = false
     private q: any
@@ -118,7 +123,7 @@ export class Query {
         this.q = this.q || {}
         this.q.query = this.q.query || {}
 
-        /**
+         /**
           * @method lessThan
           * @description Retrieves entries in which the value of a field is lesser than the provided value
           * @param {String} key - uid of the field
@@ -134,7 +139,7 @@ export class Query {
           */
         this.lessThan = extend.compare('$lt')
 
-        /**
+         /**
           * @method lessThanOrEqualTo
           * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
           * @param {String} key - uid of the field
@@ -142,7 +147,7 @@ export class Query {
           * @example let blogQuery = Stack().contentType('example').entries().query();
           *          let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
           *          data.then(function (result) {
-          *          // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
+          * // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
           *       },function (error) {
           *          // error function
           *      })
@@ -150,7 +155,7 @@ export class Query {
           */
         this.lessThanOrEqualTo = extend.compare('$lte')
 
-        /**
+       /**
         * @method greaterThan
         * @description Retrieves entries in which the value for a field is greater than the provided value.
         * @param {String} key - uid of the field
@@ -159,7 +164,7 @@ export class Query {
         *          let blogQuery = Stack().contentType('example').entries().query();
         *          let data = blogQuery.greaterThan('created_at','2015-03-12').find()
         *                     data.then(function(result) {
-        *                       // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
+        *  // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
         *                     },function (error) {
         *                       // error function
         *                     })
@@ -175,7 +180,8 @@ export class Query {
          * @example let blogQuery = Stack().contentType('example').entries().query();
          *          let data = blogQuery.greaterThanOrEqualTo('created_at','2015-03-12').find()
          *          data.then(function(result) {
-         *          // result contains the data of entries where the 'created_at' date will be greaterThan or equalto '2015-06-22'
+         * // result contains the data of entries where the 'created_at' date will be
+         * //greaterThan or equalto '2015-06-22'
          *       },function (error) {
          *          // error function
          *      })
@@ -192,7 +198,7 @@ export class Query {
          * @example let blogQuery = Stack().contentType('example').entries().query();
          *          let data = blogQuery.notEqualTo('title','Demo').find()
          *          data.then(function(result) {
-         *            // ‘result’ contains the list of entries where value of the ‘title’ field will not be 'Demo'.
+         * // ‘result’ contains the list of entries where value of the ‘title’ field will not be 'Demo'.
          *       },function (error) {
          *          // error function
          *      })
@@ -208,7 +214,8 @@ export class Query {
          * @example let blogQuery = Stack().contentType('example').entries().query();
          *          let data = blogQuery.containedIn('title', ['Demo', 'Welcome']).find()
          *          data.then(function(result) {
-         *          // ‘result’ contains the list of entries where value of the ‘title’ field will contain either 'Demo' or ‘Welcome’.
+         *  // ‘result’ contains the list of entries where value of the ‘title’ field will contain
+         * //either 'Demo' or ‘Welcome’.
          *       },function (error) {
          *          // error function
          *      })
@@ -216,15 +223,17 @@ export class Query {
          */
         this.containedIn = extend.contained(true)
 
-        /**
+         /**
           * @method notContainedIn
-          * @description Retrieve entries in which the value of a field does not match with any of the provided array of values.
+          * @description Retrieve entries in which the value of a field does not match
+          *              with any of the provided array of values.
           * @param {String} key - uid of the field
           * @param {Array} value - Array of values that are to be used to match or compare
           * @example let blogQuery = Stack().contentType('example').entries().query();
           *          let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
           *          data.then(function(result) {
-          *          // 'result' contains the list of entries where value of the title field should not be either "Demo" or ‘Welcome’
+          * // 'result' contains the list of entries where value of the title field should
+          * //not be either "Demo" or ‘Welcome’
           *       },function (error) {
           *          // error function
           *      })
@@ -232,7 +241,7 @@ export class Query {
           */
         this.notContainedIn = extend.contained(false)
 
-        /**
+       /**
         * @method exists
         * @description Retrieve entries if value of the field, mentioned in the condition, exists.
         * @param {String} key - uid of the field
@@ -248,7 +257,7 @@ export class Query {
         */
         this.exists = extend.exists(true)
 
-        /**
+       /**
         * @method notExists
         * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
         * @param {String} key - uid of the field
@@ -264,14 +273,14 @@ export class Query {
         */
         this.notExists = extend.exists(false)
 
-        /**
+       /**
         * @method ascending
         * @description Sort fetched entries in the ascending order with respect to a specific field.
         * @param {String} key - field uid based on which the ordering will be done
         * @example let blogQuery = Stack().contentType('example').entries().query();
         *          let data = blogQuery.ascending('created_at').find()
         *          data.then(function(result) {
-        *           // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
+        *  // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
         *       },function (error) {
         *          // error function
         *      })
@@ -286,7 +295,7 @@ export class Query {
          * @example let blogQuery = Stack().contentType('example').entries().query();
          *          let data = blogQuery.descending('created_at').find()
          *          data.then(function(result) {
-         *           // ‘result’ contains the list of entries which is sorted in descending order on the basis of ‘created_at’.
+         *  // ‘result’ contains the list of entries which is sorted in descending order on the basis of ‘created_at’.
          *       },function (error) {
          *          // error function
          *      })
@@ -295,7 +304,7 @@ export class Query {
         this.descending = extend.sort('desc')
 
 
-        /**
+       /**
         * @method skip
         * @description Skips at specific number of entries.
         * @param {Number} skip - number of entries to be skipped
@@ -311,7 +320,7 @@ export class Query {
         */
         this.skip = extend.pagination('skip')
 
-        /**
+       /**
         * @method limit
         * @description Returns a specific number of entries based on the set limit
         * @param {Number} limit - maximum number of entries to be returned
@@ -326,7 +335,7 @@ export class Query {
         */
         this.limit = extend.pagination('limit')
 
-        /**
+       /**
         * @method or
         * @description Retrieves entries that satisfy at least one of the given conditions
         * @param {object} queries - array of Query objects or raw queries
@@ -383,10 +392,11 @@ export class Query {
     public equalTo(key, value) {
         if (key && typeof key === 'string') {
             this.q.query[key] = value
+
             return this
-        } else {
-            throw new Error('Kindly provide valid parameters.')
         }
+        throw new Error('Kindly provide valid parameters.')
+
     }
 
     /**
@@ -405,11 +415,13 @@ export class Query {
      */
 
     public where(expr) {
-        if (!(expr)) {
-            throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'')
+        if (expr) {
+            this.q.query.$where = expr
+
+            return this
         }
-        this.q.query.$where = expr
-        return this
+        throw new Error('Kindly provide a valid field and expr/fn value for \'.where()\'')
+
     }
 
 
@@ -428,6 +440,7 @@ export class Query {
      */
     public count() {
         this.q.count = true
+
         return this
     }
 
@@ -439,11 +452,12 @@ export class Query {
      */
     public query(userQuery) {
         if (typeof userQuery === 'object') {
-            this.q.query = mergeDeep(this.q.query, userQuery)
+            this.q.query = merge(this.q.query, userQuery)
+
             return this
-        } else {
-            throw new Error('Kindly provide valid parameters')
         }
+        throw new Error('Kindly provide valid parameters')
+
     }
 
     /**
@@ -462,10 +476,11 @@ export class Query {
     public tags(values) {
         if (Array.isArray(values)) {
             this.q.tags = values
+
             return this
-        } else {
-            throw new Error('Kindly provide valid parameters')
         }
+        throw new Error('Kindly provide valid parameters')
+
     }
 
     /**
@@ -483,6 +498,7 @@ export class Query {
      */
     public includeCount() {
         this.q.include_count = true
+
         return this
     }
 
@@ -499,22 +515,25 @@ export class Query {
      *      })
      * @returns {Query}
      */
-    public language(language_code) {
-        if (language_code && typeof language_code === 'string') {
-            this.q.locale = language_code
+    public language(languageCode) {
+        if (languageCode && typeof languageCode === 'string') {
+            this.q.locale = languageCode
+
             return this
-        } else {
-            throw new Error('Argument should be a String.')
         }
+        throw new Error('Argument should be a String.')
+
     }
 
     public includeReferences() {
         this.q.includeReferences = true
+
         return this
     }
 
     public excludeReferences() {
         this.q.excludeReferences = true
+
         return this
     }
 
@@ -533,6 +552,7 @@ export class Query {
      */
     public includeContentType() {
         this.q.include_content_type = true
+
         return this
     }
 
@@ -544,6 +564,7 @@ export class Query {
      * @returns {Query}
      */
     public getQuery() {
+
         return this.q.query
     }
 
@@ -564,13 +585,14 @@ export class Query {
     public regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
             this.q.query[key] = {
+                $options: options,
                 $regex: value,
-                $options: options
             }
+
             return this
-        } else {
-            throw new Error('Kindly provide valid parameters.')
         }
+        throw new Error('Kindly provide valid parameters.')
+
     }
 
     /**
@@ -591,6 +613,7 @@ export class Query {
         }
         this.q.only = this.q.only || {}
         this.q.only = fields
+
         return this
     }
 
@@ -616,7 +639,7 @@ export class Query {
         return this
     }
 
-    /**
+  /**
    * @summary
    *  Wrapper, that allows querying on the entry's references.
    * @note
@@ -627,6 +650,7 @@ export class Query {
     public queryReferences(query) {
         if (query && typeof query === 'object') {
             this.q.queryReferences = query
+
             return this
         }
         throw new Error('Kindly pass a query object for \'.queryReferences()\'')
@@ -635,7 +659,7 @@ export class Query {
     public find() {
         const baseDir = this.baseDir
         const masterLocale = this.masterLocale
-        const contentTypeUid = this.content_type_uid
+        const contentTypeUid = this.contentTypeUid
         const locale = (!this.q.locale) ? masterLocale : this.q.locale
 
         return new Promise((resolve, reject) => {
@@ -650,49 +674,55 @@ export class Query {
                 }
 
                 if (!fs.existsSync(dataPath)) {
-                    return reject(`${dataPath} didn't exist`)
+
+                    return reject('content-type or entry not found')
                 }
 
                 fs.readFile(dataPath, 'utf8', async (err, data) => {
                     if (err) {
+
                         return reject(err)
                     }
 
 
                     const finalResult = {
-                        content_type_uid: this.content_type_uid,
-                        locale: locale,
+                        content_type_uid: this.contentTypeUid,
+                        locale,
                     }
 
-                    let type = (this.type !== 'asset') ? 'entries' : 'assets'
+                    const type = (this.type !== 'asset') ? 'entries' : 'assets'
                     if (!data) {
                         finalResult[type] = []
+
                         return resolve(finalResult)
                     }
                     data = JSON.parse(data)
                     const filteredData = map(data, 'data')
 
                     if (this.q.queryReferences) {
+
                         return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
                             .then(resolve)
                             .catch(reject)
                     }
 
                     if (this.q.excludeReferences) {
-                        let preProcessedData = this.preProcess(filteredData)
+                        const preProcessedData = this.preProcess(filteredData)
                         this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
                             .then((result) => {
                                 this.q = {}
+
                                 return resolve(result)
                             }).catch(reject)
 
-                    }
-                    else {
+                    }else {
                         return this.includeReferencesI(filteredData, locale, {}, undefined)
                             .then(async () => {
-                                let preProcessedData = this.preProcess(filteredData)
-                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((result) => {
+                                const preProcessedData = this.preProcess(filteredData)
+                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                                .then((result) => {
                                     this.q = {}
+
                                     return resolve(result)
                                 })
                             })
@@ -702,6 +732,7 @@ export class Query {
                 })
 
             } catch (error) {
+
                 return reject(error)
 
             }
@@ -709,32 +740,36 @@ export class Query {
 
     }
 
+    public findOne() {
+        this.single = true
+
+        return new Promise((resolve, reject) => {
+            this.find().then((result) => {
+
+                return resolve(result)
+            }).catch((error) => {
+
+                return reject(error)
+            })
+        })
+    }
+
     private queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
         return new Promise((resolve, reject) => {
 
             return this.includeReferencesI(filteredData, locale, {}, undefined)
                 .then(async () => {
-                    let result = sift(this.q.queryReferences, filteredData)
-                    let preProcessedData = this.preProcess(result)
+                    const result = sift(this.q.queryReferences, filteredData)
+                    const preProcessedData = this.preProcess(result)
                     this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
                         this.q = {}
+
                         return resolve(res)
                     })
 
                 })
                 .catch(reject)
 
-        })
-    }
-
-    public findOne() {
-        this.single = true
-        return new Promise((resolve, reject) => {
-            this.find().then((result) => {
-                return resolve(result)
-            }).catch((error) => {
-                return reject(error)
-            })
         })
     }
 
@@ -747,17 +782,23 @@ export class Query {
                 pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
             }
             if (!fs.existsSync(pth)) {
+
                 return resolve([])
             }
+
             return fs.readFile(pth, 'utf-8', (readError, data) => {
                 if (readError) {
+
                     return reject(readError)
                 }
                 if (!data) {
+
                     return resolve()
                 }
                 data = JSON.parse(data)
                 data = (map(data, 'data') as any)
+                data = sift(query.query, (data as any))
+
                 return resolve(data)
             })
         })
@@ -765,8 +806,10 @@ export class Query {
 
     private includeReferencesI(entry, locale, references, parentUid?) {
         const self = this
+
         return new Promise((resolve, reject) => {
             if (entry === null || typeof entry !== 'object') {
+
                 return resolve()
             }
 
@@ -791,6 +834,7 @@ export class Query {
                             }
                             if (entry[prop].reference_to !== '_assets') {
                                 uids = filter(uids, (uid) => {
+
                                     return !(checkCyclic(uid, references))
                                 })
                             }
@@ -798,12 +842,15 @@ export class Query {
                                 const query = {
                                     content_type_uid: entry[prop].reference_to,
                                     locale,
-                                    uid: {
-                                        $in: uids,
+                                    query: {
+                                        uid: {
+                                            $in: uids,
+                                        },
                                     },
                                 }
 
                                 referencesFound.push(new Promise((rs, rj) => {
+
                                     return self.findReferences(query).then((entities) => {
                                         entities = cloneDeep(entities)
                                         if ((entities as any).length === 0) {
@@ -812,15 +859,18 @@ export class Query {
                                             return rs()
                                         } else if (parentUid) {
                                             references[parentUid] = references[parentUid] || []
-                                            references[parentUid] = uniq(references[parentUid].concat(map((entities as any), 'uid')))
+                                            references[parentUid] = uniq(references[parentUid]
+                                                .concat(map((entities as any), 'uid')))
                                         }
                                         if (typeof entry[prop].values === 'string') {
-                                            entry[prop] = ((entities === null) || (entities as any).length === 0) ? null : entities[0]
+                                            entry[prop] = ((entities === null) || (entities as any).length === 0) ? null
+                                            : entities[0]
                                         } else {
                                             // format the references in order
                                             const referenceBucket = []
-                                            query.uid.$in.forEach((entityUid) => {
+                                            query.query.uid.$in.forEach((entityUid) => {
                                                 const elem = find(entities, (entity) => {
+
                                                     return (entity as any).uid === entityUid
                                                 })
                                                 if (elem) {
@@ -856,6 +906,7 @@ export class Query {
         const sortQuery: any = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
             .reduce((obj, key) => {
+
                 return {
                     ...obj,
                     [key]: this.q[key],
@@ -920,6 +971,8 @@ export class Query {
                 }
 
                 if (this.single) {
+                    delete finalResult[type]
+                    type = (type === 'entries') ? 'entry' : 'asset'
                     finalResult[type] = result[0]
                 }
 
@@ -935,21 +988,26 @@ export class Query {
 
                 if (this.q.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
-                        return reject(`content type not found`)
+
+                        return reject('content type not found')
                     }
                     let contents
                     readFile(schemaPath).then((data) => {
                         contents = JSON.parse(data);
                         (finalResult as any).content_type = contents
+
                         return resolve(finalResult)
                     }).catch(() => {
                         (finalResult as any).content_type = null
+
                         return resolve(finalResult)
                     })
                 } else {
+
                     return resolve(finalResult)
                 }
             } catch (error) {
+
                 return reject(error)
             }
         })
