@@ -1,3 +1,8 @@
+/*!
+ * contentstack-sync-filsystem-sdk
+ * copyright (c) Contentstack LLC
+ * MIT Licensed
+ */
 export declare class Query {
     lessThan: (key: any, value: any) => any;
     lessThanOrEqualTo: (key: any, value: any) => any;

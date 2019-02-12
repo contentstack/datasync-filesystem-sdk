@@ -74,6 +74,140 @@ describe('core', () => {
 
     })
 
+    test('lessThan()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .lessThan('')
+            .find()
+          }).toThrow()
+    })
+
+    test('containedIn()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .containedIn('')
+            .find()
+          }).toThrow()
+    })
+
+    test('exists()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .exists('')
+            .find()
+          }).toThrow()
+    })
+
+    test('ascending()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .ascending('')
+            .find()
+          }).toThrow()
+    })
+
+    test('skip()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .skip('')
+            .find()
+          }).toThrow()
+    })
+
+    test('equalTo()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .equalTo('')
+            .find()
+          }).toThrow()
+    })
+
+    test('where()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .where('')
+            .find()
+          }).toThrow()
+    })
+
+    test('tags()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .tags('')
+            .find()
+          }).toThrow()
+    })
+
+    test('language()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .language('')
+            .find()
+          }).toThrow()
+    })
+
+    test('query()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .query('')
+            .find()
+          }).toThrow()
+    })
+
+    test('regex()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .regex('')
+            .find()
+          }).toThrow()
+    })
+
+    test('only()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .only('')
+            .find()
+          }).toThrow()
+    })
+    
+
+    test('except()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .except('')
+            .find()
+          }).toThrow()
+    })
+
+    test('queryReferences()', () => {
+        expect(() => {
+            return Stack.contentType('product')
+            .entry()
+            .queryReferences('')
+            .find()
+          }).toThrow()
+    })
+    
+    
+
+
+
+
+    
+
     test('get all entries from contentType of product', () => {
         return Stack.contentType('product')
             .entries()
@@ -319,7 +453,7 @@ describe('core', () => {
             })
     })
 
-    test('get entries from contentType product by giving limit of 5 entries', () => {
+    test('get entries from contentType product by using query()', () => {
         return Stack.contentType('product')
             .entries()
             .query({ "title": "Amazon_Echo_Black" })
