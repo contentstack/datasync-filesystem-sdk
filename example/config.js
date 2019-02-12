@@ -1,6 +1,6 @@
 module.exports = {
-    "options": {
-      "base_dir": "../../_contents"
+    "contentStore": {
+      "baseDir": "../../_contents"
     },
     "locales": [
       {
