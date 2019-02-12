@@ -1,29 +1,30 @@
-const Contentstack = require('../dist')
 
-const Stack = Contentstack.Stack({
-    api_key: '',
-    access_token: '',
-    'contentStore': {
-        'baseDir': '../_contents'
-    },
-    locales: [
-        {
-            code: 'en-us',
-            relative_url_prefix: '/'
-        },
-        {
-            code: 'es-es',
-            relative_url_prefix: '/es/'
-        }
-    ]
-
-})
 // describe('contentStore key test', () => {
-//     return test('contentStore test', () => {
+//     const Contentstack = require('../dist')
+
+//     const Stack = Contentstack.Stack({
+//         api_key: '',
+//         access_token: '',
+//         'contentStore': {
+//             'baseDir': '../_contents'
+//         },
+//         // locales: [
+//         //     {
+//         //         code: 'en-us',
+//         //         relative_url_prefix: '/'
+//         //     },
+//         //     {
+//         //         code: 'es-es',
+//         //         relative_url_prefix: '/es/'
+//         //     }
+//         // ]
+
+//     })
+//         return test('contentStore test', () => {
 //         Stack.connect().then((res) => {
 
 //         }).catch((error) => {
-
+//             console.log(error)
 //             expect(error).toBe(error)
 //         })
 //     })
@@ -48,6 +49,26 @@ const Stack = Contentstack.Stack({
 // })
 
 describe('core', () => {
+    const Contentstack = require('../dist')
+
+    const Stack = Contentstack.Stack({
+        api_key: '',
+        access_token: '',
+        'contentStore': {
+            'baseDir': './test/testData'
+        },
+        locales: [
+            {
+                code: 'en-us',
+                relative_url_prefix: '/'
+            },
+            {
+                code: 'es-es',
+                relative_url_prefix: '/es/'
+            }
+        ]
+
+    })
 
     beforeAll(() => {
         
