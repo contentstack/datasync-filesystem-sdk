@@ -11,14 +11,14 @@ app.listen(4000,()=>{
 Stack.connect(config).then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
-    Stack.contentType('product')
-    .asset()
+    Stack
+    .assets()
     //.where("this.title === 'Amazon_Echo_Black'")
-    //.includeCount()
+    .includeCount()
     //.includeContentType()
     .includeReferences()
-    // .skip(2)
-    // .limit(5)
+     .skip(10)
+    .limit(10)
     // .queryReferences({})
     //.containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
