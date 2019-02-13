@@ -10,6 +10,7 @@
     "compile": "tsc",
     "test": "jest --coverage",
     "prepare": "npm run compile",
+    "pretest": "npm run build-ts",
     "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix"
   },
   "author": "Contentstack Ecosystem",
