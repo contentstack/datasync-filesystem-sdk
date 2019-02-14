@@ -381,7 +381,7 @@ export class Stack {
 
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
+                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales)) || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.')
                 } else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
                     throw new Error(`${this.config.contentStore.baseDir} didn't exist`)
@@ -421,93 +421,10 @@ export class Stack {
         return this
     }
 
-    // public find() {
-    //     const baseDir = this.baseDir
-    //     const masterLocale = this.masterLocale
-    //     const locale = (!this.q.locale) ? masterLocale : this.q.locale
-    //     let result
-
-    //     return new Promise((resolve, reject) => {
-    //         if (this.type === 'asset') {
-    //             const dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
-    //             if (!fs.existsSync(dataPath)) {
-    //                 this.q={}
-
-    //                 return reject('asset not found')
-    //             }
-    //             fs.readFile(dataPath, 'utf8', (err, data) => {
-    //                     if (err) {
-
-    //                         return reject(err)
-    //                     }
-    //                     const finalResult = {}
-
-                        
-                        
-    //                     let assetData = JSON.parse(data)
-    //                     assetData = map(assetData,'data')
-    //                     result = find(assetData, { uid: this.assetUid });
-    //                     if (result=== undefined) {
-    //                         (finalResult as any).asset = {}
-    //                         this.q ={}
-
-    //                         return resolve(finalResult)
-    //                     }
-    //                     (finalResult as any).asset = result
-    //                     this.q ={}
-
-    //                     return resolve(finalResult)
-    //                 })
-    //         } else {
-    //             const dataPath = path.join(baseDir, locale, 'data', this.contentTypeUid, 'index.json')
-    //             if (!fs.existsSync(dataPath)) {
-
-    //                 return reject('content type not found')
-    //             }
-    //             fs.readFile(dataPath, 'utf8', (err, data) => {
-    //                 if (err) {
-
-    //                     return reject(err)
-    //                 }
-    //                 const finalResult = {
-    //                     content_type_uid: this.contentTypeUid,
-    //                     locale,
-    //                 }
-    //                 if (!data) {
-    //                     (finalResult as any).entry = null
-    //                     this.q ={}
-
-    //                     return resolve(finalResult)
-    //                 }
-    //                 const entryData = JSON.parse(data)
-    //                 result = map(entryData, 'data')
-    //                 result = find(result, { uid: this.entryUid });
-    //                 (finalResult as any).entry = result
-    //                 this.q ={}
-
-    //                 return resolve(finalResult)
-    //             })
-
-    //         }
-    //     })
-    // }
-
-    // public findOne() {
-    //     this.single = true
-
-    //     return new Promise((resolve, reject) => {
-    //         this.find().then((result) => {
-    //             return resolve(result)
-    //         }).catch((error) => {
-    //             return reject(error)
-    //         })
-    //     })
-    // }
-
-
     public entry(uid?) {
        
         this.isEntry = true
+        this.single = true
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first')
         }
@@ -516,7 +433,6 @@ export class Stack {
 
             return this
         }
-        this.single = true
 
         return this
     }
@@ -524,13 +440,12 @@ export class Stack {
 
     public asset(uid?) {
         this.type = 'asset'
-      
+        this.single = true
         if (uid && typeof uid === 'string') {
             this.assetUid = uid
 
             return this
         }
-        this.single = true
 
         return this
     }
@@ -849,15 +764,19 @@ export class Stack {
                     if (err) {
                         return reject(err)
                     }
-
-
                     const finalResult = {
-                        content_type_uid: this.contentTypeUid,
+                        content_type_uid: this.contentTypeUid || "_assets",
                         locale,
                     }
+                    let type = (this.type !== 'asset') ? 'entries' : 'assets'
+                    if (data === undefined || data.length === 2) {
+                        this.q = {}
+                        if (this.single) {
+                            type = (type === 'entries')? 'entry' : 'asset'
+                            finalResult[type] = {}
 
-                    const type = (this.type !== 'asset') ? 'entries' : 'assets'
-                    if (!data) {
+                            return resolve(finalResult)
+                        }
                         finalResult[type] = []
 
                         return resolve(finalResult)
@@ -890,7 +809,7 @@ export class Stack {
                                     this.q = {}
 
                                     return resolve(result)
-                                })
+                                }).catch(reject)
                             })
                             .catch(reject)
                     }
@@ -1139,22 +1058,19 @@ export class Stack {
                 if (this.single) {
                     delete finalResult[type]
                     type = (type === 'entries') ? 'entry' : 'asset'
-                    finalResult[type] = result[0]
+                    if (result.length === 0) {
+                        finalResult[type] = {}
+                    } else{
+                        finalResult[type] = result[0]
+                    }
                 }
 
                 if (this.q.include_count) {
-                    if (result === undefined) {
-                        (finalResult as any).count = 0
-                    } else if (this.single) {
-                        (finalResult as any).count = 1
-                    } else {
-                        (finalResult as any).count = result.length
-                    }
+                    (finalResult as any).count = result.length
                 }
 
                 if (this.q.include_content_type) {
                     if (!fs.existsSync(schemaPath)) {
-
                         return reject('content type not found')
                     }
                     let contents
@@ -1164,7 +1080,7 @@ export class Stack {
 
                         return resolve(finalResult)
                     }).catch(() => {
-                        (finalResult as any).content_type = null
+                        (finalResult as any).content_type = {}
 
                         return resolve(finalResult)
                     })
@@ -1173,7 +1089,6 @@ export class Stack {
                     return resolve(finalResult)
                 }
             } catch (error) {
-
                 return reject(error)
             }
         })
