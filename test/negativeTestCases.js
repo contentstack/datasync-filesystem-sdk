@@ -1,5 +1,5 @@
 const Contentstack = require('../dist/contentstack').Contentstack
-
+const fs = require('fs')
 let Stack = Contentstack.Stack({
     api_key: '',
     access_token: '',
@@ -212,8 +212,9 @@ describe('negavtive test cases',()=>{
     
     test('get all entries from contentType of product', () => {
         
-        return Stack.contentType('test')
+        return Stack.contentType('abc')
             .entry('abc')
+            .includeCount()
             .find()
             .then(function (result) {
             }).catch((error) => {
@@ -222,8 +223,38 @@ describe('negavtive test cases',()=>{
     })
 
     test('get all entries from contentType of product', () => {
+        
+        return Stack.contentType('abc')
+            .entry()
+            .includeContentType()
+            .find()
+            .then(function (result) {
+               
+            })
+            .catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
+    test('get all entries from contentType of product', () => {
+        fs.chmodSync('./test/testData/en-us/data/footer/_schema.json','000')
+        return Stack.contentType('footer')
+            .entry()
+            .includeContentType()
+            .find()
+            .then(function (result) {
+               
+            })
+            .catch((error) => {
+                console.log("aalo")
+                expect(error).toBe(error)
+            })
+    })
+
+    test('get all entries from contentType of product', () => {
+        fs.chmodSync('./test/testData/en-us/data/footer/_schema.json','755')
         return Stack.asset('acb')
-            .language('fr-fs')
+            .language('fr-fr')
             .find()
             .then(function (result) {
             }).catch((error) => {
@@ -235,13 +266,13 @@ describe('negavtive test cases',()=>{
 
     test('locale key', () => {
         const cs = require('../dist/contentstack').Contentstack
-        //let cs = new cms()
         let stack = cs.Stack({
             'contentStore': {
                 'baseDir': './test/testData'
             },
-            'locales':[]
+            'locales':"ds"
         })
+        
             return stack
             .connect().then().catch((error)=>{
                 expect(error).toBe(error)
