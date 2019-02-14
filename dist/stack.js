@@ -119,7 +119,7 @@ class Stack {
         this.config = lodash_1.merge(this.config, overrides);
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.hasOwnProperty('locales') || this.config.locales.length === 0) {
+                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales)) || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
                 else if (!(fs_1.default.existsSync(this.config.contentStore.baseDir))) {
@@ -158,6 +158,7 @@ class Stack {
     }
     entry(uid) {
         this.isEntry = true;
+        this.single = true;
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first');
         }
@@ -165,16 +166,15 @@ class Stack {
             this.entryUid = uid;
             return this;
         }
-        this.single = true;
         return this;
     }
     asset(uid) {
         this.type = 'asset';
+        this.single = true;
         if (uid && typeof uid === 'string') {
             this.assetUid = uid;
             return this;
         }
-        this.single = true;
         return this;
     }
     assets() {
@@ -296,11 +296,17 @@ class Stack {
                         return reject(err);
                     }
                     const finalResult = {
-                        content_type_uid: this.contentTypeUid,
+                        content_type_uid: this.contentTypeUid || "_assets",
                         locale,
                     };
-                    const type = (this.type !== 'asset') ? 'entries' : 'assets';
-                    if (!data) {
+                    let type = (this.type !== 'asset') ? 'entries' : 'assets';
+                    if (data === undefined || data.length === 2) {
+                        this.q = {};
+                        if (this.single) {
+                            type = (type === 'entries') ? 'entry' : 'asset';
+                            finalResult[type] = {};
+                            return resolve(finalResult);
+                        }
                         finalResult[type] = [];
                         return resolve(finalResult);
                     }
@@ -327,7 +333,7 @@ class Stack {
                                 .then((result) => {
                                 this.q = {};
                                 return resolve(result);
-                            });
+                            }).catch(reject);
                         }))
                             .catch(reject);
                     }
@@ -537,18 +543,15 @@ class Stack {
                 if (this.single) {
                     delete finalResult[type];
                     type = (type === 'entries') ? 'entry' : 'asset';
-                    finalResult[type] = result[0];
-                }
-                if (this.q.include_count) {
-                    if (result === undefined) {
-                        finalResult.count = 0;
-                    }
-                    else if (this.single) {
-                        finalResult.count = 1;
+                    if (result.length === 0) {
+                        finalResult[type] = {};
                     }
                     else {
-                        finalResult.count = result.length;
+                        finalResult[type] = result[0];
                     }
+                }
+                if (this.q.include_count) {
+                    finalResult.count = result.length;
                 }
                 if (this.q.include_content_type) {
                     if (!fs_1.default.existsSync(schemaPath)) {
@@ -560,7 +563,7 @@ class Stack {
                         finalResult.content_type = contents;
                         return resolve(finalResult);
                     }).catch(() => {
-                        finalResult.content_type = null;
+                        finalResult.content_type = {};
                         return resolve(finalResult);
                     });
                 }
