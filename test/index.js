@@ -388,6 +388,18 @@ describe('core', () => {
             })
     })
 
+    test('get all assets', () => {
+        return Stack
+            .assets()
+            .language('fr-fr')
+            .find()
+            .then(function (result) {
+                expect(result).toHaveProperty('assets')
+            }).catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
     test('get first asset using asset()', () => {
         return Stack
             .asset()
@@ -412,7 +424,7 @@ describe('core', () => {
 
     test('get asset with uid', () => {
         fs.chmodSync('./test/testData/en-us/assets/_assets.json','0755')
-        return Stack.asset('bltf45225d5a0af61d9')
+        return Stack.asset('bltf45225d5a0af61d9').includeCount()
             .find()
             .then(function (result) {
                 expect(result).toHaveProperty('asset')
@@ -437,7 +449,7 @@ describe('core', () => {
             .entry('bltb1e0f507020e70b1')
             .find()
             .then(function (result) {
-                expect(result).toHaveProperty('entries')
+                expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -448,7 +460,7 @@ describe('core', () => {
             .entry('bltb1e0f507020e70b1')
             .findOne()
             .then(function (result) {
-                expect(result).toHaveProperty('entries')
+                expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -459,7 +471,7 @@ describe('core', () => {
             .entry()
             .findOne()
             .then(function (result) {
-                expect(result).toHaveProperty('entries')
+                expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
