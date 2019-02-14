@@ -19,7 +19,7 @@
             "price": "$199",
             "product_description": "Plays all your music from Amazon Music, Spotify, Pandora, iHeartRadio, TuneIn, and more using just your voice Fills the room with immersive, 360º omni-directional audio",
             "category": {
-                "reference_to": "categories",
+                "reference_to": "abc",
                 "values": [
                     "bltd0f51996c27a61cc"
                 ]
