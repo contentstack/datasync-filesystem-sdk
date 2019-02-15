@@ -12,8 +12,6 @@ export declare class Stack {
     q: any;
     assetUid: any;
     entryUid: any;
-    single: boolean;
-    isEntry: boolean;
     lessThan: (key: any, value: any) => any;
     lessThanOrEqualTo: (key: any, value: any) => any;
     greaterThan: (key: any, value: any) => any;

@@ -5,12 +5,12 @@
  */
 
 import fs from 'fs'
-import path from 'path'
-import { defaultConfig } from './default'
 import { default as mask } from 'json-mask'
 import { cloneDeep, filter, find, map, merge, orderBy, uniq } from 'lodash'
+import path from 'path'
 import { default as sift } from 'sift'
 import { promisify } from 'util'
+import { defaultConfig } from './default'
 import { checkCyclic, difference } from './utils'
 
 
@@ -100,25 +100,23 @@ export class Stack {
     public q: any = {}
     public assetUid: any
     public entryUid: any
-    public single: boolean = false
-    public isEntry: boolean = false
-    lessThan: (key: any, value: any) => any;
-    lessThanOrEqualTo: (key: any, value: any) => any;
-    greaterThan: (key: any, value: any) => any;
-    greaterThanOrEqualTo: (key: any, value: any) => any;
-    notEqualTo: (key: any, value: any) => any;
-    containedIn: (key: any, value: any) => any;
-    notContainedIn: (key: any, value: any) => any;
-    exists: (key: any) => any;
-    notExists: (key: any) => any;
-    ascending: (key: any) => any;
-    descending: (key: any) => any;
-    skip: (value: any) => any;
-    limit: (value: any) => any;
-    or: () => any;
-    nor: () => any;
-    not: () => any;
-    and: () => any;
+    public lessThan: (key: any, value: any) => any
+    public lessThanOrEqualTo: (key: any, value: any) => any
+    public greaterThan: (key: any, value: any) => any
+    public greaterThanOrEqualTo: (key: any, value: any) => any
+    public notEqualTo: (key: any, value: any) => any
+    public containedIn: (key: any, value: any) => any
+    public notContainedIn: (key: any, value: any) => any
+    public exists: (key: any) => any
+    public notExists: (key: any) => any
+    public ascending: (key: any) => any
+    public descending: (key: any) => any
+    public skip: (value: any) => any
+    public limit: (value: any) => any
+    public or: () => any
+    public nor: () => any
+    public not: () => any
+    public and: () => any
 
     constructor(...stackArguments) {
         this.config = merge(defaultConfig, ...stackArguments)
@@ -381,8 +379,9 @@ export class Stack {
 
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales)) || this.config.locales.length === 0) {
-                    throw new Error('Please provide locales with code and relative_url_prefix.')
+                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales))
+                    || this.config.locales.length === 0) {
+                        throw new Error('Please provide locales with code and relative_url_prefix.')
                 } else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
                     throw new Error(`${this.config.contentStore.baseDir} didn't exist`)
                 } else {
@@ -412,8 +411,8 @@ export class Stack {
     }
 
     public entries() {
-        
-        this.isEntry = true
+
+        this.q.isEntry = true
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first')
         }
@@ -422,9 +421,9 @@ export class Stack {
     }
 
     public entry(uid?) {
-       
-        this.isEntry = true
-        this.single = true
+
+        this.q.isEntry = true
+        this.q.single = true
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first')
         }
@@ -440,7 +439,7 @@ export class Stack {
 
     public asset(uid?) {
         this.type = 'asset'
-        this.single = true
+        this.q.single = true
         if (uid && typeof uid === 'string') {
             this.assetUid = uid
 
@@ -452,11 +451,11 @@ export class Stack {
 
     public assets() {
         this.type = 'asset'
-       
+
         return this
     }
 
-     /**
+    /**
      * @method equalTo
      * @description Retrieve entries in which a specific field satisfies the value provided
      * @param {String} key - uid of the field
@@ -765,19 +764,21 @@ export class Stack {
                         return reject(err)
                     }
                     const finalResult = {
-                        content_type_uid: this.contentTypeUid || "_assets",
+                        content_type_uid: this.contentTypeUid || '_assets',
                         locale,
                     }
                     let type = (this.type !== 'asset') ? 'entries' : 'assets'
-                    if (data === undefined || data.length === 2) {
-                        this.q = {}
-                        if (this.single) {
-                            type = (type === 'entries')? 'entry' : 'asset'
+                    if (data === undefined || data === "") {
+                       
+                        if (this.q.single) {
+                            type = (type === 'entries') ? 'entry' : 'asset'
                             finalResult[type] = {}
+                            this.q = {}
 
                             return resolve(finalResult)
                         }
                         finalResult[type] = []
+                        this.q = {}
 
                         return resolve(finalResult)
                     }
@@ -826,7 +827,7 @@ export class Stack {
     }
 
     public findOne() {
-        this.single = true
+        this.q.single = true
 
         return new Promise((resolve, reject) => {
             this.find().then((result) => {
@@ -1055,7 +1056,7 @@ export class Stack {
                     finalResult[type] = result
                 }
 
-                if (this.single) {
+                if (this.q.single) {
                     delete finalResult[type]
                     type = (type === 'entries') ? 'entry' : 'asset'
                     if (result.length === 0) {
