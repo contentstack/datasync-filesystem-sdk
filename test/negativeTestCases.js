@@ -229,7 +229,6 @@ describe('negavtive test cases',()=>{
             .includeContentType()
             .find()
             .then(function (result) {
-               
             })
             .catch((error) => {
                 expect(error).toBe(error)
@@ -243,10 +242,8 @@ describe('negavtive test cases',()=>{
             .includeContentType()
             .find()
             .then(function (result) {
-               
             })
             .catch((error) => {
-                console.log("aalo")
                 expect(error).toBe(error)
             })
     })
@@ -255,6 +252,26 @@ describe('negavtive test cases',()=>{
         fs.chmodSync('./test/testData/en-us/data/footer/_schema.json','755')
         return Stack.asset('acb')
             .language('fr-fr')
+            .find()
+            .then(function (result) {
+            }).catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
+    test('get all entries from contentType of product', () => {
+        return Stack.asset('acb')
+            .language('mr-in')
+            .find()
+            .then(function (result) {
+            }).catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
+    test('get all entries from contentType of product', () => {
+        return Stack.assets()
+            .language('mr-in')
             .find()
             .then(function (result) {
             }).catch((error) => {
