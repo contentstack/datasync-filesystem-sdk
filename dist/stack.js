@@ -17,12 +17,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
-const path_1 = __importDefault(require("path"));
-const default_1 = require("./default");
 const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
+const path_1 = __importDefault(require("path"));
 const sift_1 = __importDefault(require("sift"));
 const util_1 = require("util");
+const default_1 = require("./default");
 const utils_1 = require("./utils");
 const readFile = util_1.promisify(fs_1.default.readFile);
 const extend = {
@@ -92,8 +92,6 @@ const extend = {
 class Stack {
     constructor(...stackArguments) {
         this.q = {};
-        this.single = false;
-        this.isEntry = false;
         this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
         this.q = this.q || {};
         this.q.query = this.q.query || {};
@@ -119,7 +117,8 @@ class Stack {
         this.config = lodash_1.merge(this.config, overrides);
         return new Promise((resolve, reject) => {
             try {
-                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales)) || this.config.locales.length === 0) {
+                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales))
+                    || this.config.locales.length === 0) {
                     throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
                 else if (!(fs_1.default.existsSync(this.config.contentStore.baseDir))) {
@@ -150,15 +149,15 @@ class Stack {
         return stack;
     }
     entries() {
-        this.isEntry = true;
+        this.q.isEntry = true;
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first');
         }
         return this;
     }
     entry(uid) {
-        this.isEntry = true;
-        this.single = true;
+        this.q.isEntry = true;
+        this.q.single = true;
         if (this.type === undefined) {
             throw new Error('Please call contentType(\'uid\') first');
         }
@@ -170,7 +169,7 @@ class Stack {
     }
     asset(uid) {
         this.type = 'asset';
-        this.single = true;
+        this.q.single = true;
         if (uid && typeof uid === 'string') {
             this.assetUid = uid;
             return this;
@@ -296,18 +295,19 @@ class Stack {
                         return reject(err);
                     }
                     const finalResult = {
-                        content_type_uid: this.contentTypeUid || "_assets",
+                        content_type_uid: this.contentTypeUid || '_assets',
                         locale,
                     };
                     let type = (this.type !== 'asset') ? 'entries' : 'assets';
-                    if (data === undefined || data.length === 2) {
-                        this.q = {};
-                        if (this.single) {
+                    if (data === undefined || data === "") {
+                        if (this.q.single) {
                             type = (type === 'entries') ? 'entry' : 'asset';
                             finalResult[type] = {};
+                            this.q = {};
                             return resolve(finalResult);
                         }
                         finalResult[type] = [];
+                        this.q = {};
                         return resolve(finalResult);
                     }
                     data = JSON.parse(data);
@@ -345,7 +345,7 @@ class Stack {
         });
     }
     findOne() {
-        this.single = true;
+        this.q.single = true;
         return new Promise((resolve, reject) => {
             this.find().then((result) => {
                 return resolve(result);
@@ -540,7 +540,7 @@ class Stack {
                 else {
                     finalResult[type] = result;
                 }
-                if (this.single) {
+                if (this.q.single) {
                     delete finalResult[type];
                     type = (type === 'entries') ? 'entry' : 'asset';
                     if (result.length === 0) {
