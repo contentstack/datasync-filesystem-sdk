@@ -37,19 +37,13 @@ describe('core', () => {
         expect(Contentstack.Stack()).toHaveProperty('connect')
     })
 
-   
-
-    
-
-
-    
-
     test('get all entries from contentType of product', () => {
         
         return Stack.contentType('product')
             .entries()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -63,6 +57,7 @@ describe('core', () => {
             .includeCount()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('count')
                 expect(result.count).toBe(10)
             }).catch((error) => {
@@ -76,6 +71,7 @@ describe('core', () => {
             .includeContentType()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('content_type')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -89,6 +85,7 @@ describe('core', () => {
             .includeReferences()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -102,6 +99,7 @@ describe('core', () => {
             .where("this.title === 'Amazon_Echo_Black'")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries[0].title).toBe('Amazon_Echo_Black')
             }).catch((error) => {
@@ -115,6 +113,7 @@ describe('core', () => {
             .equalTo("title", "Amazon_Echo_Black")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries[0].title).toBe('Amazon_Echo_Black')
             }).catch((error) => {
@@ -128,6 +127,7 @@ describe('core', () => {
             .lessThan("created_at", "2018-07-20")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -141,6 +141,7 @@ describe('core', () => {
             .lessThanOrEqualTo("created_at", "2018-07-20")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -154,6 +155,7 @@ describe('core', () => {
             .greaterThan("created_at", "2018-07-20")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(0)
             }).catch((error) => {
@@ -167,6 +169,7 @@ describe('core', () => {
             .greaterThanOrEqualTo("created_at", "2018-07-20")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(0)
             }).catch((error) => {
@@ -181,6 +184,7 @@ describe('core', () => {
             .limit(5)
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(5)
             }).catch((error) => {
@@ -194,6 +198,7 @@ describe('core', () => {
             .ascending("title")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -207,6 +212,7 @@ describe('core', () => {
             .descending("title")
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
@@ -220,6 +226,7 @@ describe('core', () => {
             .containedIn("title", ['Amazon_Echo_Black', 'LG_G3_D850'])
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(2)
             }).catch((error) => {
@@ -233,6 +240,7 @@ describe('core', () => {
             .notContainedIn("title", ['Amazon_Echo_Black', 'LG_G3_D850'])
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(8)
             }).catch((error) => {
@@ -246,6 +254,7 @@ describe('core', () => {
             .only(['title', 'uid'])
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(Object.keys(result.entries[0]).length).toBe(2)
             }).catch((error) => {
@@ -259,6 +268,7 @@ describe('core', () => {
             .except(['title', 'uid'])
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(Object.keys(result.entries[0]).length).toBe(16)
             }).catch((error) => {
@@ -272,6 +282,7 @@ describe('core', () => {
             .skip(5)
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -284,6 +295,7 @@ describe('core', () => {
             .limit(5)
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -296,6 +308,7 @@ describe('core', () => {
             .query({ "title": "Amazon_Echo_Black" })
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -308,6 +321,7 @@ describe('core', () => {
             .count()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('count')
                 expect(result.count).toBe(10)
             }).catch((error) => {
@@ -322,6 +336,7 @@ describe('core', () => {
             .includeReferences()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -335,11 +350,13 @@ describe('core', () => {
             .includeReferences()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
     })
+    
     test('get entries from contentType product using tags() ', () => {
         return Stack.contentType('product')
             .entries()
@@ -347,6 +364,7 @@ describe('core', () => {
             .includeReferences()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -359,6 +377,7 @@ describe('core', () => {
             .language('fr-fr')
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -371,6 +390,7 @@ describe('core', () => {
             .excludeReferences()
             .findOne()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -382,6 +402,7 @@ describe('core', () => {
             .assets()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('assets')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -394,6 +415,7 @@ describe('core', () => {
             .language('fr-fr')
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('assets')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -405,6 +427,7 @@ describe('core', () => {
             .asset()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -416,6 +439,8 @@ describe('core', () => {
         return Stack.asset('bltf45225d5a0af61d9')
             .find()
             .then(function (result) {
+                console.log(result)
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -427,6 +452,7 @@ describe('core', () => {
         return Stack.asset('bltf45225d5a0af61d9').includeCount()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -437,6 +463,7 @@ describe('core', () => {
         return Stack.asset('bltf45225d5a0af61d9').language('fr-fr')
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -446,9 +473,10 @@ describe('core', () => {
 
     test('get entry with uid', () => {
         return Stack.contentType('product')
-            .entry('bltb1e0f507020e70b1')
+            .entry('blt88281dee93ce0fdc')
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -457,9 +485,10 @@ describe('core', () => {
 
     test('get entry with uid using findOne()', () => {
         return Stack.contentType('product')
-            .entry('bltb1e0f507020e70b1')
+            .entry('blt88281dee93ce0fdc')
             .findOne()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -471,6 +500,7 @@ describe('core', () => {
             .entry()
             .findOne()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -485,6 +515,7 @@ describe('core', () => {
         return query.or(q1, q2).descending('title').ascending('created_at').includeCount().includeContentType()
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -497,6 +528,7 @@ describe('core', () => {
             .regex('title', '^Amazon')
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -509,6 +541,7 @@ describe('core', () => {
             .queryReferences({ 'category.title': 'Home & Appliances' })
             .find()
             .then(function (result) {
+                expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
             }).catch((error) => {
                 expect(error).toBe(error)
