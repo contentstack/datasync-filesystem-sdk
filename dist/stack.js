@@ -299,7 +299,7 @@ class Stack {
                         locale,
                     };
                     let type = (this.type !== 'asset') ? 'entries' : 'assets';
-                    if (data === undefined || data === "") {
+                    if (data === undefined || data === '') {
                         if (this.q.single) {
                             type = (type === 'entries') ? 'entry' : 'asset';
                             finalResult[type] = {};
@@ -311,7 +311,11 @@ class Stack {
                         return resolve(finalResult);
                     }
                     data = JSON.parse(data);
-                    const filteredData = lodash_1.map(data, 'data');
+                    let filteredData = lodash_1.map(data, 'data');
+                    if (this.assetUid || this.entryUid) {
+                        const uid = this.assetUid || this.entryUid;
+                        filteredData = lodash_1.find(filteredData, ['uid', uid]);
+                    }
                     if (this.q.queryReferences) {
                         return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
                             .then(resolve)
@@ -543,15 +547,23 @@ class Stack {
                 if (this.q.single) {
                     delete finalResult[type];
                     type = (type === 'entries') ? 'entry' : 'asset';
-                    if (result.length === 0) {
+                    if (result === undefined) {
                         finalResult[type] = {};
                     }
                     else {
-                        finalResult[type] = result[0];
+                        finalResult[type] = result[0] || result;
                     }
                 }
                 if (this.q.include_count) {
-                    finalResult.count = result.length;
+                    if (result instanceof Array) {
+                        finalResult.count = result.length;
+                    }
+                    else if (this.q.single && result !== undefined) {
+                        finalResult.count = 1;
+                    }
+                    else {
+                        finalResult.count = 0;
+                    }
                 }
                 if (this.q.include_content_type) {
                     if (!fs_1.default.existsSync(schemaPath)) {
