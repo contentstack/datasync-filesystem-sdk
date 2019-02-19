@@ -18,7 +18,7 @@ let Stack = Contentstack.Stack({
     ]
 
 })
-//Stack.connect().catch()
+
 describe('core', () => {
     beforeEach(() => {
         return new Promise(async (resolve, reject) => {
@@ -58,6 +58,7 @@ describe('core', () => {
             .find()
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
+                expect(result).toHaveProperty('entries')
                 expect(result).toHaveProperty('count')
                 expect(result.count).toBe(10)
             }).catch((error) => {
@@ -72,6 +73,8 @@ describe('core', () => {
             .find()
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
+                expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toBe(10)
                 expect(result).toHaveProperty('content_type')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -101,6 +104,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toBe(1)
                 expect(result.entries[0].title).toBe('Amazon_Echo_Black')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -115,6 +119,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toBe(1)
                 expect(result.entries[0].title).toBe('Amazon_Echo_Black')
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -184,6 +189,7 @@ describe('core', () => {
             .limit(5)
             .find()
             .then(function (result) {
+                expect(result.entries[0].title).toEqual('LG_Stylo_2')
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(5)
@@ -200,6 +206,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('SADES_A60_7.1')
                 expect(result.entries.length).toBe(10)
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -212,6 +219,7 @@ describe('core', () => {
             .descending("title")
             .find()
             .then(function (result) {
+                expect(result.entries[0].title).toEqual('All_New_Echo_Dot')
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
                 expect(result.entries.length).toBe(10)
@@ -228,6 +236,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('Amazon_Echo_Black')
+                expect(result.entries[1].title).toEqual('LG_G3_D850')
                 expect(result.entries.length).toBe(2)
             }).catch((error) => {
                 expect(error).toBe(error)
@@ -284,6 +294,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toBe(5)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -297,6 +308,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toBe(5)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -310,6 +322,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('Amazon_Echo_Black')
+                expect(result.entries[0].length).toBe(1)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -352,6 +366,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toEqual(10)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -366,6 +381,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('Amazon_Echo_Black')
+                expect(result.entries[0].length).toBe(1)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -376,9 +393,7 @@ describe('core', () => {
             .entries()
             .language('fr-fr')
             .find()
-            .then(function (result) {
-                expect(result.content_type_uid).toEqual('product')
-                expect(result).toHaveProperty('entries')
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -391,7 +406,8 @@ describe('core', () => {
             .findOne()
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
-                expect(result).toHaveProperty('entries')
+                expect(result).toHaveProperty('entry')
+                expect(result.entry.title).toEqual('Amazon_Echo_Black')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -404,6 +420,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('assets')
+                expect(result.assets.length).toEqual(32)
+                expect(result.assets[0].uid).toEqual('bltf45225d5a0af61d9')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -417,6 +435,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('assets')
+                expect(result.assets.length).toEqual(0)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -429,6 +448,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
+                expect(result.asset.uid).toEqual('bltf45225d5a0af61d9')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -438,10 +458,7 @@ describe('core', () => {
         fs.chmodSync('./test/testData/en-us/assets/_assets.json','000')
         return Stack.asset('bltf45225d5a0af61d9')
             .find()
-            .then(function (result) {
-                console.log(result)
-                expect(result.content_type_uid).toEqual('_assets')
-                expect(result).toHaveProperty('asset')
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -454,6 +471,20 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
+                expect(result.asset.uid).toEqual('bltf45225d5a0af61d9')
+            }).catch((error) => {
+                expect(error).toBe(error)
+            })
+    })
+
+    test('get asset with uid', () => {
+        fs.chmodSync('./test/testData/en-us/assets/_assets.json','0755')
+        return Stack.asset('bltf45225d5a0af61d9').count()
+            .find()
+            .then(function (result) {
+                expect(result.content_type_uid).toEqual('_assets')
+                expect(result).toHaveProperty('asset')
+                expect(result.asset.uid).toEqual('bltf45225d5a0af61d9')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -465,6 +496,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('_assets')
                 expect(result).toHaveProperty('asset')
+                expect(Object.keys(result.asset).length).toEqual(0)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -478,6 +510,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
+                expect(result.entry.uid).toEqual('blt88281dee93ce0fdc')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -490,6 +523,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
+                expect(result.entry.uid).toEqual('blt88281dee93ce0fdc')
+                
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -502,6 +537,7 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entry')
+                expect(result.entry.title).toEqual('Amazon_Echo_Black')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -517,6 +553,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries.length).toEqual(10)
+                expect(result.entries[0].title).toEqual('SADES_A60_7.1')
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -530,6 +568,8 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('Amazon_Echo_Black')
+                expect(result.entries.length).toEqual(1)
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -543,6 +583,9 @@ describe('core', () => {
             .then(function (result) {
                 expect(result.content_type_uid).toEqual('product')
                 expect(result).toHaveProperty('entries')
+                expect(result.entries[0].title).toEqual('Google_Daydream_View')
+                expect(result.entries.length).toEqual(2)
+              
             }).catch((error) => {
                 expect(error).toBe(error)
             })

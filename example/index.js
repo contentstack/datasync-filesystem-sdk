@@ -12,13 +12,14 @@ Stack.connect(config).then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
     Stack
-    .assets()
+    .contentType('product')
     //.where("this.title === 'Amazon_Echo_Black'")
     .includeCount()
-    //.includeContentType()
+    .includeContentType()
     .includeReferences()
-     .skip(10)
-    .limit(10)
+    .skip(4)
+    .limit(3)
+    .descending('title')
     // .queryReferences({})
     //.containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
