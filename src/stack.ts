@@ -989,7 +989,7 @@ export class Stack {
     }
 
     private preProcess(filteredData) {
-        let result
+        // let result
         const sortKeys: any = ['asc', 'desc']
 
         const sortQuery: any = Object.keys(this.q)
@@ -1004,57 +1004,63 @@ export class Stack {
         if (this.q.asc || this.q.desc) {
             const value: any = (Object as any).values(sortQuery)
             const key: any = Object.keys(sortQuery)
-            result = orderBy(filteredData, value, key)
+            filteredData = orderBy(filteredData, value, key)
         }
 
         if (this.q.query && Object.keys(this.q.query).length > 0) {
-            result = sift(this.q.query, filteredData)
+            filteredData = sift(this.q.query, filteredData)
         } else if (this.q.logical) {
             const operator = Object.keys(this.q.logical)[0]
             const vals: any = (Object as any).values(this.q.logical)
             const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
             const logicalQuery = {}
             logicalQuery[operator] = values
-            result = sift(logicalQuery, filteredData)
+            filteredData = sift(logicalQuery, filteredData)
         } else {
-            result = filteredData
+            filteredData = filteredData
         }
 
         if ((this.q.skip) && ((this.q.limit))) {
-            result = result.splice(this.q.skip, this.q.limit)
+            filteredData = filteredData.splice(this.q.skip, this.q.limit)
         } else if ((this.q.skip)) {
-            result = result.slice(this.q.skip)
+            filteredData = filteredData.slice(this.q.skip)
         } else if (this.q.limit) {
-            result = result.splice(0, this.q.limit)
+            filteredData = filteredData.splice(0, this.q.limit)
         }
 
         if (this.q.only) {
             const only = this.q.only.toString().replace(/\./g, '/')
-            result = mask(result, only)
+            filteredData = mask(filteredData, only)
         }
 
         if (this.q.except) {
             const bukcet = this.q.except.toString().replace(/\./g, '/')
-            const except = mask(result, bukcet)
-            result = difference(result, except)
+            const except = mask(filteredData, bukcet)
+            filteredData = difference(filteredData, except)
         }
 
         if (this.q.tags) {
-            result = sift({
+            filteredData = sift({
                 tags: {
                     $in: this.q.tags,
                 },
-            }, result)
+            }, filteredData)
         }
 
-        return result
+        return filteredData
     }
 
     private postProcessResult(finalResult, result, type, schemaPath) {
         return new Promise((resolve, reject) => {
             try {
                 if (this.q.count) {
-                    (finalResult as any).count = result.length
+                    if (result instanceof Array){
+                        (finalResult as any).count = result.length
+                    }else if (this.q.single && result !== undefined){
+                        (finalResult as any).count = 1
+                    }else {
+                        (finalResult as any).count = 0
+                    }
                 } else {
                     finalResult[type] = result
                 }
