@@ -216,7 +216,7 @@ describe('negavtive test cases',()=>{
             .entry('abc')
             .includeCount()
             .find()
-            .then(function (result) {
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -228,7 +228,7 @@ describe('negavtive test cases',()=>{
             .entry()
             .includeContentType()
             .find()
-            .then(function (result) {
+            .then(function () {
             })
             .catch((error) => {
                 expect(error).toBe(error)
@@ -241,7 +241,7 @@ describe('negavtive test cases',()=>{
             .entry()
             .includeContentType()
             .find()
-            .then(function (result) {
+            .then(function () {
             })
             .catch((error) => {
                 expect(error).toBe(error)
@@ -253,7 +253,7 @@ describe('negavtive test cases',()=>{
         return Stack.asset('acb')
             .language('fr-fr')
             .find()
-            .then(function (result) {
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -263,7 +263,7 @@ describe('negavtive test cases',()=>{
         return Stack.asset('acb')
             .language('mr-in')
             .find()
-            .then(function (result) {
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
@@ -273,7 +273,7 @@ describe('negavtive test cases',()=>{
         return Stack.assets()
             .language('mr-in')
             .find()
-            .then(function (result) {
+            .then(function () {
             }).catch((error) => {
                 expect(error).toBe(error)
             })
