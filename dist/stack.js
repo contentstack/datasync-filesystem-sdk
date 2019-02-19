@@ -482,7 +482,6 @@ class Stack {
         });
     }
     preProcess(filteredData) {
-        let result;
         const sortKeys = ['asc', 'desc'];
         const sortQuery = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
@@ -492,10 +491,10 @@ class Stack {
         if (this.q.asc || this.q.desc) {
             const value = Object.values(sortQuery);
             const key = Object.keys(sortQuery);
-            result = lodash_1.orderBy(filteredData, value, key);
+            filteredData = lodash_1.orderBy(filteredData, value, key);
         }
         if (this.q.query && Object.keys(this.q.query).length > 0) {
-            result = sift_1.default(this.q.query, filteredData);
+            filteredData = sift_1.default(this.q.query, filteredData);
         }
         else if (this.q.logical) {
             const operator = Object.keys(this.q.logical)[0];
@@ -503,43 +502,51 @@ class Stack {
             const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
             const logicalQuery = {};
             logicalQuery[operator] = values;
-            result = sift_1.default(logicalQuery, filteredData);
+            filteredData = sift_1.default(logicalQuery, filteredData);
         }
         else {
-            result = filteredData;
+            filteredData = filteredData;
         }
         if ((this.q.skip) && ((this.q.limit))) {
-            result = result.splice(this.q.skip, this.q.limit);
+            filteredData = filteredData.splice(this.q.skip, this.q.limit);
         }
         else if ((this.q.skip)) {
-            result = result.slice(this.q.skip);
+            filteredData = filteredData.slice(this.q.skip);
         }
         else if (this.q.limit) {
-            result = result.splice(0, this.q.limit);
+            filteredData = filteredData.splice(0, this.q.limit);
         }
         if (this.q.only) {
             const only = this.q.only.toString().replace(/\./g, '/');
-            result = json_mask_1.default(result, only);
+            filteredData = json_mask_1.default(filteredData, only);
         }
         if (this.q.except) {
             const bukcet = this.q.except.toString().replace(/\./g, '/');
-            const except = json_mask_1.default(result, bukcet);
-            result = utils_1.difference(result, except);
+            const except = json_mask_1.default(filteredData, bukcet);
+            filteredData = utils_1.difference(filteredData, except);
         }
         if (this.q.tags) {
-            result = sift_1.default({
+            filteredData = sift_1.default({
                 tags: {
                     $in: this.q.tags,
                 },
-            }, result);
+            }, filteredData);
         }
-        return result;
+        return filteredData;
     }
     postProcessResult(finalResult, result, type, schemaPath) {
         return new Promise((resolve, reject) => {
             try {
                 if (this.q.count) {
-                    finalResult.count = result.length;
+                    if (result instanceof Array) {
+                        finalResult.count = result.length;
+                    }
+                    else if (this.q.single && result !== undefined) {
+                        finalResult.count = 1;
+                    }
+                    else {
+                        finalResult.count = 0;
+                    }
                 }
                 else {
                     finalResult[type] = result;
