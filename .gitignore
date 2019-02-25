@@ -1,23 +1,11 @@
-*
-node_modules/
-!dist
-!dist/**
-!example
-!example/**
-!src
-!src/**
-!test
-!test/**
-!.gitignore
-!.npmignore
-!package.json
-!jest.config.js
-!tslint.json
-!tsconfig.json
-!.jsbeautifyrc
-!LICENSE
-!typings
-!typings/**
-!.babelrc
-!.eslint.js
-!README.md
+# IDE config
+.vscode
+
+# Dependency directories
+node_modules
+
+# Coverage directories
+coverage
+
+
+
