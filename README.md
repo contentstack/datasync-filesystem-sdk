@@ -27,7 +27,7 @@ To import the SDK in your project, use the following command:
 
 ```js
 
-const  Contentstack = require ('contentstack-sync-filesystem-sdk')
+const  Contentstack = require ('contentstack-sync-filesystem-sdk').Contentstack
 
 ```
 
