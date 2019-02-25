@@ -393,9 +393,8 @@ describe('core', () => {
             .entries()
             .language('fr-fr')
             .find()
-            .then(function () {
-            }).catch((error) => {
-                expect(error).toBe(error)
+            .catch((error) => {
+                expect(error).toBe("content-type or entry not found")
             })
     })
 
@@ -458,9 +457,8 @@ describe('core', () => {
         fs.chmodSync('./test/testData/en-us/assets/_assets.json','000')
         return Stack.asset('bltf45225d5a0af61d9')
             .find()
-            .then(function () {
-            }).catch((error) => {
-                expect(error).toBe(error)
+            .catch((error) => {
+                expect(error).toEqual(error)
             })
     })
 
