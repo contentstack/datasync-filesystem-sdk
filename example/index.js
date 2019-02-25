@@ -2,13 +2,34 @@ var express = require('express')
 var app = express()
 const Contentstack = require('../dist/contentstack').Contentstack
 
-var config = require('./config')
-var Stack = Contentstack.Stack({"api_key":"","token":""})
+//var config = require('./config')
+var Stack = Contentstack.Stack(
+    {
+        "api_key": "",
+        "token": "",
+        "contentStore": {
+            "baseDir": "../../_contents"
+        },
+        "locales": [
+            {
+                "code": "en-us",
+                "relative_url_prefix": "/"
+            },
+            {
+                "code": "fr-fr",
+                "relative_url_prefix": "/fr/"
+            },
+            {
+                "code": "es-es",
+                "relative_url_prefix": "/es/"
+            }
+        ]
+    })
 app.listen(4000,()=>{
     console.log("Server running on port 4000")
 })
 
-Stack.connect(config).then(console.log).catch(console.error)
+Stack.connect().then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
     Stack
