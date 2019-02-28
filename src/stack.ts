@@ -379,17 +379,25 @@ export class Stack {
 
         return new Promise((resolve, reject) => {
             try {
+                let contentBaseDir
+                if(process.env.contentBaseDir !== undefined){
+                    contentBaseDir = process.env.contentBaseDir
+                }else if (this.config.contentStore.baseDir){
+                    contentBaseDir = path.resolve(path.join(__dirname,'../../../', this.config.contentStore.baseDir))
+                }
+                this.baseDir = contentBaseDir
+                
                 if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales))
                     || this.config.locales.length === 0) {
                         throw new Error('Please provide locales with code and relative_url_prefix.')
-                } else if (!(fs.existsSync(this.config.contentStore.baseDir))) {
-                    throw new Error(`${this.config.contentStore.baseDir} didn't exist`)
-                } else {
-                    this.baseDir = this.config.contentStore.baseDir
-                    this.masterLocale = this.config.locales[0].code
-
-                    return resolve(this.config.contentStore)
                 }
+                
+                if (typeof this.baseDir !== 'string' || !fs.existsSync(this.baseDir)) {
+                    throw new Error('Could not resolve ' + this.config.contentStore.baseDir)
+                }
+                
+                this.masterLocale = this.config.locales[0].code
+                return resolve(this.config.contentStore)
             } catch (error) {
                 reject(error)
             }
@@ -438,21 +446,27 @@ export class Stack {
 
 
     public asset(uid?) {
-        this.type = 'asset'
-        this.q.single = true
+        const stack = new Stack(this.config)
+        stack.baseDir = this.baseDir
+        stack.masterLocale = this.masterLocale
+        stack.type = 'asset'
+        stack.q.single = true
         if (uid && typeof uid === 'string') {
-            this.assetUid = uid
+            stack.assetUid = uid
 
-            return this
+            return stack
         }
 
-        return this
+        return stack
     }
 
     public assets() {
-        this.type = 'asset'
+        const stack = new Stack(this.config)
+        stack.baseDir = this.baseDir
+        stack.masterLocale = this.masterLocale
+        stack.type = 'asset'
 
-        return this
+        return stack
     }
 
     /**
@@ -911,70 +925,74 @@ export class Stack {
 
             // iterate over each key in the object
             for (const prop in entry) {
+               
                 if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    if (entry[prop] && entry[prop].reference_to && ((!(this.includeReferences)
-                        && entry[prop].reference_to === '_assets') || this.includeReferences)) {
-                        if (entry[prop].values.length === 0) {
-                            entry[prop] = []
-                        } else {
-                            let uids = entry[prop].values
-                            if (typeof uids === 'string') {
-                                uids = [uids]
-                            }
-                            if (entry[prop].reference_to !== '_assets') {
-                                uids = filter(uids, (uid) => {
-
-                                    return !(checkCyclic(uid, references))
-                                })
-                            }
-                            if (uids.length) {
-                                const query = {
-                                    content_type_uid: entry[prop].reference_to,
-                                    locale,
-                                    query: {
-                                        uid: {
-                                            $in: uids,
-                                        },
-                                    },
+                    if (entry[prop] && entry[prop].reference_to) {
+                        if ((!(this.includeReferences) && entry[prop].reference_to === '_assets') || this.includeReferences) {
+                            if (entry[prop].values.length === 0) {
+                                entry[prop] = []
+                            } else {
+                                let uids = entry[prop].values
+                                if (typeof uids === 'string') {
+                                    uids = [uids]
                                 }
+                                if (entry[prop].reference_to !== '_assets') {
+                                    uids = filter(uids, (uid) => {
 
-                                referencesFound.push(new Promise((rs, rj) => {
-
-                                    return self.findReferences(query).then((entities) => {
-                                        entities = cloneDeep(entities)
-                                        if ((entities as any).length === 0) {
-                                            entry[prop] = []
-
-                                            return rs()
-                                        } else if (parentUid) {
-                                            references[parentUid] = references[parentUid] || []
-                                            references[parentUid] = uniq(references[parentUid]
-                                                .concat(map((entities as any), 'uid')))
-                                        }
-                                        if (typeof entry[prop].values === 'string') {
-                                            entry[prop] = ((entities === null) || (entities as any).length === 0) ? null
-                                            : entities[0]
-                                        } else {
-                                            // format the references in order
-                                            const referenceBucket = []
-                                            query.query.uid.$in.forEach((entityUid) => {
-                                                const elem = find(entities, (entity) => {
-
-                                                    return (entity as any).uid === entityUid
-                                                })
-                                                if (elem) {
-                                                    referenceBucket.push(elem)
-                                                }
-                                            })
-                                            entry[prop] = referenceBucket
-                                        }
-
-                                        return self.includeReferencesI(entry[prop], locale, references, parentUid)
-                                            .then(rs)
-                                            .catch(rj)
+                                        return !(checkCyclic(uid, references))
                                     })
-                                }))
+                                }
+                                if (uids.length) {
+                                    const query = {
+                                        content_type_uid: entry[prop].reference_to,
+                                        locale,
+                                        query: {
+                                            uid: {
+                                                $in: uids,
+                                            },
+                                        },
+                                    }
+
+                                    referencesFound.push(new Promise((rs, rj) => {
+
+                                        return self.findReferences(query).then((entities) => {
+                                            entities = cloneDeep(entities)
+                                            if ((entities as any).length === 0) {
+                                                entry[prop] = []
+
+                                                return rs()
+                                            } else if (parentUid) {
+                                                references[parentUid] = references[parentUid] || []
+                                                references[parentUid] = uniq(references[parentUid]
+                                                    .concat(map((entities as any), 'uid')))
+                                            }
+                                            if (typeof entry[prop].values === 'string') {
+                                                entry[prop] = ((entities === null) || (entities as any).length === 0) ? null
+                                                    : entities[0]
+                                            } else {
+                                                // format the references in order
+                                                const referenceBucket = []
+                                                query.query.uid.$in.forEach((entityUid) => {
+                                                    const elem = find(entities, (entity) => {
+
+                                                        return (entity as any).uid === entityUid
+                                                    })
+                                                    if (elem) {
+                                                        referenceBucket.push(elem)
+                                                    }
+                                                })
+                                                entry[prop] = referenceBucket
+                                            }
+
+                                            return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                                                .then(rs)
+                                                .catch(rj)
+                                        })
+                                    }))
+                                }
                             }
+                        } else {
+                            entry[prop] = entry[prop].values
                         }
                     } else {
                         referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))

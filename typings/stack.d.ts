@@ -34,8 +34,8 @@ export declare class Stack {
     contentType(uid: any): Stack;
     entries(): this;
     entry(uid?: any): this;
-    asset(uid?: any): this;
-    assets(): this;
+    asset(uid?: any): Stack;
+    assets(): Stack;
     equalTo(key: any, value: any): this;
     where(expr: any): this;
     count(): this;
