@@ -1,10 +1,10 @@
-const Contentstack = require('../dist/contentstack').Contentstack
+const Contentstack = require('../dist').Contentstack
 const fs = require('fs')
 let Stack = Contentstack.Stack({
     api_key: '',
     access_token: '',
-    'contentStore': {
-        'baseDir': './test/testData'
+    contentStore: {
+        baseDir: '../test/testData'
     },
     locales: [
         {
@@ -18,7 +18,7 @@ let Stack = Contentstack.Stack({
     ]
 
 })
-
+process.env.contentBaseDir = '/home/asmit/Documents/trial/test/testData'
 describe('negavtive test cases',()=>{
 
     beforeEach(() => {
@@ -282,10 +282,10 @@ describe('negavtive test cases',()=>{
 
 
     test('locale key', () => {
-        const cs = require('../dist/contentstack').Contentstack
+        const cs = require('../dist').Contentstack
         let stack = cs.Stack({
             'contentStore': {
-                'baseDir': './test/testData'
+                'baseDir': '../test/testData'
             },
             'locales':"ds"
         })
