@@ -1,8 +1,8 @@
 {
-  "name": "contentstack-filesystem-sdk",
+  "name": "contentstack-sync-filesystem-sdk",
   "version": "0.0.1",
   "description": "Contentstack sync utility's filesystem SDK",
-  "main": "dist/contentstack.js",
+  "main": "dist/index.js",
   "scripts": {
     "clean": "rimraf dist typings coverage",
     "build-ts": "npm run clean && tsc",

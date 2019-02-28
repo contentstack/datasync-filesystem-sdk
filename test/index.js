@@ -1,10 +1,10 @@
-const Contentstack = require('../dist/contentstack').Contentstack
+const Contentstack = require('../dist').Contentstack
 const fs = require('fs')
 let Stack = Contentstack.Stack({
     api_key: '',
     access_token: '',
     'contentStore': {
-        'baseDir': './test/testData'
+        'baseDir': '../test/testData'
     },
     locales: [
         {
@@ -18,7 +18,7 @@ let Stack = Contentstack.Stack({
     ]
 
 })
-
+process.env.contentBaseDir = '/home/asmit/Documents/trial/test/testData'
 describe('core', () => {
     beforeEach(() => {
         return new Promise(async (resolve, reject) => {
@@ -590,7 +590,7 @@ describe('core', () => {
     })
 
     test('baseDir', () => {
-        const cms = require('../dist/contentstack').Contentstack
+        const cms = require('../dist').Contentstack
         let test = cms.Stack({
             'contentStore': {
                 'baseDir': '../test/testData'

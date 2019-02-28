@@ -1,6 +1,6 @@
 var express = require('express')
 var app = express()
-const Contentstack = require('../dist/contentstack').Contentstack
+const Contentstack = require('../dist').Contentstack
 
 //var config = require('./config')
 var Stack = Contentstack.Stack(
@@ -32,12 +32,12 @@ app.listen(4000,()=>{
 Stack.connect().then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
-    Stack
-    .contentType('product')
+    Stack.contentType('product').entries()
+    //.assets()
     //.where("this.title === 'Amazon_Echo_Black'")
     .includeCount()
-    .includeContentType()
-    .includeReferences()
+    //.includeContentType()
+    //.includeReferences()
     .skip(4)
     .limit(3)
     .descending('title')
