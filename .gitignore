@@ -1,11 +1,10 @@
-# IDE config
-.vscode
-
-# Dependency directories
+# Module dependencies
 node_modules
+package-lock.json
 
-# Coverage directories
+# Test coverages
 coverage
 
-
-
+# Examples
+example/**/*
+!example/index.js
