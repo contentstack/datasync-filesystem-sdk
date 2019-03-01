@@ -123,53 +123,53 @@ export class Stack {
         this.q = this.q || {}
         this.q.query = this.q.query || {}
 
-         /**
-          * @method lessThan
-          * @description Retrieves entries in which the value of a field is lesser than the provided value
-          * @param {String} key - uid of the field
-          * @param {*} value - Value used to match or compare
-          * @example let blogQuery = Stack().contentType('example').entries().query();
-          *          let data = blogQuery.lessThan('created_at','2015-06-22').find()
-          *          data.then(function (result) {
-          *          // result content the data who's 'created_at date' is less than '2015-06-22'
-          *       },function (error) {
-          *          // error function
-          *      })
-          * @returns {query}
-          */
+        /**
+         * @method lessThan
+         * @description Retrieves entries in which the value of a field is lesser than the provided value
+         * @param {String} key - uid of the field
+         * @param {*} value - Value used to match or compare
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.lessThan('created_at','2015-06-22').find()
+         *          data.then(function (result) {
+         *          // result content the data who's 'created_at date' is less than '2015-06-22'
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {query}
+         */
         this.lessThan = extend.compare('$lt')
 
-         /**
-          * @method lessThanOrEqualTo
-          * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
-          * @param {String} key - uid of the field
-          * @param {*} value - Value used to match or compare
-          * @example let blogQuery = Stack().contentType('example').entries().query();
-          *          let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
-          *          data.then(function (result) {
-          * // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
-          *       },function (error) {
-          *          // error function
-          *      })
-          * @returns {query}
-          */
+        /**
+         * @method lessThanOrEqualTo
+         * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
+         * @param {String} key - uid of the field
+         * @param {*} value - Value used to match or compare
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
+         *          data.then(function (result) {
+         * // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {query}
+         */
         this.lessThanOrEqualTo = extend.compare('$lte')
 
-       /**
-        * @method greaterThan
-        * @description Retrieves entries in which the value for a field is greater than the provided value.
-        * @param {String} key - uid of the field
-        * @param {*} value -  value used to match or compare
-        * @example
-        *          let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.greaterThan('created_at','2015-03-12').find()
-        *                     data.then(function(result) {
-        *  // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
-        *                     },function (error) {
-        *                       // error function
-        *                     })
-        * @returns {query}
-        */
+        /**
+         * @method greaterThan
+         * @description Retrieves entries in which the value for a field is greater than the provided value.
+         * @param {String} key - uid of the field
+         * @param {*} value -  value used to match or compare
+         * @example
+         *          let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.greaterThan('created_at','2015-03-12').find()
+         *                     data.then(function(result) {
+         *  // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
+         *                     },function (error) {
+         *                       // error function
+         *                     })
+         * @returns {query}
+         */
         this.greaterThan = extend.compare('$gt')
 
         /**
@@ -223,69 +223,69 @@ export class Stack {
          */
         this.containedIn = extend.contained(true)
 
-         /**
-          * @method notContainedIn
-          * @description Retrieve entries in which the value of a field does not match
-          *              with any of the provided array of values.
-          * @param {String} key - uid of the field
-          * @param {Array} value - Array of values that are to be used to match or compare
-          * @example let blogQuery = Stack().contentType('example').entries().query();
-          *          let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
-          *          data.then(function(result) {
-          * // 'result' contains the list of entries where value of the title field should
-          * //not be either "Demo" or ‘Welcome’
-          *       },function (error) {
-          *          // error function
-          *      })
-          * @returns {Query}
-          */
+        /**
+         * @method notContainedIn
+         * @description Retrieve entries in which the value of a field does not match
+         *              with any of the provided array of values.
+         * @param {String} key - uid of the field
+         * @param {Array} value - Array of values that are to be used to match or compare
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
+         *          data.then(function(result) {
+         * // 'result' contains the list of entries where value of the title field should
+         * //not be either "Demo" or ‘Welcome’
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.notContainedIn = extend.contained(false)
 
-       /**
-        * @method exists
-        * @description Retrieve entries if value of the field, mentioned in the condition, exists.
-        * @param {String} key - uid of the field
-        * @example blogQuery.exists('featured')
-        * @example let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.exists('featured').find()
-        *          data.then(function(result) {
-        *          // ‘result’ contains the list of entries in which "featured" exists.
-        *       },function (error) {
-        *          // error function
-        *      })
-        * @returns {Query}
-        */
+        /**
+         * @method exists
+         * @description Retrieve entries if value of the field, mentioned in the condition, exists.
+         * @param {String} key - uid of the field
+         * @example blogQuery.exists('featured')
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.exists('featured').find()
+         *          data.then(function(result) {
+         *          // ‘result’ contains the list of entries in which "featured" exists.
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.exists = extend.exists(true)
 
-       /**
-        * @method notExists
-        * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
-        * @param {String} key - uid of the field
-        * @example blogQuery.notExists('featured')
-        * @example let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.notExists('featured').find()
-        *          data.then(function(result) {
-        *        // result is the list of non-existing’featured’" data.
-        *       },function (error) {
-        *          // error function
-        *      })
-        * @returns {Query}
-        */
+        /**
+         * @method notExists
+         * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
+         * @param {String} key - uid of the field
+         * @example blogQuery.notExists('featured')
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.notExists('featured').find()
+         *          data.then(function(result) {
+         *        // result is the list of non-existing’featured’" data.
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.notExists = extend.exists(false)
 
-       /**
-        * @method ascending
-        * @description Sort fetched entries in the ascending order with respect to a specific field.
-        * @param {String} key - field uid based on which the ordering will be done
-        * @example let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.ascending('created_at').find()
-        *          data.then(function(result) {
-        *  // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
-        *       },function (error) {
-        *          // error function
-        *      })
-        * @returns {Query}
-        */
+        /**
+         * @method ascending
+         * @description Sort fetched entries in the ascending order with respect to a specific field.
+         * @param {String} key - field uid based on which the ordering will be done
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.ascending('created_at').find()
+         *          data.then(function(result) {
+         *  // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.ascending = extend.sort('asc')
 
         /**
@@ -304,53 +304,53 @@ export class Stack {
         this.descending = extend.sort('desc')
 
 
-       /**
-        * @method skip
-        * @description Skips at specific number of entries.
-        * @param {Number} skip - number of entries to be skipped
-        * @example blogQuery.skip(5)
-        * @example let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.skip(5).find()
-        *          data.then(function(result) {
-        *          // result contains the list of data which is sorted in descending order on 'created_at' bases.
-        *       },function (error) {
-        *          // error function
-        *      })
-        * @returns {Query}
-        */
+        /**
+         * @method skip
+         * @description Skips at specific number of entries.
+         * @param {Number} skip - number of entries to be skipped
+         * @example blogQuery.skip(5)
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.skip(5).find()
+         *          data.then(function(result) {
+         *          // result contains the list of data which is sorted in descending order on 'created_at' bases.
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.skip = extend.pagination('skip')
 
-       /**
-        * @method limit
-        * @description Returns a specific number of entries based on the set limit
-        * @param {Number} limit - maximum number of entries to be returned
-        * @example let blogQuery = Stack().contentType('example').entries().query();
-        *          let data = blogQuery.limit(10).find()
-        *          data.then(function(result) {
-        *          // result contains the limited number of entries
-        *       },function (error) {
-        *          // error function
-        *      })
-        * @returns {Query}
-        */
+        /**
+         * @method limit
+         * @description Returns a specific number of entries based on the set limit
+         * @param {Number} limit - maximum number of entries to be returned
+         * @example let blogQuery = Stack().contentType('example').entries().query();
+         *          let data = blogQuery.limit(10).find()
+         *          data.then(function(result) {
+         *          // result contains the limited number of entries
+         *       },function (error) {
+         *          // error function
+         *      })
+         * @returns {Query}
+         */
         this.limit = extend.pagination('limit')
 
-       /**
-        * @method or
-        * @description Retrieves entries that satisfy at least one of the given conditions
-        * @param {object} queries - array of Query objects or raw queries
-        * @example
-        * <caption> .or with Query instances</caption>
-        * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').find()
-        * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).find()
-        * blogQuery.or(Query1, Query2)
-        * @example
-        * <caption> .or with raw queries</caption>
-        * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
-        * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
-        * blogQuery.or(Query1, Query2)
-        * @returns {Query}
-        */
+        /**
+         * @method or
+         * @description Retrieves entries that satisfy at least one of the given conditions
+         * @param {object} queries - array of Query objects or raw queries
+         * @example
+         * <caption> .or with Query instances</caption>
+         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').find()
+         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).find()
+         * blogQuery.or(Query1, Query2)
+         * @example
+         * <caption> .or with raw queries</caption>
+         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
+         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
+         * blogQuery.or(Query1, Query2)
+         * @returns {Query}
+         */
         this.or = extend.logical('$or')
         this.nor = extend.logical('$nor')
         this.not = extend.logical('$not')
@@ -379,25 +379,20 @@ export class Stack {
 
         return new Promise((resolve, reject) => {
             try {
-                let contentBaseDir
-                if(process.env.contentBaseDir !== undefined){
-                    contentBaseDir = process.env.contentBaseDir
-                }else if (this.config.contentStore.baseDir){
-                    contentBaseDir = path.resolve(path.join(__dirname,'../../../', this.config.contentStore.baseDir))
+                this.baseDir = (process.env.CONTENT_DIR) ? path.resolve(process.env.CONTENT_DIR) :
+                    (fs.existsSync(path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
+                        path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
+                        path.resolve(path.join(process.cwd(), '_contents'))
+                if (typeof this.baseDir !== 'string' || !fs.existsSync(this.baseDir)) {
+                    throw new Error('Could not resolve ' + this.baseDir)
                 }
-                this.baseDir = contentBaseDir
-                
                 if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales))
                     || this.config.locales.length === 0) {
-                        throw new Error('Please provide locales with code and relative_url_prefix.')
+                    throw new Error('Please provide locales with code and relative_url_prefix.')
                 }
-                
-                if (typeof this.baseDir !== 'string' || !fs.existsSync(this.baseDir)) {
-                    throw new Error('Could not resolve ' + this.config.contentStore.baseDir)
-                }
-                
                 this.masterLocale = this.config.locales[0].code
-                return resolve(this.config.contentStore)
+
+                return resolve(this.baseDir)
             } catch (error) {
                 reject(error)
             }
@@ -410,7 +405,7 @@ export class Stack {
         stack.masterLocale = this.masterLocale
         if (!uid) {
             throw new Error('Please provide valid uid')
-        }else if (uid && typeof uid === 'string') {
+        } else if (uid && typeof uid === 'string') {
             stack.contentTypeUid = uid
             stack.type = 'contentType'
         }
@@ -734,14 +729,14 @@ export class Stack {
         return this
     }
 
-  /**
-   * @summary
-   *  Wrapper, that allows querying on the entry's references.
-   * @note
-   *  This is a slow method, since it scans all documents and fires the `reference` query on them
-   *  Use `.query()` filters to reduce the total no of documents being scanned
-   * @returns {this} - Returns `stack's` instance
-   */
+    /**
+     * @summary
+     *  Wrapper, that allows querying on the entry's references.
+     * @note
+     *  This is a slow method, since it scans all documents and fires the `reference` query on them
+     *  Use `.query()` filters to reduce the total no of documents being scanned
+     * @returns {this} - Returns `stack's` instance
+     */
     public queryReferences(query) {
         if (query && typeof query === 'object') {
             this.q.queryReferences = query
@@ -798,7 +793,7 @@ export class Stack {
                     }
                     data = JSON.parse(data)
                     let filteredData = map(data, 'data')
-                    if (this.assetUid || this.entryUid){
+                    if (this.assetUid || this.entryUid) {
                         const uid = this.assetUid || this.entryUid
                         filteredData = find(filteredData, ['uid', uid])
                     }
@@ -818,16 +813,16 @@ export class Stack {
                                 return resolve(result)
                             }).catch(reject)
 
-                    }else {
+                    } else {
                         return this.includeReferencesI(filteredData, locale, {}, undefined)
                             .then(async () => {
                                 const preProcessedData = this.preProcess(filteredData)
                                 this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                                .then((result) => {
-                                    this.q = {}
+                                    .then((result) => {
+                                        this.q = {}
 
-                                    return resolve(result)
-                                }).catch(reject)
+                                        return resolve(result)
+                                    }).catch(reject)
                             })
                             .catch(reject)
                     }
@@ -925,10 +920,10 @@ export class Stack {
 
             // iterate over each key in the object
             for (const prop in entry) {
-               
                 if (entry[prop] !== null && typeof entry[prop] === 'object') {
                     if (entry[prop] && entry[prop].reference_to) {
-                        if ((!(this.includeReferences) && entry[prop].reference_to === '_assets') || this.includeReferences) {
+                        if ((!(this.q.includeReferences) && entry[prop].reference_to === '_assets')
+                            || this.q.includeReferences) {
                             if (entry[prop].values.length === 0) {
                                 entry[prop] = []
                             } else {
@@ -967,7 +962,8 @@ export class Stack {
                                                     .concat(map((entities as any), 'uid')))
                                             }
                                             if (typeof entry[prop].values === 'string') {
-                                                entry[prop] = ((entities === null) || (entities as any).length === 0) ? null
+                                                entry[prop] = ((entities === null) ||
+                                                    (entities as any).length === 0) ? null
                                                     : entities[0]
                                             } else {
                                                 // format the references in order
@@ -991,8 +987,6 @@ export class Stack {
                                     }))
                                 }
                             }
-                        } else {
-                            entry[prop] = entry[prop].values
                         }
                     } else {
                         referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
@@ -1006,8 +1000,9 @@ export class Stack {
         })
     }
 
+
+
     private preProcess(filteredData) {
-        // let result
         const sortKeys: any = ['asc', 'desc']
 
         const sortQuery: any = Object.keys(this.q)
@@ -1072,11 +1067,11 @@ export class Stack {
         return new Promise((resolve, reject) => {
             try {
                 if (this.q.count) {
-                    if (result instanceof Array){
+                    if (result instanceof Array) {
                         (finalResult as any).count = result.length
-                    }else if (this.q.single && result !== undefined){
+                    } else if (this.q.single && result !== undefined) {
                         (finalResult as any).count = 1
-                    }else {
+                    } else {
                         (finalResult as any).count = 0
                     }
                 } else {
@@ -1088,17 +1083,17 @@ export class Stack {
                     type = (type === 'entries') ? 'entry' : 'asset'
                     if (result === undefined) {
                         finalResult[type] = {}
-                    } else{
+                    } else {
                         finalResult[type] = result[0] || result
                     }
                 }
 
                 if (this.q.include_count) {
-                    if (result instanceof Array){
+                    if (result instanceof Array) {
                         (finalResult as any).count = result.length
-                    }else if (this.q.single && result !== undefined){
+                    } else if (this.q.single && result !== undefined) {
                         (finalResult as any).count = 1
-                    }else {
+                    } else {
                         (finalResult as any).count = 0
                     }
 
@@ -1128,4 +1123,3 @@ export class Stack {
         })
     }
 }
-
