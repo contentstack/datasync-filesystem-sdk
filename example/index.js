@@ -2,7 +2,6 @@ var express = require('express')
 var app = express()
 const Contentstack = require('../dist').Contentstack
 
-//var config = require('./config')
 var Stack = Contentstack.Stack(
     {
         "api_key": "",
@@ -35,7 +34,7 @@ app.get('/', (req,res)=>{
     Stack.contentType('product').entries()
     //.assets()
     //.where("this.title === 'Amazon_Echo_Black'")
-    .includeCount()
+    // .includeCount()
     //.includeContentType()
     //.includeReferences()
     .skip(4)
