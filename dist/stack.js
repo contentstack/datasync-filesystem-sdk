@@ -118,8 +118,8 @@ class Stack {
         return new Promise((resolve, reject) => {
             try {
                 this.baseDir = (process.env.CONTENT_DIR) ? path_1.default.resolve(process.env.CONTENT_DIR) :
-                    (fs_1.default.existsSync(path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
-                        path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
+                    (fs_1.default.existsSync(path_1.default.resolve(path_1.default.join(__dirname, '../../', this.config.contentStore.baseDir)))) ?
+                        path_1.default.resolve(path_1.default.join(__dirname, '../../', this.config.contentStore.baseDir)) :
                         path_1.default.resolve(path_1.default.join(process.cwd(), '_contents'));
                 if (typeof this.baseDir !== 'string' || !fs_1.default.existsSync(this.baseDir)) {
                     throw new Error('Could not resolve ' + this.baseDir);
