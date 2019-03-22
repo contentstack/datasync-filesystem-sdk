@@ -1,5 +1,5 @@
 {
-  "name": "contentstack-sync-filesystem-sdk",
+  "name": "@contentstack/datasync-filesystem-sdk",
   "version": "0.0.1",
   "description": "Contentstack sync utility's filesystem SDK",
   "main": "dist/index.js",
