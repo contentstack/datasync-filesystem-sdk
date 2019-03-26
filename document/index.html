@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Home</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Home</h1>
+
+    
+
+
+
+    
+
+
+    <h3> </h3>
+
+
+
+
+
+
+
+
+
+
+    
+
+
+
+
+    <section>
+        <article><p><a href="https://www.contentstack.com/"><img src="https://www.contentstack.com/docs/static/images/contentstack.png" alt="Contentstack"></a></p>
+<h2>Contentstack sync Filesystem SDK</h2><p>Contentstack is a headless CMS with an API-first approach. It is a CMS that developers can use to build powerful cross-platform applications in their favorite languages. Build your application frontend, and Contentstack will take care of the rest. <a href="https://www.contentstack.com/">Read More</a>.</p>
+<p>(Contentstack sync utility)[] provides Filesystem SDK to query applications that have locally strored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.</p>
+<h3>Prerequisite</h3><ul>
+<li>nodejs, v6 or higher</li>
+</ul>
+<h3>Setup and Installation</h3><p>To import the SDK in your project, use the following command:</p>
+<pre class="prettyprint source lang-js"><code>
+const  Contentstack = require ('contentstack-sync-filesystem-sdk').Contentstack
+</code></pre><p>To initialize the SDK, you'd need to perform the following steps</p>
+<ol>
+<li>Initialize stack instance.</li>
+</ol>
+<pre class="prettyprint source lang-js"><code>
+const  Stack = contentstack.Stack(config)
+</code></pre><ol start="2">
+<li>Call the connect method. The connect method connects the SDK to the database. Call this, before running SDK queries</li>
+</ol>
+<pre class="prettyprint source lang-js"><code>
+Stack.connect()
+
+.then()
+
+.catch()
+</code></pre><p>Once you have initialized the SDK, you can start querying on the filesystem</p>
+<h3>Querying</h3><p>Notes</p>
+<ul>
+<li><p>By default, 'content_type_uid' and 'locale' keys as part of the response.</p>
+</li>
+<li><p>If <code>.language()</code> is not provided, then the 1st language, provided in config would be considered.</p>
+</li>
+<li><p>If querying for a single entry/asset (using <code>.entry()</code> OR <code>.findOne()</code>), the result will be an object i.e. <code>{ entry: {} }</code>, if the entry or asset is not found, <code>{ entry: null }</code> will be returned.</p>
+</li>
+<li><p>Querying multiple entries, would return <code>{ entries: [ {...} ] }</code>.</p>
+</li>
+</ul>
+<ol>
+<li>Query a single entry</li>
+</ol>
+<pre class="prettyprint source lang-js"><code>
+// Sample 1. Returns the 1st entry that matches query filters
+
+Stack.contentType('blogs')
+
+.entry() // OR .asset()
+
+.language('en-us')
+
+.find()
+
+.then((result) => {
+
+// Response
+
+// result = {
+
+// entry: {
+
+// title: '' || null
+
+// },
+
+// content_type_uid: '',
+
+// locale: ''
+
+// }
+
+})
+
+// Sample 2. Returns the 1st entry that matches query filters
+
+Stack.contentType('blogs')
+
+.entries() // OR .assets()
+
+.language('en-us')
+
+.findOne()
+
+.then((result) => {
+
+// Response
+
+// result = {
+
+// entry: {
+
+// title: '' || null
+
+// },
+
+// content_type_uid: '',
+
+// locale: ''
+
+// }
+
+})
+
+.catch()
+</code></pre><ol start="2">
+<li>Querying a set of entries or assets</li>
+</ol>
+<pre class="prettyprint source lang-js"><code>
+Stack.contentType('blogs')
+
+.entries()
+
+.includeContentType()
+
+.includeCount()
+
+.find()
+
+.then((result) => {
+
+// Response
+
+// result = {
+
+// entries: [
+
+// {
+
+// title: ''
+
+// }
+
+// ],
+
+// content_type: {
+
+// title: 'Blogs',
+
+// ...
+
+// },
+
+// content_type_uid: 'blogs',
+
+// locale: '',
+
+// count: 1
+
+// }
+
+})
+
+.catch()
+</code></pre></article>
+    </section>
+
+
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="global.html#Stack">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#and">and</a></li><li><a href="global.html#ascending">ascending</a></li><li><a href="global.html#containedIn">containedIn</a></li><li><a href="global.html#Contentstack">Contentstack</a></li><li><a href="global.html#count">count</a></li><li><a href="global.html#descending">descending</a></li><li><a href="global.html#equalTo">equalTo</a></li><li><a href="global.html#except">except</a></li><li><a href="global.html#exists">exists</a></li><li><a href="global.html#getQuery">getQuery</a></li><li><a href="global.html#greaterThan">greaterThan</a></li><li><a href="global.html#greaterThanOrEqualTo">greaterThanOrEqualTo</a></li><li><a href="global.html#includeContentType">includeContentType</a></li><li><a href="global.html#includeCount">includeCount</a></li><li><a href="global.html#language">language</a></li><li><a href="global.html#lessThan">lessThan</a></li><li><a href="global.html#lessThanOrEqualTo">lessThanOrEqualTo</a></li><li><a href="global.html#limit">limit</a></li><li><a href="global.html#notContainedIn">notContainedIn</a></li><li><a href="global.html#notEqualTo">notEqualTo</a></li><li><a href="global.html#notExists">notExists</a></li><li><a href="global.html#only">only</a></li><li><a href="global.html#or">or</a></li><li><a href="global.html#query">query</a></li><li><a href="global.html#regex">regex</a></li><li><a href="global.html#skip">skip</a></li><li><a href="global.html#tags">tags</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Mar 26 2019 16:11:17 GMT+0530 (IST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
