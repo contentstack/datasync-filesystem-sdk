@@ -1,7 +1,7 @@
 {
-  "name": "@contentstack/datasync-filesystem-sdk",
+  "name": "datasync-filesystem-sdk",
   "version": "0.0.1",
-  "description": "Contentstack sync utility's filesystem SDK",
+  "description": "JavaScript SDK to build an application on top of JavaScript.",
   "main": "dist/index.js",
   "scripts": {
     "clean": "rimraf dist typings coverage",
@@ -13,8 +13,16 @@
     "pretest": "npm run build-ts",
     "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix"
   },
-  "author": "Contentstack Ecosystem",
-  "license": "ISC",
+  "author": "Contentstack LLC <support@contentstack.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/contentstack/datasync-filesystem-sdk/"
+  },
+  "bugs": {
+    "url": "https://github.com/contentstack/datasync-filesystem-sdk/issues",
+    "email": "support@contentstack.com"
+  },
   "dependencies": {
     "json-mask": "^0.3.8",
     "lodash": "^4.17.11",
@@ -26,6 +34,7 @@
     "@types/rimraf": "^2.0.2",
     "express": "^4.16.4",
     "jest": "^23.6.0",
+    "jsdoc": "^3.5.5",
     "rimraf": "^2.6.3",
     "tslint": "^5.12.1",
     "typescript": "^3.2.4"
