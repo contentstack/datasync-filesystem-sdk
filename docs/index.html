@@ -44,156 +44,123 @@
 
     <section>
         <article><p><a href="https://www.contentstack.com/"><img src="https://www.contentstack.com/docs/static/images/contentstack.png" alt="Contentstack"></a></p>
-<h2>Contentstack sync Filesystem SDK</h2><p>Contentstack is a headless CMS with an API-first approach. It is a CMS that developers can use to build powerful cross-platform applications in their favorite languages. Build your application frontend, and Contentstack will take care of the rest. <a href="https://www.contentstack.com/">Read More</a>.</p>
-<p>(Contentstack sync utility)[] provides Filesystem SDK to query applications that have locally strored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.</p>
-<h3>Prerequisite</h3><ul>
+<p>  Contentstack is a headless CMS with an API-first approach. It is a CMS that developers can use to build powerful cross-platform applications in their favorite languages. Build your application frontend, and Contentstack will take care of the rest. <a href="https://www.contentstack.com/">Read More</a>.</p>
+<h2>Contentstack DataSync Javascript Filesystem SDK</h2><p><a href="[https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started">Contentstack DataSync</a>) provides Filesystem SDK to query applications that have locally stored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.</p>
+<h2>Prerequisite</h2><ul>
 <li>nodejs, v6 or higher</li>
+<li>You should have the data synced through <a href="[https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started">Contentstack
+DataSync</a>)</li>
 </ul>
-<h3>Setup and Installation</h3><p>To import the SDK in your project, use the following command:</p>
-<pre class="prettyprint source lang-js"><code>
-const  Contentstack = require ('contentstack-sync-filesystem-sdk').Contentstack
-</code></pre><p>To initialize the SDK, you'd need to perform the following steps</p>
+<h2>Configuration</h2><table>
+<thead>
+<tr>
+<th>Property</th>
+<th>DataType</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>baseDir</td>
+<td>string</td>
+<td>./_contents</td>
+<td><strong>Required.</strong>  file location of stored data</td>
+</tr>
+<tr>
+<td>locales</td>
+<td>object</td>
+<td></td>
+<td><strong>Required.</strong>  locales to be supported by the SDK. ex: [ { code: 'en-us', ‘relative_url_prefix’:’/’ } ]</td>
+</tr>
+</tbody>
+</table>
+<h2>Setup and Installation</h2><p>To import the SDK in your project, use the following command:</p>
+<pre class="prettyprint source lang-js"><code>const  Contentstack  =  require('@contentstack/datasync-filesystem-sdk').Contentstack</code></pre><p>To initialize the SDK, you'd need to perform the following steps</p>
 <ol>
 <li>Initialize stack instance.</li>
 </ol>
-<pre class="prettyprint source lang-js"><code>
-const  Stack = contentstack.Stack(config)
-</code></pre><ol start="2">
+<pre class="prettyprint source lang-js"><code>const  Stack  = contentstack.Stack(config)</code></pre><ol start="2">
 <li>Call the connect method. The connect method connects the SDK to the database. Call this, before running SDK queries</li>
 </ol>
-<pre class="prettyprint source lang-js"><code>
-Stack.connect()
-
-.then()
-
-.catch()
-</code></pre><p>Once you have initialized the SDK, you can start querying on the filesystem</p>
-<h3>Querying</h3><p>Notes</p>
-<ul>
-<li><p>By default, 'content_type_uid' and 'locale' keys as part of the response.</p>
-</li>
-<li><p>If <code>.language()</code> is not provided, then the 1st language, provided in config would be considered.</p>
-</li>
-<li><p>If querying for a single entry/asset (using <code>.entry()</code> OR <code>.findOne()</code>), the result will be an object i.e. <code>{ entry: {} }</code>, if the entry or asset is not found, <code>{ entry: null }</code> will be returned.</p>
-</li>
-<li><p>Querying multiple entries, would return <code>{ entries: [ {...} ] }</code>.</p>
+<pre class="prettyprint source lang-js"><code>  Stack.connect(config)
+    .then(fnResolve)
+    .catch(fnReject)</code></pre><blockquote>
+<p>Important: You need to call this, before running SDK queries!</p>
+</blockquote>
+<p>Once you have initialized the SDK, you can start querying on the filesystem</p>
+<h2>Querying</h2><ul>
+<li>Notes<ul>
+<li>By default, 'content_type_uid' and 'locale' keys as part of the response.</li>
+<li>If <code>.language()</code> is not provided, then the 1st language, provided in <code>config.locales</code> would be considered.</li>
+<li>If querying for a single entry/asset (using <code>.entry()</code> OR <code>.findOne()</code>), the result will be an object i.e. <code>{ entry: {} }</code>, if the entry or asset is not found, <code>{ entry: null }</code> will be returned.</li>
+<li>Querying multiple entries, would return <code>{ entries: [ {...} ] }</code>.</li>
+</ul>
 </li>
 </ul>
 <ol>
 <li>Query a single entry</li>
 </ol>
-<pre class="prettyprint source lang-js"><code>
-// Sample 1. Returns the 1st entry that matches query filters
+<pre class="prettyprint source lang-js"><code>  // Sample 1. Returns the 1st entry that matches query filters
+  Stack.contentType('blogs')
+    .entry() // OR .asset()
+    .language('en-us')
+    .find()
+    .then((result) => {
+      // Response
+      // result = {
+      //   entry: {
+      //     title: '' || null
+      //   },
+      //   content_type_uid: '',
+      //   locale: ''
+      // }
+    })
+    .catch(reject)
 
-Stack.contentType('blogs')
-
-.entry() // OR .asset()
-
-.language('en-us')
-
-.find()
-
-.then((result) => {
-
-// Response
-
-// result = {
-
-// entry: {
-
-// title: '' || null
-
-// },
-
-// content_type_uid: '',
-
-// locale: ''
-
-// }
-
-})
-
-// Sample 2. Returns the 1st entry that matches query filters
-
-Stack.contentType('blogs')
-
-.entries() // OR .assets()
-
-.language('en-us')
-
-.findOne()
-
-.then((result) => {
-
-// Response
-
-// result = {
-
-// entry: {
-
-// title: '' || null
-
-// },
-
-// content_type_uid: '',
-
-// locale: ''
-
-// }
-
-})
-
-.catch()
-</code></pre><ol start="2">
-<li>Querying a set of entries or assets</li>
+  // Sample 2. Returns the 1st entry that matches query filters
+  Stack.contentType('blogs')
+    .entries() // for .assets() 
+    .language('en-us')
+    .findOne()
+    .then((result) => {
+      // Response
+      // result = {
+      //   entry: {
+      //     title: '' || null
+      //   },
+      //   content_type_uid: '',
+      //   locale: ''
+      // }
+    })
+    .catch(reject)</code></pre><ol start="2">
+<li>Querying a set of entries, assets or content types<pre class="prettyprint source lang-js"><code>Stack.contentType('blogs')
+ .entries() // for .assets() 
+ .includeCount()
+ .find()
+ .then((result) => {
+   // Response
+   // result = {
+   //   entries: [
+   //     {
+   //       title: ''
+   //     }
+   //   ],
+   //   content_type_uid: 'blogs',
+   //   locale: '',
+   //   count: 1
+   // }
+ })
+ .catch(reject)</code></pre></li>
 </ol>
-<pre class="prettyprint source lang-js"><code>
-Stack.contentType('blogs')
-
-.entries()
-
-.includeContentType()
-
-.includeCount()
-
-.find()
-
-.then((result) => {
-
-// Response
-
-// result = {
-
-// entries: [
-
-// {
-
-// title: ''
-
-// }
-
-// ],
-
-// content_type: {
-
-// title: 'Blogs',
-
-// ...
-
-// },
-
-// content_type_uid: 'blogs',
-
-// locale: '',
-
-// count: 1
-
-// }
-
-})
-
-.catch()
-</code></pre></article>
+<h2>Advanced Queries</h2><p>In order to learn more about advance queries please refer the API documentation, <a href="https://contentstack.github.io/datasync-filesystem-sdk/">here</a>.</p>
+<h2>Further Reading</h2><ul>
+<li><a href="https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync">Getting started with Contentstack DataSync</a> </li>
+<li><a href="https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/configuration-files-for-contentstack-datasync">Contentstack DataSync</a> doc lists the configuration for different modules</li>
+</ul>
+<h2>Support and Feature requests</h2><p>If you have any issues working with the library, please file an issue <a href="https://github.com/contentstack/datasync-asset-store-filesystem/issues">here</a> at Github.</p>
+<p>You can send us an e-mail at <a href="mailto:support@contentstack.com">support@contentstack.com</a> if you have any support or feature requests. Our support team is available 24/7 on the intercom. You can always get in touch and give us an opportunity to serve you better!</p>
+<h2>License</h2><p>This repository is published under the <a href="LICENSE">MIT license</a>.</p></article>
     </section>
 
 
@@ -210,7 +177,7 @@ Stack.contentType('blogs')
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Mar 26 2019 16:11:17 GMT+0530 (IST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.5.5</a> on Tue Mar 26 2019 18:26:31 GMT+0530 (IST)
 </footer>
 
 <script> prettyPrint(); </script>

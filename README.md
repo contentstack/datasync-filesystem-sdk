@@ -6,12 +6,12 @@
 
 ## Contentstack DataSync Javascript Filesystem SDK
 
-[Contentstack DataSync]([https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started)) provides Filesystem SDK to query applications that have locally strored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.
+[Contentstack DataSync]([https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started)) provides Filesystem SDK to query applications that have locally stored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.
 
 ## Prerequisite
 
  - nodejs, v6 or higher
-  - You should have the data synced through [Contentstack
+ - You should have the data synced through [Contentstack
    DataSync]([https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started))
 
   
