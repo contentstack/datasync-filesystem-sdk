@@ -6,15 +6,15 @@
 
 ## Contentstack DataSync Javascript Filesystem SDK
 
-[Contentstack DataSync]([https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started)) provides Filesystem SDK to query applications that have locally stored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.
+[Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) provides Filesystem SDK to query applications that have locally stored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.
+
 
 ## Prerequisite
 
- - nodejs, v6 or higher
- - You should have the data synced through [Contentstack
-   DataSync]([https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/getting-started))
+- nodejs, v6 or higher
+- You should have the data synced through [Contentstack
+   DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
 
-  
 
 ## Configuration
 
@@ -23,9 +23,6 @@
 |baseDir|string|./_contents|**Required.**  file location of stored data|
 |locales|object| |**Required.**  locales to be supported by the SDK. ex: [ { code: 'en-us', ‘relative_url_prefix’:’/’ } ]|
 
-  
-
-  
 
 ## Setup and Installation
 
@@ -33,8 +30,6 @@ To import the SDK in your project, use the following command:
 ```js
 const  Contentstack  =  require('@contentstack/datasync-filesystem-sdk').Contentstack
 ```
-  
-
 To initialize the SDK, you'd need to perform the following steps
 
 1.  Initialize stack instance.
@@ -54,6 +49,7 @@ const  Stack  = contentstack.Stack(config)
 
   
 Once you have initialized the SDK, you can start querying on the filesystem
+
 
 ## Querying
 - Notes
