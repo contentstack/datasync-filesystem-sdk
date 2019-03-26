@@ -90,7 +90,11 @@ const extend = {
         }
     },
 }
-
+/**
+ * @summary
+ *  Expose SDK query methods on Stack
+ * @returns {this} - Returns `stack's` instance
+ */
 export class Stack {
     public baseDir: any
     public masterLocale: any
@@ -128,14 +132,16 @@ export class Stack {
          * @description Retrieves entries in which the value of a field is lesser than the provided value
          * @param {String} key - uid of the field
          * @param {*} value - Value used to match or compare
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.lessThan('created_at','2015-06-22').find()
-         *          data.then(function (result) {
-         *          // result content the data who's 'created_at date' is less than '2015-06-22'
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.lessThan('created_at','2015-06-22').find()
+         * data.then(function (result) {
+         *      // result content the data who's 'created_at date'
+         *      //is less than '2015-06-22'
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.lessThan = extend.compare('$lt')
 
@@ -144,14 +150,16 @@ export class Stack {
          * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
          * @param {String} key - uid of the field
          * @param {*} value - Value used to match or compare
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
-         *          data.then(function (result) {
-         * // result contain the data of entries where the 'created_at' date will be less than or equalto '2015-06-22'.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
+         * data.then(function (result) {
+         *      // result contain the data of entries where the
+         *      //'created_at' date will be less than or equalto '2015-06-22'.
+         * },function (error) {
+         *      // error function
+         * })
+         *@returns {this} - Returns `stack's` instance
          */
         this.lessThanOrEqualTo = extend.compare('$lte')
 
@@ -161,14 +169,15 @@ export class Stack {
          * @param {String} key - uid of the field
          * @param {*} value -  value used to match or compare
          * @example
-         *          let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.greaterThan('created_at','2015-03-12').find()
-         *                     data.then(function(result) {
-         *  // result contains the data of entries where the 'created_at' date will be greaterthan '2015-06-22'
-         *                     },function (error) {
-         *                       // error function
-         *                     })
-         * @returns {query}
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.greaterThan('created_at','2015-03-12').find()
+         * data.then(function(result) {
+         *      // result contains the data of entries where the
+         *      //'created_at' date will be greaterthan '2015-06-22'
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.greaterThan = extend.compare('$gt')
 
@@ -177,15 +186,16 @@ export class Stack {
          * @description Retrieves entries in which the value for a field is greater than or equal to the provided value.
          * @param {String} key - uid of the field
          * @param {*} value - Value used to match or compare
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.greaterThanOrEqualTo('created_at','2015-03-12').find()
-         *          data.then(function(result) {
-         * // result contains the data of entries where the 'created_at' date will be
-         * //greaterThan or equalto '2015-06-22'
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.greaterThanOrEqualTo('created_at','2015-03-12').find()
+         * data.then(function(result) {
+         *      // result contains the data of entries where the
+         *      //'created_at' date will be  greaterThan or equalto '2015-06-22'
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.greaterThanOrEqualTo = extend.compare('$gte')
 
@@ -194,15 +204,16 @@ export class Stack {
          * @description Retrieves entries in which the value for a field does not match the provided value.
          * @param {String} key - uid of the field
          * @param {*} value - Value used to match or compare
-         * @example blogQuery.notEqualTo('title','Demo')
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.notEqualTo('title','Demo').find()
-         *          data.then(function(result) {
-         * // ‘result’ contains the list of entries where value of the ‘title’ field will not be 'Demo'.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.notEqualTo('title','Demo').find()
+         * data.then(function(result) {
+         *      // ‘result’ contains the list of entries where value
+         *      //of the ‘title’ field will not be 'Demo'.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.notEqualTo = extend.compare('$ne')
 
@@ -211,15 +222,16 @@ export class Stack {
          * @description Retrieve entries in which the value of a field matches with any of the provided array of values
          * @param {String} key - uid of the field
          * @param {*} value - Array of values that are to be used to match or compare
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.containedIn('title', ['Demo', 'Welcome']).find()
-         *          data.then(function(result) {
-         *  // ‘result’ contains the list of entries where value of the ‘title’ field will contain
-         * //either 'Demo' or ‘Welcome’.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries().query();
+         * let data = blogQuery.containedIn('title', ['Demo', 'Welcome']).find()
+         * data.then(function(result) {
+         *      // ‘result’ contains the list of entries where value of the
+         *      // ‘title’ field will contain either 'Demo' or ‘Welcome’.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.containedIn = extend.contained(true)
 
@@ -229,15 +241,16 @@ export class Stack {
          *              with any of the provided array of values.
          * @param {String} key - uid of the field
          * @param {Array} value - Array of values that are to be used to match or compare
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
-         *          data.then(function(result) {
-         * // 'result' contains the list of entries where value of the title field should
-         * //not be either "Demo" or ‘Welcome’
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
+         * data.then(function(result) {
+         *      // 'result' contains the list of entries where value of the
+         *      //title field should not be either "Demo" or ‘Welcome’
+         * },function (error) {
+         *      // error function
+         * })
+         *@returns {this} - Returns `stack's` instance
          */
         this.notContainedIn = extend.contained(false)
 
@@ -245,15 +258,15 @@ export class Stack {
          * @method exists
          * @description Retrieve entries if value of the field, mentioned in the condition, exists.
          * @param {String} key - uid of the field
-         * @example blogQuery.exists('featured')
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.exists('featured').find()
-         *          data.then(function(result) {
-         *          // ‘result’ contains the list of entries in which "featured" exists.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.exists('featured').find()
+         * data.then(function(result) {
+         *      // ‘result’ contains the list of entries in which "featured" exists.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.exists = extend.exists(true)
 
@@ -261,15 +274,15 @@ export class Stack {
          * @method notExists
          * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
          * @param {String} key - uid of the field
-         * @example blogQuery.notExists('featured')
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.notExists('featured').find()
-         *          data.then(function(result) {
-         *        // result is the list of non-existing’featured’" data.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.notExists('featured').find()
+         * data.then(function(result) {
+         *      // result is the list of non-existing’featured’" data.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.notExists = extend.exists(false)
 
@@ -277,14 +290,16 @@ export class Stack {
          * @method ascending
          * @description Sort fetched entries in the ascending order with respect to a specific field.
          * @param {String} key - field uid based on which the ordering will be done
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.ascending('created_at').find()
-         *          data.then(function(result) {
-         *  // ‘result’ contains the list of entries which is sorted in ascending order on the basis of ‘created_at’.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.ascending('created_at').find()
+         * data.then(function(result) {
+         *      // ‘result’ contains the list of entries which is sorted in
+         *      //ascending order on the basis of ‘created_at’.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.ascending = extend.sort('asc')
 
@@ -292,14 +307,16 @@ export class Stack {
          * @method descending
          * @description Sort fetched entries in the descending order with respect to a specific field
          * @param {String} key - field uid based on which the ordering will be done.
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.descending('created_at').find()
-         *          data.then(function(result) {
-         *  // ‘result’ contains the list of entries which is sorted in descending order on the basis of ‘created_at’.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.descending('created_at').find()
+         * data.then(function(result) {
+         *      // ‘result’ contains the list of entries which is sorted in
+         *      //descending order on the basis of ‘created_at’.
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.descending = extend.sort('desc')
 
@@ -308,15 +325,15 @@ export class Stack {
          * @method skip
          * @description Skips at specific number of entries.
          * @param {Number} skip - number of entries to be skipped
-         * @example blogQuery.skip(5)
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.skip(5).find()
-         *          data.then(function(result) {
-         *          // result contains the list of data which is sorted in descending order on 'created_at' bases.
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.skip(5).find()
+         * data.then(function(result) {
+         *      //result 
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.skip = extend.pagination('skip')
 
@@ -324,14 +341,15 @@ export class Stack {
          * @method limit
          * @description Returns a specific number of entries based on the set limit
          * @param {Number} limit - maximum number of entries to be returned
-         * @example let blogQuery = Stack().contentType('example').entries().query();
-         *          let data = blogQuery.limit(10).find()
-         *          data.then(function(result) {
-         *          // result contains the limited number of entries
-         *       },function (error) {
-         *          // error function
-         *      })
-         * @returns {Query}
+         * @example 
+         * let blogQuery = Stack().contentType('example').entries();
+         * let data = blogQuery.limit(10).find()
+         * data.then(function(result) {
+         *      // result contains the limited number of entries
+         * },function (error) {
+         *      // error function
+         * })
+         * @returns {this} - Returns `stack's` instance
          */
         this.limit = extend.pagination('limit')
 
@@ -340,16 +358,10 @@ export class Stack {
          * @description Retrieves entries that satisfy at least one of the given conditions
          * @param {object} queries - array of Query objects or raw queries
          * @example
-         * <caption> .or with Query instances</caption>
-         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').find()
+         * let Query1 = Stack.contentType('blog').entries().equalTo('title', 'Demo').find()
          * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).find()
-         * blogQuery.or(Query1, Query2)
-         * @example
-         * <caption> .or with raw queries</caption>
-         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
-         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
-         * blogQuery.or(Query1, Query2)
-         * @returns {Query}
+         * blogQuery.or(Query1, Query2).find()
+         * @returns {this} - Returns `stack's` instance
          */
         this.or = extend.logical('$or')
         this.nor = extend.logical('$nor')
@@ -360,20 +372,19 @@ export class Stack {
          * @description Retrieve entries that satisfy all the provided conditions.
          * @param {object} queries - array of query objects or raw queries.
          * @example
-         * <caption> .and with Query instances</caption>
-         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo')
+         * let Query1 = Stack.contentType('blog').entries().equalTo('title', 'Demo')
          * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10)
-         * blogQuery.and(Query1, Query2)
-         * @example
-         * <caption> .and with raw queries</caption>
-         * let Query1 = Stack.contentType('blog').entries().where('title', 'Demo').getQuery()
-         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).getQuery()
-         * blogQuery.and(Query1, Query2)
-         * @returns {Query}
+         * blogQuery.and(Query1, Query2).find()
+         * @returns {this} - Returns `stack's` instance
          */
         this.and = extend.logical('$and')
     }
 
+  /**
+   * @summary
+   *  Establish connection to filesytem
+   * @param {Object} - Config overrides/flesystem specific config
+   */
     public connect(overrides: object = {}) {
         this.config = merge(this.config, overrides)
 
@@ -399,6 +410,12 @@ export class Stack {
         })
     }
 
+  /**
+   * @summary
+   *  Content type to query on
+   * @param {String} uid - Content type uid
+   * @returns {this} - Returns `stack's` instance
+   */
     public contentType(uid) {
         const stack = new Stack(this.config)
         stack.baseDir = this.baseDir
@@ -412,7 +429,13 @@ export class Stack {
 
         return stack
     }
-
+  /**
+   * @summary
+   *  To get entries from contentType
+   * @example 
+   * Stack.contentType('blog').entries().find()
+   * @returns {this} - Returns `stack's` instance
+   */
     public entries() {
 
         this.q.isEntry = true
@@ -423,6 +446,16 @@ export class Stack {
         return this
     }
 
+  /**
+   * @summary
+   *  To get entry from contentType
+   * @example 
+   * Stack.contentType('blog').entry('bltabcd12345').find()
+   * //or
+   * Stack.contentType('blog').entry().find()
+   * @param {string} uid- Optional. uid of entry
+   * @returns {this} - Returns `stack's` instance
+   */
     public entry(uid?) {
 
         this.q.isEntry = true
@@ -439,7 +472,16 @@ export class Stack {
         return this
     }
 
-
+  /**
+   * @summary
+   *  To get single asset
+   * @example 
+   * Stack.asset('bltabced12435').find()
+   * //or
+   * Stack.asset().find()
+   * @param {string} uid- Optional. uid of asset
+   * @returns {this} - Returns `stack's` instance
+   */
     public asset(uid?) {
         const stack = new Stack(this.config)
         stack.baseDir = this.baseDir
@@ -455,6 +497,13 @@ export class Stack {
         return stack
     }
 
+  /**
+   * @summary
+   * To get assets
+   * @example 
+   * Stack.assets().find()
+   * @returns {this} - Returns `stack's` instance
+   */
     public assets() {
         const stack = new Stack(this.config)
         stack.baseDir = this.baseDir
@@ -469,14 +518,15 @@ export class Stack {
      * @description Retrieve entries in which a specific field satisfies the value provided
      * @param {String} key - uid of the field
      * @param {*} value - value used to match or compare
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.equalTo('title','Demo').find()
-     *          data.then(function(result) {
-     *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.equalTo('title','Demo').find()
+     * data.then(function(result) {
+     *      // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
 
     public equalTo(key, value) {
@@ -489,20 +539,34 @@ export class Stack {
 
     }
 
-    /**
-     * @method where
-     * @description Retrieve entries in which a specific field satisfies the value provided
-     * @param {String} key - uid of the field
-     * @param {*} value - value used to match or compare
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.where('title','Demo').find()
-     *          data.then(function(result) {
-     *            // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
-     */
+  /**
+   * @summary
+   *  Pass JS expression or a full function to the query system
+   * @description
+   *  - Use the $where operator to pass either a string containing a JavaScript expression
+   *    or a full JavaScript function to the query system.
+   *  - The $where provides greater flexibility, but requires that the database processes
+   *    the JavaScript expression or function for each document in the collection.
+   *  - Reference the document in the JavaScript expression or function using either this or obj.
+   * @note
+   *  - Only apply the $where query operator to top-level documents.
+   *  - The $where query operator will not work inside a nested document, for instance,
+   *    in an $elemMatch query.
+   * @link
+   *  https://docs.mongodb.com/manual/reference/operator/query/where/index.html
+   * @param field
+   * @param value
+   * @returns {this} - Returns `stack's` instance
+   * @example 
+   * let blogQuery = Stack().contentType('example').entries();
+   * let data = blogQuery.where("this.title === 'Amazon_Echo_Black'").find()
+   * data.then(function(result) {
+   *        // ‘result’ contains the list of entries where value of 
+   *        //‘title’ is equal to ‘Demo’.
+   *  },function (error) {
+   *         // error function
+   *  })
+   */
 
     public where(expr) {
         if (expr) {
@@ -518,15 +582,15 @@ export class Stack {
     /**
      * @method count
      * @description Returns the total number of entries
-     * @example blogQuery.count()
-     * @example let blogQuery = Stack().ContentType('example').entries();
-     *          let data = blogQuery.count().find()
-     *          data.then(function(result) {
-     *           // ‘result’ contains the total count.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().ContentType('example').entries();
+     * let data = blogQuery.count().find()
+     * data.then(function(result) {
+     *      // ‘result’ contains the total count.
+     * },function (error) {
+     *      // error function
+     * })
+     *@returns {this} - Returns `stack's` instance
      */
     public count() {
         this.q.count = true
@@ -537,8 +601,8 @@ export class Stack {
     /**
      * @method query
      * @description Retrieve entries based on raw queries
-     * @param {object} query - RAW (JSON) queries
-     * @returns {Query}
+     * @param {object} userQuery - RAW (JSON) queries
+     * @returns {this} - Returns `stack's` instance
      */
     public query(userQuery) {
         if (typeof userQuery === 'object') {
@@ -554,14 +618,15 @@ export class Stack {
      * @method tags
      * @description Retrieves entries based on the provided tags
      * @param {Array} values - tags
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.tags(['technology', 'business']).find()
-     *          data.then(function(result) {
-     *        // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.tags(['technology', 'business']).find()
+     * data.then(function(result) {
+     *      // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public tags(values) {
         if (Array.isArray(values)) {
@@ -576,15 +641,15 @@ export class Stack {
     /**
      * @method includeCount
      * @description Includes the total number of entries returned in the response.
-     * @example blogQuery.includeCount()
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.includeCount().find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries in which count of object is present at array[1] position.
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.includeCount().find()
+     * data.then(function(result) {
+     *      // ‘result’ contains a list of entries in which count of object is present at array[1] position.
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public includeCount() {
         this.q.include_count = true
@@ -595,15 +660,15 @@ export class Stack {
     /**
      * @method language
      * @description to retrive the result bsed on the specific locale.
-     * @example blogQuery.language()
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.language('fr-fr').find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries of locale fr-fr
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.language('fr-fr').find()
+     * data.then(function(result) {
+     *      // ‘result’ contains a list of entries of locale fr-fr
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public language(languageCode) {
         if (languageCode && typeof languageCode === 'string') {
@@ -614,13 +679,35 @@ export class Stack {
         throw new Error('Argument should be a String.')
 
     }
-
+  /**
+   * @summary
+   *  Includes all references of the entries being scanned
+   * @returns {this} - Returns `stack's` instance
+   * @example 
+   * Stack().contentType('example').entries().includeReferences().find()
+   * .then(function(result) {
+   *        // ‘result’ entries with references
+   * },function (error) {
+   *        // error function
+   * })
+   */
     public includeReferences() {
         this.q.includeReferences = true
 
         return this
     }
-
+  /**
+   * @summary
+   *  Excludes all references of the entries being scanned
+   * @returns {this} - Returns `stack's` instance
+   * @example
+   * Stack().contentType('example').entries().excludeReferences().find()
+   * .then(function(result) {
+   *    // ‘result’ entries without references
+   *  },function (error) {
+   *    // error function
+   *  })
+   */
     public excludeReferences() {
         this.q.excludeReferences = true
 
@@ -630,15 +717,15 @@ export class Stack {
     /**
      * @method includeContentType
      * @description Includes the total number of entries returned in the response.
-     * @example blogQuery.includeContentType()
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.includeContentType().find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries along contentType
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.includeContentType().find()
+     * data.then(function(result) {
+     *      // ‘result’ contains a list of entries along contentType
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public includeContentType() {
         this.q.include_content_type = true
@@ -650,8 +737,9 @@ export class Stack {
     /**
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
-     * @example Stack.ContentType('contentType_uid').Query().where('title','Demo').getQuery().find()
-     * @returns {Query}
+     * @example 
+     * Stack.contentType('contentType_uid').eqaulTo('title','Demo').getQuery().find()
+     * @returns {this} - Returns `stack's` instance
      */
     public getQuery() {
 
@@ -665,12 +753,11 @@ export class Stack {
      * @param {*} value - value used to match or compare
      * @param {String} [options] - match or compare value in entry
      * @example
-     * <caption> .regex without options</caption>
-     * blogQuery.regex('title','^Demo')
-     * @example
-     * <caption> .regex with options</caption>
-     * blogQuery.regex('title','^Demo', 'i')
-     * @returns {Query}
+     * let blogQuery = Stack().contentType('example').entries();
+     * blogQuery.regex('title','^Demo').find() //regex without options
+     * //or
+     * blogQuery.regex('title','^Demo', 'i').find() //regex without options
+     * @returns {this} - Returns `stack's` instance
      */
     public regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
@@ -687,15 +774,15 @@ export class Stack {
 
     /**
      * @method only
-     * @example blogQuery.only([title,uid])
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.only(['title','uid']).find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries with field title and uid only
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.only(['title','uid']).find()
+     * data.then(function(result) {
+     *      // ‘result’ contains a list of entries with field title and uid only
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public only(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
@@ -709,15 +796,15 @@ export class Stack {
 
     /**
      * @method except
-     * @example blogQuery.except([title,uid])
-     * @example let blogQuery = Stack().contentType('example').entries();
-     *          let data = blogQuery.except(['title','uid']).find()
-     *          data.then(function(result) {
-     *         // ‘result’ contains a list of entries without fields title and uid only
-     *       },function (error) {
-     *          // error function
-     *      })
-     * @returns {Query}
+     * @example 
+     * let blogQuery = Stack().contentType('example').entries();
+     * let data = blogQuery.except(['title','uid']).find()
+     * data.then(function(result) {
+     *      // ‘result’ contains a list of entries without fields title and uid only
+     * },function (error) {
+     *      // error function
+     * })
+     * @returns {this} - Returns `stack's` instance
      */
     public except(fields) {
         if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
