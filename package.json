@@ -1,5 +1,5 @@
 {
-  "name": "datasync-filesystem-sdk",
+  "name": "@contentstack/datasync-filesystem-sdk",
   "version": "0.0.1",
   "description": "JavaScript SDK to build an application on top of JavaScript.",
   "main": "dist/index.js",

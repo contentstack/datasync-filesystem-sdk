@@ -7,13 +7,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const stack_1 = require("./stack");
 /**
- * @method Contentstack
+ *
  * @description Creates an instance of `Contentstack`.
  * @api public
  */
 class Contentstack {
     /**
-     * @method Stack
      * @description Initialize an instance of ‘Stack’
      * @api public
      * @example
