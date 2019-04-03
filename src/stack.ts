@@ -358,8 +358,8 @@ export class Stack {
          * @description Retrieves entries that satisfy at least one of the given conditions
          * @param {object} queries - array of Query objects or raw queries
          * @example
-         * let Query1 = Stack.contentType('blog').entries().equalTo('title', 'Demo').find()
-         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10).find()
+         * let Query1 = Stack.contentType('example').entries().equalTo('title', 'Demo').find()
+         * let Query2 = Stack.contentType('example').entries().lessThan('comments', 10).find()
          * blogQuery.or(Query1, Query2).find()
          * @returns {this} - Returns `stack's` instance
          */
@@ -372,8 +372,8 @@ export class Stack {
          * @description Retrieve entries that satisfy all the provided conditions.
          * @param {object} queries - array of query objects or raw queries.
          * @example
-         * let Query1 = Stack.contentType('blog').entries().equalTo('title', 'Demo')
-         * let Query2 = Stack.contentType('blog').entries().lessThan('comments', 10)
+         * let Query1 = Stack.contentType('example').entries().equalTo('title', 'Demo')
+         * let Query2 = Stack.contentType('example').entries().lessThan('comments', 10)
          * blogQuery.and(Query1, Query2).find()
          * @returns {this} - Returns `stack's` instance
          */
@@ -381,9 +381,20 @@ export class Stack {
     }
 
   /**
+   * @method connect
    * @summary
    *  Establish connection to filesytem
-   * @param {Object} - Config overrides/flesystem specific config
+   * @param {Object} overrides - Config overrides/flesystem specific config
+   * @example
+   * Stack.connect({overrides})
+   *  .then((result) => {
+   *    
+   *  })
+   *  .catch((error) => {
+   *    // handle query errors
+   *  })
+   * 
+   * @returns {string} baseDir
    */
     public connect(overrides: object = {}) {
         this.config = merge(this.config, overrides)
@@ -391,8 +402,8 @@ export class Stack {
         return new Promise((resolve, reject) => {
             try {
                 this.baseDir = (process.env.CONTENT_DIR) ? path.resolve(process.env.CONTENT_DIR) :
-                    (fs.existsSync(path.resolve(path.join(__dirname, '../../', this.config.contentStore.baseDir)))) ?
-                        path.resolve(path.join(__dirname, '../../', this.config.contentStore.baseDir)) :
+                    (fs.existsSync(path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
+                        path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
                         path.resolve(path.join(process.cwd(), '_contents'))
                 if (typeof this.baseDir !== 'string' || !fs.existsSync(this.baseDir)) {
                     throw new Error('Could not resolve ' + this.baseDir)
@@ -411,10 +422,20 @@ export class Stack {
     }
 
   /**
+   * @method contentType
    * @summary
    *  Content type to query on
    * @param {String} uid - Content type uid
    * @returns {this} - Returns `stack's` instance
+   * @example
+   * Stack.contentType('example').entries().find()
+   *  .then((result) => {
+   *    // returns entries filtered based on 'example' content type
+   *  })
+   *  .catch((error) => {
+   *    // handle query errors
+   *  })
+   * 
    */
     public contentType(uid) {
         const stack = new Stack(this.config)
@@ -429,11 +450,13 @@ export class Stack {
 
         return stack
     }
+
   /**
+   * @method entries
    * @summary
    *  To get entries from contentType
    * @example 
-   * Stack.contentType('blog').entries().find()
+   * Stack.contentType('example').entries().find()
    * @returns {this} - Returns `stack's` instance
    */
     public entries() {
@@ -447,12 +470,13 @@ export class Stack {
     }
 
   /**
+   * @method entry
    * @summary
    *  To get entry from contentType
    * @example 
-   * Stack.contentType('blog').entry('bltabcd12345').find()
+   * Stack.contentType('example').entry('bltabcd12345').find()
    * //or
-   * Stack.contentType('blog').entry().find()
+   * Stack.contentType('example').entry().find()
    * @param {string} uid- Optional. uid of entry
    * @returns {this} - Returns `stack's` instance
    */
@@ -473,6 +497,7 @@ export class Stack {
     }
 
   /**
+   * @method asset
    * @summary
    *  To get single asset
    * @example 
@@ -498,6 +523,7 @@ export class Stack {
     }
 
   /**
+   * @method assets
    * @summary
    * To get assets
    * @example 
@@ -522,7 +548,8 @@ export class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.equalTo('title','Demo').find()
      * data.then(function(result) {
-     *      // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
+     *      // ‘result’ contains the list of entries where value of 
+     *      //‘title’ is equal to ‘Demo’.
      * },function (error) {
      *      // error function
      * })
@@ -540,6 +567,7 @@ export class Stack {
     }
 
   /**
+   * @method where
    * @summary
    *  Pass JS expression or a full function to the query system
    * @description
@@ -563,9 +591,9 @@ export class Stack {
    * data.then(function(result) {
    *        // ‘result’ contains the list of entries where value of 
    *        //‘title’ is equal to ‘Demo’.
-   *  },function (error) {
+   * },function (error) {
    *         // error function
-   *  })
+   * })
    */
 
     public where(expr) {
@@ -583,7 +611,7 @@ export class Stack {
      * @method count
      * @description Returns the total number of entries
      * @example 
-     * let blogQuery = Stack().ContentType('example').entries();
+     * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.count().find()
      * data.then(function(result) {
      *      // ‘result’ contains the total count.
@@ -603,6 +631,14 @@ export class Stack {
      * @description Retrieve entries based on raw queries
      * @param {object} userQuery - RAW (JSON) queries
      * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.contentType('example').entries().query({"authors.name": "John Doe"}).find()
+     * .then((result) => {
+     *    // returns entries, who's reference author's name equals "John Doe"
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
      */
     public query(userQuery) {
         if (typeof userQuery === 'object') {
@@ -679,7 +715,34 @@ export class Stack {
         throw new Error('Argument should be a String.')
 
     }
+    /**
+   * @method include
+   * @summary
+   *  Includes references of provided fields of the entries being scanned
+   * @param {*} key - uid/uid's of the field
+   * @returns {this} - Returns `stack's` instance
+   * @example 
+   * Stack().contentType('example').entries().include(['authors','categories']).find()
+   * .then(function(result) {
+   *        // ‘result’ inclueds entries with references of authors and categories filed's
+   * },function (error) {
+   *        // error function
+   * })
+   */
+
+    public include(fields) {
+        if (fields.length === 0) {
+          throw new Error('Kindly pass a valid reference field path to \'.include()\' ')
+        } else if (typeof fields === 'string') {
+          this.q.includeSpecificReferences = [fields]
+        } else {
+          this.q.includeSpecificReferences = fields
+        }
+    
+        return this
+      }
   /**
+   * @method includeReferences
    * @summary
    *  Includes all references of the entries being scanned
    * @returns {this} - Returns `stack's` instance
@@ -697,6 +760,7 @@ export class Stack {
         return this
     }
   /**
+   * @method excludeReferences
    * @summary
    *  Excludes all references of the entries being scanned
    * @returns {this} - Returns `stack's` instance
@@ -817,12 +881,22 @@ export class Stack {
     }
 
     /**
+     * @method queryReferences
      * @summary
      *  Wrapper, that allows querying on the entry's references.
      * @note
      *  This is a slow method, since it scans all documents and fires the `reference` query on them
      *  Use `.query()` filters to reduce the total no of documents being scanned
      * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.contentType('blog').entries().queryReferences({"authors.name": "John Doe"})
+     * .find()
+     * .then((result) => {
+     *    // returns entries, who's reference author's name equals "John Doe"
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
      */
     public queryReferences(query) {
         if (query && typeof query === 'object') {
@@ -832,6 +906,25 @@ export class Stack {
         }
         throw new Error('Kindly pass a query object for \'.queryReferences()\'')
     }
+
+  /**
+   * @method find
+   * @description
+   * Queries the db using the query built/passed
+   * Does all the processing, filtering, referencing after querying the DB
+   * @param {object} query Optional query object, that overrides all the 
+   * previously build queries
+   * @public
+   * @example
+   * Stack.contentType('blog').entries().find()
+   * .then((result) => {
+   *    // returns blog content type's entries
+   * })
+   * .catch((error) => {
+   *    // handle query errors
+   * })
+   * @returns {object} - Returns a objects, that have been processed, filtered and referenced
+   */
 
     public find() {
         const baseDir = this.baseDir
@@ -900,6 +993,17 @@ export class Stack {
                                 return resolve(result)
                             }).catch(reject)
 
+                    }  else if (this.q.includeSpecificReferences) {
+                        return this.includeSpecificReferences(filteredData, locale, {}, undefined, this.q.includeSpecificReferences)
+                            .then(() => {
+                                const preProcessedData = this.preProcess(filteredData)
+                                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
+                                    .then((result)=>{   
+                                        this.q = {}
+
+                                        return resolve(result)
+                                    }).catch(reject)
+                            }).catch(reject)
                     } else {
                         return this.includeReferencesI(filteredData, locale, {}, undefined)
                             .then(async () => {
@@ -924,6 +1028,149 @@ export class Stack {
         })
 
     }
+    
+    /**
+   * @summary
+   *  Internal method, that iteratively calls itself and binds entries reference
+   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
+   * @param {String} locale - Locale, in which the reference is to be found
+   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
+   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
+   * @returns {Object} - Returns `entry`, that has all of its reference binded
+   */
+  private includeSpecificReferences(entry, locale, references, parentUid?, includePths = [], parentField = '') {
+    const self = this
+
+    return new Promise((resolve, reject) => {
+      if (entry === null || typeof entry !== 'object') {
+        return resolve()
+      }
+
+      // current entry becomes the parent
+      if (entry.uid) {
+        parentUid = entry.uid
+      }
+
+      const referencesFound = []
+
+      // iterate over each key in the object
+      for (const prop in entry) {
+        if (entry[prop] !== null && typeof entry[prop] === 'object') {
+          let currentPth
+          if (parentField === '' && isNaN(parseInt(prop))) {
+            currentPth = prop
+          } else if (parentField === '' && !isNaN(parseInt(prop))) {
+            currentPth = parentField
+          } else {
+            currentPth = parentField.concat('.', prop)
+          }
+
+          if (entry[prop] && entry[prop].reference_to) {
+            if (entry[prop].reference_to === '_assets' || this.isPartOfInclude(currentPth, includePths)) {
+              if (entry[prop].values.length === 0) {
+                entry[prop] = []
+              } else {
+                let uids = entry[prop].values
+                if (typeof uids === 'string') {
+                  uids = [uids]
+                }
+                if (entry[prop].reference_to !== '_assets') {
+                  uids = filter(uids, (uid) => {
+                    return !(checkCyclic(uid, references))
+                  })
+                }
+                if (uids.length) {
+                   const query = {
+                                        content_type_uid: entry[prop].reference_to,
+                                        locale,
+                                        query: {
+                                            uid: {
+                                                $in: uids,
+                                            },
+                                        },
+                                    }
+
+
+                  referencesFound.push(new Promise((rs, rj) => {
+
+                    return self.findReferences(query).then((entities) => {
+                        entities = cloneDeep(entities)
+                        if ((entities as any).length === 0) {
+                            entry[prop] = []
+
+                            return rs()
+                        } else if (parentUid) {
+                            references[parentUid] = references[parentUid] || []
+                            references[parentUid] = uniq(references[parentUid]
+                                .concat(map((entities as any), 'uid')))
+                        }
+                        if (typeof entry[prop].values === 'string') {
+                            entry[prop] = ((entities === null) ||
+                                (entities as any).length === 0) ? null
+                                : entities[0]
+                        } else {
+                            // format the references in order
+                            const referenceBucket = []
+                            query.query.uid.$in.forEach((entityUid) => {
+                                const elem = find(entities, (entity) => {
+
+                                    return (entity as any).uid === entityUid
+                                })
+                                if (elem) {
+                                    referenceBucket.push(elem)
+                                }
+                            })
+                            entry[prop] = referenceBucket
+                        }
+
+                        return self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth)
+                          .then(rs)
+                          .catch(rj)
+                    })
+                }))
+                }
+              }
+            }
+          } else {
+            referencesFound.push(self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth))
+          }
+        }
+      }
+
+      return Promise.all(referencesFound)
+        .then(resolve)
+        .catch(reject)
+    })
+  }
+
+  private isPartOfInclude(pth, include) {
+    for (let i = 0, j = include.length; i < j; i++) {
+      if (include[i].indexOf(pth) !== -1) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  /**
+   * @method findOne
+   * @description
+   * Queries the db using the query built/passed. Returns a single entry/asset/content type object
+   * Does all the processing, filtering, referencing after querying the DB
+   * @param {object} query Optional query object, that overrides all the previously build queries
+   * 
+   * @example
+   * Stack.contentType('blog').entries().findOne()
+   * .then((result) => {
+   *    // returns an entry
+   * })
+   * .catch((error) => {
+   *    // handle query errors
+   * })
+   * 
+   * @returns {object} - Returns an object, that has been processed, filtered and referenced
+   */
 
     public findOne() {
         this.q.single = true
