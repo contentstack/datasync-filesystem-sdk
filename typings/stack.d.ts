@@ -36,38 +36,62 @@ export declare class Stack {
     and: () => any;
     constructor(...stackArguments: any[]);
     /**
+     * @method connect
      * @summary
      *  Establish connection to filesytem
-     * @param {Object} - Config overrides/flesystem specific config
+     * @param {Object} overrides - Config overrides/flesystem specific config
+     * @example
+     * Stack.connect({overrides})
+     *  .then((result) => {
+     *
+     *  })
+     *  .catch((error) => {
+     *    // handle query errors
+     *  })
+     *
+     * @returns {string} baseDir
      */
     connect(overrides?: object): Promise<{}>;
     /**
+     * @method contentType
      * @summary
      *  Content type to query on
      * @param {String} uid - Content type uid
      * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.contentType('example').entries().find()
+     *  .then((result) => {
+     *    // returns entries filtered based on 'example' content type
+     *  })
+     *  .catch((error) => {
+     *    // handle query errors
+     *  })
+     *
      */
     contentType(uid: any): Stack;
     /**
+     * @method entries
      * @summary
      *  To get entries from contentType
      * @example
-     * Stack.contentType('blog').entries().find()
+     * Stack.contentType('example').entries().find()
      * @returns {this} - Returns `stack's` instance
      */
     entries(): this;
     /**
+     * @method entry
      * @summary
      *  To get entry from contentType
      * @example
-     * Stack.contentType('blog').entry('bltabcd12345').find()
+     * Stack.contentType('example').entry('bltabcd12345').find()
      * //or
-     * Stack.contentType('blog').entry().find()
+     * Stack.contentType('example').entry().find()
      * @param {string} uid- Optional. uid of entry
      * @returns {this} - Returns `stack's` instance
      */
     entry(uid?: any): this;
     /**
+     * @method asset
      * @summary
      *  To get single asset
      * @example
@@ -79,6 +103,7 @@ export declare class Stack {
      */
     asset(uid?: any): Stack;
     /**
+     * @method assets
      * @summary
      * To get assets
      * @example
@@ -95,7 +120,8 @@ export declare class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.equalTo('title','Demo').find()
      * data.then(function(result) {
-     *      // ‘result’ contains the list of entries where value of ‘title’ is equal to ‘Demo’.
+     *      // ‘result’ contains the list of entries where value of
+     *      //‘title’ is equal to ‘Demo’.
      * },function (error) {
      *      // error function
      * })
@@ -103,6 +129,7 @@ export declare class Stack {
      */
     equalTo(key: any, value: any): this;
     /**
+     * @method where
      * @summary
      *  Pass JS expression or a full function to the query system
      * @description
@@ -126,16 +153,16 @@ export declare class Stack {
      * data.then(function(result) {
      *        // ‘result’ contains the list of entries where value of
      *        //‘title’ is equal to ‘Demo’.
-     *  },function (error) {
+     * },function (error) {
      *         // error function
-     *  })
+     * })
      */
     where(expr: any): this;
     /**
      * @method count
      * @description Returns the total number of entries
      * @example
-     * let blogQuery = Stack().ContentType('example').entries();
+     * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.count().find()
      * data.then(function(result) {
      *      // ‘result’ contains the total count.
@@ -150,6 +177,14 @@ export declare class Stack {
      * @description Retrieve entries based on raw queries
      * @param {object} userQuery - RAW (JSON) queries
      * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.contentType('example').entries().query({"authors.name": "John Doe"}).find()
+     * .then((result) => {
+     *    // returns entries, who's reference author's name equals "John Doe"
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
      */
     query(userQuery: any): this;
     /**
@@ -196,6 +231,22 @@ export declare class Stack {
      */
     language(languageCode: any): this;
     /**
+   * @method include
+   * @summary
+   *  Includes references of provided fields of the entries being scanned
+   * @param {*} key - uid/uid's of the field
+   * @returns {this} - Returns `stack's` instance
+   * @example
+   * Stack().contentType('example').entries().include(['authors','categories']).find()
+   * .then(function(result) {
+   *        // ‘result’ inclueds entries with references of authors and categories filed's
+   * },function (error) {
+   *        // error function
+   * })
+   */
+    include(fields: any): this;
+    /**
+     * @method includeReferences
      * @summary
      *  Includes all references of the entries being scanned
      * @returns {this} - Returns `stack's` instance
@@ -209,6 +260,7 @@ export declare class Stack {
      */
     includeReferences(): this;
     /**
+     * @method excludeReferences
      * @summary
      *  Excludes all references of the entries being scanned
      * @returns {this} - Returns `stack's` instance
@@ -284,15 +336,72 @@ export declare class Stack {
      */
     except(fields: any): this;
     /**
+     * @method queryReferences
      * @summary
      *  Wrapper, that allows querying on the entry's references.
      * @note
      *  This is a slow method, since it scans all documents and fires the `reference` query on them
      *  Use `.query()` filters to reduce the total no of documents being scanned
      * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.contentType('blog').entries().queryReferences({"authors.name": "John Doe"})
+     * .find()
+     * .then((result) => {
+     *    // returns entries, who's reference author's name equals "John Doe"
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
      */
     queryReferences(query: any): this;
+    /**
+     * @method find
+     * @description
+     * Queries the db using the query built/passed
+     * Does all the processing, filtering, referencing after querying the DB
+     * @param {object} query Optional query object, that overrides all the
+     * previously build queries
+     * @public
+     * @example
+     * Stack.contentType('blog').entries().find()
+     * .then((result) => {
+     *    // returns blog content type's entries
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
+     * @returns {object} - Returns a objects, that have been processed, filtered and referenced
+     */
     find(): Promise<{}>;
+    /**
+   * @summary
+   *  Internal method, that iteratively calls itself and binds entries reference
+   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
+   * @param {String} locale - Locale, in which the reference is to be found
+   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
+   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
+   * @returns {Object} - Returns `entry`, that has all of its reference binded
+   */
+    private includeSpecificReferences;
+    private isPartOfInclude;
+    /**
+     * @method findOne
+     * @description
+     * Queries the db using the query built/passed. Returns a single entry/asset/content type object
+     * Does all the processing, filtering, referencing after querying the DB
+     * @param {object} query Optional query object, that overrides all the previously build queries
+     *
+     * @example
+     * Stack.contentType('blog').entries().findOne()
+     * .then((result) => {
+     *    // returns an entry
+     * })
+     * .catch((error) => {
+     *    // handle query errors
+     * })
+     *
+     * @returns {object} - Returns an object, that has been processed, filtered and referenced
+     */
     findOne(): Promise<{}>;
     private queryOnReferences;
     private findReferences;
