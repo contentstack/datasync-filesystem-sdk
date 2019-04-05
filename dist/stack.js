@@ -1013,6 +1013,9 @@ class Stack {
                                 }
                             }
                         }
+                        else {
+                            entry[prop] = {};
+                        }
                     }
                     else {
                         referencesFound.push(self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth));
