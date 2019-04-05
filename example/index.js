@@ -37,7 +37,7 @@ app.get('/', (req,res)=>{
     // .includeCount()
     //.includeContentType()
     //.includeReferences()
-    .include(['category', 'related_products'])
+    .include([ 'related_products'])
     // .queryReferences({})
     //.containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
