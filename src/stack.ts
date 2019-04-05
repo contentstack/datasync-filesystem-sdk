@@ -1080,15 +1080,15 @@ export class Stack {
                   })
                 }
                 if (uids.length) {
-                   const query = {
-                                        content_type_uid: entry[prop].reference_to,
-                                        locale,
-                                        query: {
-                                            uid: {
-                                                $in: uids,
-                                            },
-                                        },
-                                    }
+                const query = {
+                    content_type_uid: entry[prop].reference_to,
+                    locale,
+                    query: {
+                        uid: {
+                            $in: uids,
+                        },
+                    },
+                }
 
 
                   referencesFound.push(new Promise((rs, rj) => {
@@ -1130,6 +1130,8 @@ export class Stack {
                 }))
                 }
               }
+            }else{
+                entry[prop]={}
             }
           } else {
             referencesFound.push(self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth))
