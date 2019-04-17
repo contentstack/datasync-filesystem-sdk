@@ -1339,6 +1339,8 @@ export class Stack {
 
 
     private preProcess(filteredData) {
+        filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'))
+        console.log(filteredData,"filteredData",filteredData.length)
         const sortKeys: any = ['asc', 'desc']
 
         const sortQuery: any = Object.keys(this.q)
@@ -1395,7 +1397,6 @@ export class Stack {
                 },
             }, filteredData)
         }
-
         return filteredData
     }
 

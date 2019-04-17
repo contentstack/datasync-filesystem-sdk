@@ -31,13 +31,15 @@ app.listen(4000,()=>{
 Stack.connect().then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
-    Stack.contentType('product').entries()
-    //.assets()
+    Stack
+    //.contentType('product').entries()
+    .assets()
+    .language('mr-in')
     //.where("this.title === 'Amazon_Echo_Black'")
     // .includeCount()
     //.includeContentType()
     //.includeReferences()
-    .include([ 'related_products'])
+    //.include([ 'related_products'])
     // .queryReferences({})
     //.containedIn("category.uid",["bltd0f51996c27a61cc"])
     //.tags(['AI'])
