@@ -123,6 +123,17 @@ describe('core', function () {
         });
     });
 
+    test('get all entries from contentType product with specific field references', function () {
+        return Stack.contentType('product').entries().include('category').find().then(function (result) {
+            expect(result.content_type_uid).toEqual('product');
+            expect(result).toHaveProperty('entries');
+            expect(result.entries.length).toBe(10);
+        }).catch(function (error) {
+            expect(error).toBe(error);
+        });
+    });
+
+
     test('get entries from contentType product where title=Amazon_Echo_Black ', function () {
         return Stack.contentType('product').entries().where("this.title === 'Amazon_Echo_Black'").find().then(function (result) {
             expect(result.content_type_uid).toEqual('product');
@@ -347,16 +358,18 @@ describe('core', function () {
         });
     });
 
-    test('get all assets', function () {
+    test('get all assets without RTE/Markdown', function () {
         return Stack.assets().find().then(function (result) {
             expect(result.content_type_uid).toEqual('_assets');
             expect(result).toHaveProperty('assets');
+            console.log(result.assets.length,"result.assets.length")
             expect(result.assets.length).toEqual(32);
             expect(result.assets[0].uid).toEqual('bltf45225d5a0af61d9');
         }).catch(function (error) {
             expect(error).toBe(error);
         });
     });
+
 
     test('get all assets', function () {
         return Stack.assets().language('fr-fr').find().then(function (result) {

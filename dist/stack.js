@@ -1193,6 +1193,8 @@ class Stack {
         });
     }
     preProcess(filteredData) {
+        filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'));
+        console.log(filteredData, "filteredData", filteredData.length);
         const sortKeys = ['asc', 'desc'];
         const sortQuery = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
