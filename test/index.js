@@ -362,7 +362,6 @@ describe('core', function () {
         return Stack.assets().find().then(function (result) {
             expect(result.content_type_uid).toEqual('_assets');
             expect(result).toHaveProperty('assets');
-            console.log(result.assets.length,"result.assets.length")
             expect(result.assets.length).toEqual(32);
             expect(result.assets[0].uid).toEqual('bltf45225d5a0af61d9');
         }).catch(function (error) {
