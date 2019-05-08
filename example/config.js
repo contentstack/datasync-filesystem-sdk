@@ -1,6 +1,6 @@
 module.exports = {
     "contentStore": {
-      "baseDir": "../../_contents"
+      "baseDir": "../../../Desktop/syncboilerplate18_4/datasync-boilerplate/_contents"
     },
     "locales": [
       {

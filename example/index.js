@@ -7,7 +7,7 @@ var Stack = Contentstack.Stack(
         "api_key": "",
         "token": "",
         "contentStore": {
-            "baseDir": "../../_contents"
+            "baseDir": "../../../Desktop/syncboilerplate18_4/datasync-boilerplate/_contents"
         },
         "locales": [
             {
@@ -34,7 +34,7 @@ app.get('/', (req,res)=>{
     Stack
     //.contentType('product').entries()
     .assets()
-    .language('mr-in')
+    //.language('mr-in')
     //.where("this.title === 'Amazon_Echo_Black'")
     // .includeCount()
     //.includeContentType()

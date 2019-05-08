@@ -6,8 +6,8 @@
 
 import fs from 'fs'
 import { default as mask } from 'json-mask'
-import { cloneDeep, filter, find, map, merge, orderBy, uniq } from 'lodash'
-import path from 'path'
+import { cloneDeep, compact, filter, find, map, merge, orderBy, uniq } from 'lodash'
+import { join, resolve as resolves}  from 'path'
 import { default as sift } from 'sift'
 import { promisify } from 'util'
 import { defaultConfig } from './default'
@@ -99,6 +99,7 @@ export class Stack {
     public baseDir: any
     public masterLocale: any
     public config: any
+    public patterns:any = {}
     public contentTypeUid: string
     public type: string
     public q: any = {}
@@ -121,12 +122,12 @@ export class Stack {
     public nor: () => any
     public not: () => any
     public and: () => any
+    
 
     constructor(...stackArguments) {
         this.config = merge(defaultConfig, ...stackArguments)
         this.q = this.q || {}
         this.q.query = this.q.query || {}
-
         /**
          * @method lessThan
          * @description Retrieves entries in which the value of a field is lesser than the provided value
@@ -399,12 +400,12 @@ export class Stack {
     public connect(overrides: object = {}) {
         this.config = merge(this.config, overrides)
 
-        return new Promise((resolve, reject) => {
+        return new Promise((rs, rj) => {
             try {
-                this.baseDir = (process.env.CONTENT_DIR) ? path.resolve(process.env.CONTENT_DIR) :
-                    (fs.existsSync(path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
-                        path.resolve(path.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
-                        path.resolve(path.join(process.cwd(), '_contents'))
+                this.baseDir = (process.env.CONTENT_DIR) ? resolves(process.env.CONTENT_DIR) :
+                    (fs.existsSync(resolves(join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
+                        resolves(join(__dirname, '../../../', this.config.contentStore.baseDir)) :
+                        resolves(join(process.cwd(), '_contents'))
                 if (typeof this.baseDir !== 'string' || !fs.existsSync(this.baseDir)) {
                     throw new Error('Could not resolve ' + this.baseDir)
                 }
@@ -413,10 +414,9 @@ export class Stack {
                     throw new Error('Please provide locales with code and relative_url_prefix.')
                 }
                 this.masterLocale = this.config.locales[0].code
-
-                return resolve(this.baseDir)
+                return rs(this.baseDir)
             } catch (error) {
-                reject(error)
+                rj(error)
             }
         })
     }
@@ -927,24 +927,35 @@ export class Stack {
    */
 
     public find() {
-        const baseDir = this.baseDir
         const masterLocale = this.masterLocale
         const contentTypeUid = this.contentTypeUid
         const locale = (!this.q.locale) ? masterLocale : this.q.locale
-
         return new Promise((resolve, reject) => {
             try {
+                const baseDirKeys = [];
+                baseDirKeys.push(this.baseDir);
                 let dataPath
                 let schemaPath
                 if (this.type === 'asset') {
-                    dataPath = path.join(baseDir, locale, 'assets', '_assets.json')
+                    let assetKeys = baseDirKeys.concat(compact(this.config.contentStore.patterns.asset.split('/')));
+                    let localeKeyIndex = assetKeys.indexOf(':locale')
+                    assetKeys[localeKeyIndex] = locale
+                    dataPath = join.apply(this, assetKeys)
                 } else {
-                    dataPath = path.join(baseDir, locale, 'data', contentTypeUid, 'index.json')
-                    schemaPath = path.join(baseDir, locale, 'data', contentTypeUid, '_schema.json')
+                    let contentTypeKeys = baseDirKeys.concat(compact(this.config.contentStore.patterns.contentType.split('/')));
+                    let entryKeys = baseDirKeys.concat(compact(this.config.contentStore.patterns.entry.split('/')));
+                    let entryLocaleKeyIndex = entryKeys.indexOf(':locale')
+                    let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid')
+                    entryKeys[entryLocaleKeyIndex] = locale
+                    entryKeys[entryCtKeyIndex] = contentTypeUid
+                    dataPath = join.apply(this, entryKeys)
+                    let ctLocaleKeyIndex = contentTypeKeys.indexOf(':locale')
+                    let ctKeyIndex = contentTypeKeys.indexOf(':uid')
+                    contentTypeKeys[ctLocaleKeyIndex] = locale
+                    contentTypeKeys[ctKeyIndex] = contentTypeUid
+                    schemaPath = join.apply(this, contentTypeKeys);
                 }
-
                 if (!fs.existsSync(dataPath)) {
-
                     return reject('content-type or entry not found')
                 }
 
@@ -1211,9 +1222,9 @@ export class Stack {
         return new Promise((resolve, reject) => {
             let pth
             if (query.content_type_uid === '_assets') {
-                pth = path.join(this.baseDir, query.locale, 'assets', '_assets.json')
+                pth = join(this.baseDir, query.locale, 'assets', '_assets.json')
             } else {
-                pth = path.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
+                pth = join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
             }
             if (!fs.existsSync(pth)) {
 

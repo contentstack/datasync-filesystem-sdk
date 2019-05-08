@@ -19,7 +19,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
-const path_1 = __importDefault(require("path"));
+const path_1 = require("path");
 const sift_1 = __importDefault(require("sift"));
 const util_1 = require("util");
 const default_1 = require("./default");
@@ -96,6 +96,7 @@ const extend = {
  */
 class Stack {
     constructor(...stackArguments) {
+        this.patterns = {};
         this.q = {};
         this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
         this.q = this.q || {};
@@ -355,12 +356,12 @@ class Stack {
      */
     connect(overrides = {}) {
         this.config = lodash_1.merge(this.config, overrides);
-        return new Promise((resolve, reject) => {
+        return new Promise((rs, rj) => {
             try {
-                this.baseDir = (process.env.CONTENT_DIR) ? path_1.default.resolve(process.env.CONTENT_DIR) :
-                    (fs_1.default.existsSync(path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
-                        path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
-                        path_1.default.resolve(path_1.default.join(process.cwd(), '_contents'));
+                this.baseDir = (process.env.CONTENT_DIR) ? path_1.resolve(process.env.CONTENT_DIR) :
+                    (fs_1.default.existsSync(path_1.resolve(path_1.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
+                        path_1.resolve(path_1.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
+                        path_1.resolve(path_1.join(process.cwd(), '_contents'));
                 if (typeof this.baseDir !== 'string' || !fs_1.default.existsSync(this.baseDir)) {
                     throw new Error('Could not resolve ' + this.baseDir);
                 }
@@ -369,10 +370,10 @@ class Stack {
                     throw new Error('Please provide locales with code and relative_url_prefix.');
                 }
                 this.masterLocale = this.config.locales[0].code;
-                return resolve(this.baseDir);
+                return rs(this.baseDir);
             }
             catch (error) {
-                reject(error);
+                rj(error);
             }
         });
     }
@@ -830,20 +831,34 @@ class Stack {
      * @returns {object} - Returns a objects, that have been processed, filtered and referenced
      */
     find() {
-        const baseDir = this.baseDir;
         const masterLocale = this.masterLocale;
         const contentTypeUid = this.contentTypeUid;
         const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
+                const baseDirKeys = [];
+                baseDirKeys.push(this.baseDir);
                 let dataPath;
                 let schemaPath;
                 if (this.type === 'asset') {
-                    dataPath = path_1.default.join(baseDir, locale, 'assets', '_assets.json');
+                    let assetKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
+                    let localeKeyIndex = assetKeys.indexOf(':locale');
+                    assetKeys[localeKeyIndex] = locale;
+                    dataPath = path_1.join.apply(this, assetKeys);
                 }
                 else {
-                    dataPath = path_1.default.join(baseDir, locale, 'data', contentTypeUid, 'index.json');
-                    schemaPath = path_1.default.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
+                    let contentTypeKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.contentType.split('/')));
+                    let entryKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
+                    let entryLocaleKeyIndex = entryKeys.indexOf(':locale');
+                    let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid');
+                    entryKeys[entryLocaleKeyIndex] = locale;
+                    entryKeys[entryCtKeyIndex] = contentTypeUid;
+                    dataPath = path_1.join.apply(this, entryKeys);
+                    let ctLocaleKeyIndex = contentTypeKeys.indexOf(':locale');
+                    let ctKeyIndex = contentTypeKeys.indexOf(':uid');
+                    contentTypeKeys[ctLocaleKeyIndex] = locale;
+                    contentTypeKeys[ctKeyIndex] = contentTypeUid;
+                    schemaPath = path_1.join.apply(this, contentTypeKeys);
                 }
                 if (!fs_1.default.existsSync(dataPath)) {
                     return reject('content-type or entry not found');
@@ -1081,10 +1096,10 @@ class Stack {
         return new Promise((resolve, reject) => {
             let pth;
             if (query.content_type_uid === '_assets') {
-                pth = path_1.default.join(this.baseDir, query.locale, 'assets', '_assets.json');
+                pth = path_1.join(this.baseDir, query.locale, 'assets', '_assets.json');
             }
             else {
-                pth = path_1.default.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
+                pth = path_1.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
             }
             if (!fs_1.default.existsSync(pth)) {
                 return resolve([]);

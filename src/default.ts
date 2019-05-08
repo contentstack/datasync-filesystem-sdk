@@ -6,7 +6,12 @@
 
 export const defaultConfig = {
   contentStore: {
-    baseDir: './_contents'
+    baseDir: './_contents',
+    patterns: {
+      asset: '/:locale/data/assets/index.json',
+      contentType: '/:locale/data/:uid/schema.json',
+      entry: '/:locale/data/:content_type_uid/index.json'
+    }
   },
 }
 

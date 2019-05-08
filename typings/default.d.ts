@@ -6,5 +6,10 @@
 export declare const defaultConfig: {
     contentStore: {
         baseDir: string;
+        patterns: {
+            asset: string;
+            contentType: string;
+            entry: string;
+        };
     };
 };

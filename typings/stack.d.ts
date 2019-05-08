@@ -12,6 +12,7 @@ export declare class Stack {
     baseDir: any;
     masterLocale: any;
     config: any;
+    patterns: any;
     contentTypeUid: string;
     type: string;
     q: any;
