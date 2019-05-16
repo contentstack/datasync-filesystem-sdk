@@ -11,7 +11,8 @@
     "test": "jest --coverage",
     "prepare": "npm run compile",
     "pretest": "npm run build-ts",
-    "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix"
+    "tslint": "npx tslint -c tslint.json 'src/**/*.ts' --fix",
+    "build-doc":"jsdoc dist/ -d ./docs -R README.md"
   },
   "author": "Contentstack LLC <support@contentstack.com>",
   "license": "MIT",

@@ -32,11 +32,15 @@ Stack.connect().then(console.log).catch(console.error)
 app.get('/', (req,res)=>{
     //q7
     Stack
-    //.contentType('product').entries()
-    .assets()
+    //.getContentTypes()
+    .contentType('product')
+    //.entries()
+    //.assets()
+    //.limit(8)
+    
     //.language('mr-in')
     //.where("this.title === 'Amazon_Echo_Black'")
-    // .includeCount()
+    //.includeCount()
     //.includeContentType()
     //.includeReferences()
     //.include([ 'related_products'])

@@ -35,6 +35,7 @@ export declare class Stack {
     nor: () => any;
     not: () => any;
     and: () => any;
+    private resultLength;
     constructor(...stackArguments: any[]);
     /**
      * @method connect
@@ -56,13 +57,13 @@ export declare class Stack {
     /**
      * @method contentType
      * @summary
-     *  Content type to query on
+     *  to get content type of specified uid
      * @param {String} uid - Content type uid
      * @returns {this} - Returns `stack's` instance
      * @example
-     * Stack.contentType('example').entries().find()
+     * Stack.contentType('example').find()
      *  .then((result) => {
-     *    // returns entries filtered based on 'example' content type
+     *    // returns content type of 'example'
      *  })
      *  .catch((error) => {
      *    // handle query errors
@@ -70,6 +71,22 @@ export declare class Stack {
      *
      */
     contentType(uid: any): Stack;
+    /**
+     * @method getContentTypes
+     * @summary
+     *  to get all content types
+     * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack.getContentTypes().find()
+     *  .then((result) => {
+     *    // returns all content types
+     *  })
+     *  .catch((error) => {
+     *    // handle query errors
+     *  })
+     *
+     */
+    getContentTypes(): Stack;
     /**
      * @method entries
      * @summary
@@ -232,19 +249,19 @@ export declare class Stack {
      */
     language(languageCode: any): this;
     /**
-   * @method include
-   * @summary
-   *  Includes references of provided fields of the entries being scanned
-   * @param {*} key - uid/uid's of the field
-   * @returns {this} - Returns `stack's` instance
-   * @example
-   * Stack().contentType('example').entries().include(['authors','categories']).find()
-   * .then(function(result) {
-   *        // ‘result’ inclueds entries with references of authors and categories filed's
-   * },function (error) {
-   *        // error function
-   * })
-   */
+     * @method include
+     * @summary
+     *  Includes references of provided fields of the entries being scanned
+     * @param {*} key - uid/uid's of the field
+     * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack().contentType('example').entries().include(['authors','categories']).find()
+     * .then(function(result) {
+     *        // ‘result’ inclueds entries with references of authors and categories filed's
+     * },function (error) {
+     *        // error function
+     * })
+     */
     include(fields: any): this;
     /**
      * @method includeReferences
@@ -375,14 +392,14 @@ export declare class Stack {
      */
     find(): Promise<{}>;
     /**
-   * @summary
-   *  Internal method, that iteratively calls itself and binds entries reference
-   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-   * @param {String} locale - Locale, in which the reference is to be found
-   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-   * @returns {Object} - Returns `entry`, that has all of its reference binded
-   */
+     * @summary
+     *  Internal method, that iteratively calls itself and binds entries reference
+     * @param {Object} entry - An entry or a collection of entries, who's references are to be found
+     * @param {String} locale - Locale, in which the reference is to be found
+     * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
+     * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
+     * @returns {Object} - Returns `entry`, that has all of its reference binded
+     */
     private includeSpecificReferences;
     private isPartOfInclude;
     /**
@@ -409,4 +426,5 @@ export declare class Stack {
     private includeReferencesI;
     private preProcess;
     private postProcessResult;
+    private getAllContentTypes;
 }

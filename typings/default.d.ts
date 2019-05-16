@@ -11,5 +11,6 @@ export declare const defaultConfig: {
             contentType: string;
             entry: string;
         };
+        limit: number;
     };
 };

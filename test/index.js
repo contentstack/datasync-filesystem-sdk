@@ -31,6 +31,27 @@ describe('core', function () {
         expect(Contentstack.Stack()).toHaveProperty('connect');
     });
 
+    test('get contentType of product', function () {
+
+        return Stack.contentType('product').find().then(function (result) {
+            expect(result.content_type_uid).toEqual('product');
+            expect(result).toHaveProperty('content_type');
+        }).catch(function (error) {
+            expect(error).toBe(error);
+        });
+    });
+
+    test('get all contenttypes', function () {
+
+        return Stack.getContentTypes().find().then(function (result) {
+            expect(result.content_type_uid).toEqual('_content_types');
+            expect(result).toHaveProperty('content_types');
+            expect(result.content_types.length).toBe(4);
+        }).catch(function (error) {
+            expect(error).toBe(error);
+        });
+    });
+
     test('get all entries from contentType of product', function () {
 
         return Stack.contentType('product').entries().find().then(function (result) {

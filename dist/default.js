@@ -12,6 +12,7 @@ exports.defaultConfig = {
             asset: '/:locale/data/assets/index.json',
             contentType: '/:locale/data/:uid/schema.json',
             entry: '/:locale/data/:content_type_uid/index.json'
-        }
+        },
+        limit: 100
     },
 };
