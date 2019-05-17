@@ -38,7 +38,7 @@ import {
 
 
 const readFile: any = promisify(fs.readFile)
-
+const baseDirKeys = [];
 const extend = {
   compare (type) {
     return function (key, value) {
@@ -980,7 +980,6 @@ export class Stack {
     const locale = (!this.q.locale) ? masterLocale : this.q.locale
     return new Promise((resolve, reject) => {
       try {
-        const baseDirKeys = [];
         baseDirKeys.push(this.baseDir);
         let dataPath
         let schemaPath
@@ -1324,9 +1323,17 @@ export class Stack {
     return new Promise((resolve, reject) => {
       let pth
       if (query.content_type_uid === '_assets') {
-        pth = join(this.baseDir, query.locale, 'assets', '_assets.json')
+        let assetKeys = baseDirKeys.concat(compact(this.config.contentStore.patterns.asset.split('/')));
+        let localeKeyIndex = assetKeys.indexOf(':locale')
+        assetKeys[localeKeyIndex] = query.locale
+        pth = join.apply(this, assetKeys)
       } else {
-        pth = join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
+        let entryKeys = baseDirKeys.concat(compact(this.config.contentStore.patterns.entry.split('/')));
+        let entryLocaleKeyIndex = entryKeys.indexOf(':locale')
+        let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid')
+        entryKeys[entryLocaleKeyIndex] = query.locale
+        entryKeys[entryCtKeyIndex] = query.content_type_uid
+        pth = join.apply(this, entryKeys)
       }
       if (!fs.existsSync(pth)) {
 

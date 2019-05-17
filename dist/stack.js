@@ -25,6 +25,7 @@ const util_1 = require("util");
 const default_1 = require("./default");
 const utils_1 = require("./utils");
 const readFile = util_1.promisify(fs_1.default.readFile);
+const baseDirKeys = [];
 const extend = {
     compare(type) {
         return function (key, value) {
@@ -859,7 +860,6 @@ class Stack {
         const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
-                const baseDirKeys = [];
                 baseDirKeys.push(this.baseDir);
                 let dataPath;
                 let schemaPath;
@@ -1165,10 +1165,18 @@ class Stack {
         return new Promise((resolve, reject) => {
             let pth;
             if (query.content_type_uid === '_assets') {
-                pth = path_1.join(this.baseDir, query.locale, 'assets', '_assets.json');
+                let assetKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
+                let localeKeyIndex = assetKeys.indexOf(':locale');
+                assetKeys[localeKeyIndex] = query.locale;
+                pth = path_1.join.apply(this, assetKeys);
             }
             else {
-                pth = path_1.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
+                let entryKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
+                let entryLocaleKeyIndex = entryKeys.indexOf(':locale');
+                let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid');
+                entryKeys[entryLocaleKeyIndex] = query.locale;
+                entryKeys[entryCtKeyIndex] = query.content_type_uid;
+                pth = path_1.join.apply(this, entryKeys);
             }
             if (!fs_1.default.existsSync(pth)) {
                 return resolve([]);

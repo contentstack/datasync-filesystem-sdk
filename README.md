@@ -132,7 +132,7 @@ In order to learn more about advance queries please refer the API documentation,
 
 ## Support and Feature requests
 
-If you have any issues working with the library, please file an issue [here](https://github.com/contentstack/datasync-asset-store-filesystem/issues) at Github.
+If you have any issues working with the library, please file an issue [here](https://github.com/contentstack/datasync-filesystem-sdk/issues) at Github.
 
 You can send us an e-mail at [support@contentstack.com](mailto:support@contentstack.com) if you have any support or feature requests. Our support team is available 24/7 on the intercom. You can always get in touch and give us an opportunity to serve you better!
 

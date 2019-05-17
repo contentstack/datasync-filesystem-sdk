@@ -34,7 +34,7 @@ app.get('/', (req,res)=>{
     Stack
     //.getContentTypes()
     .contentType('product')
-    //.entries()
+    .entries()
     //.assets()
     //.limit(8)
     
@@ -42,7 +42,7 @@ app.get('/', (req,res)=>{
     //.where("this.title === 'Amazon_Echo_Black'")
     //.includeCount()
     //.includeContentType()
-    //.includeReferences()
+    .includeReferences()
     //.include([ 'related_products'])
     // .queryReferences({})
     //.containedIn("category.uid",["bltd0f51996c27a61cc"])
