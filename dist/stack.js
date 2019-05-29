@@ -25,7 +25,6 @@ const util_1 = require("util");
 const default_1 = require("./default");
 const utils_1 = require("./utils");
 const readFile = util_1.promisify(fs_1.default.readFile);
-const baseDirKeys = [];
 const extend = {
     compare(type) {
         return function (key, value) {
@@ -102,6 +101,7 @@ class Stack {
         this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
         this.q = this.q || {};
         this.q.query = this.q.query || {};
+        this.baseDirKeys = [];
         /**
          * @method lessThan
          * @description Retrieves entries in which the value of a field is lesser than the provided value
@@ -860,18 +860,18 @@ class Stack {
         const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
-                baseDirKeys.push(this.baseDir);
+                this.baseDirKeys.push(this.baseDir);
                 let dataPath;
                 let schemaPath;
                 if (this.type === 'asset') {
-                    let assetKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
+                    let assetKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
                     let localeKeyIndex = assetKeys.indexOf(':locale');
                     assetKeys[localeKeyIndex] = locale;
                     dataPath = path_1.join.apply(this, assetKeys);
                 }
                 else {
-                    let contentTypeKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.contentType.split('/')));
-                    let entryKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
+                    let contentTypeKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.contentType.split('/')));
+                    let entryKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
                     let entryLocaleKeyIndex = entryKeys.indexOf(':locale');
                     let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid');
                     entryKeys[entryLocaleKeyIndex] = locale;
@@ -903,7 +903,7 @@ class Stack {
                         });
                     }
                     else {
-                        let contentTypeKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.contentType.split('/')));
+                        let contentTypeKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.contentType.split('/')));
                         let ctLocaleKeyIndex = contentTypeKeys.indexOf(':locale');
                         contentTypeKeys[ctLocaleKeyIndex] = locale;
                         let ctKeyIndex = contentTypeKeys.indexOf(':uid');
@@ -1165,13 +1165,13 @@ class Stack {
         return new Promise((resolve, reject) => {
             let pth;
             if (query.content_type_uid === '_assets') {
-                let assetKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
+                let assetKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.asset.split('/')));
                 let localeKeyIndex = assetKeys.indexOf(':locale');
                 assetKeys[localeKeyIndex] = query.locale;
                 pth = path_1.join.apply(this, assetKeys);
             }
             else {
-                let entryKeys = baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
+                let entryKeys = this.baseDirKeys.concat(lodash_1.compact(this.config.contentStore.patterns.entry.split('/')));
                 let entryLocaleKeyIndex = entryKeys.indexOf(':locale');
                 let entryCtKeyIndex = entryKeys.indexOf(':content_type_uid');
                 entryKeys[entryLocaleKeyIndex] = query.locale;
@@ -1291,7 +1291,9 @@ class Stack {
         else {
             this.q.limit = this.config.contentStore.limit;
         }
-        filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'));
+        if (!this.q.single) {
+            filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'));
+        }
         const sortKeys = ['asc', 'desc'];
         const sortQuery = Object.keys(this.q)
             .filter((key) => sortKeys.includes(key))
@@ -1416,10 +1418,18 @@ class Stack {
                 if (fs_1.default.existsSync(pth)) {
                     readFile(pth).then((data) => {
                         let contents = JSON.parse(data);
+                        let self = this;
                         contentTypes.push(contents);
                         if (index === paths.length - 1) {
-                            finalResult.content_types = contentTypes;
-                            return resolve(finalResult);
+                            self.resultLength = contentTypes.length;
+                            const preProcessedData = self.preProcess(contentTypes);
+                            self.postProcessResult(finalResult, preProcessedData, 'content_types', 'schemaPath')
+                                .then((result) => {
+                                self.q = {};
+                                return resolve(result);
+                            }).catch((error) => {
+                                reject(error);
+                            });
                         }
                     }).catch(() => {
                         return reject(finalResult);

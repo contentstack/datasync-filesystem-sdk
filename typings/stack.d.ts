@@ -36,6 +36,7 @@ export declare class Stack {
     not: () => any;
     and: () => any;
     private resultLength;
+    baseDirKeys: any[];
     constructor(...stackArguments: any[]);
     /**
      * @method connect
