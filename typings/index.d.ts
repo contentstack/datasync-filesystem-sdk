@@ -1,9 +1,39 @@
 /*!
- * contentstack-sync-filsystem-sdk
- * copyright (c) Contentstack LLC
+ * Contentstack datasync contentstore filesystem
+ * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
 import { Stack } from './stack';
+interface IUserConfig {
+    contentStore?: {
+        baseDir?: string;
+        patterns?: {
+            assets?: string;
+            content_types?: string;
+            entries?: string;
+        };
+        [propName: string]: any;
+    };
+    [propName: string]: any;
+}
+interface IAppConfig extends IUserConfig {
+    contentStore?: {
+        internal?: {
+            locale?: string;
+            types?: {
+                assets?: string;
+                content_types?: string;
+            };
+        };
+        patterns?: {
+            assets?: string;
+            content_types?: string;
+            entries?: string;
+        };
+    };
+}
+export declare const setConfig: (userConfig: IUserConfig) => void;
+export declare const getConfig: () => IAppConfig;
 /**
  *
  * @description Creates an instance of `Contentstack`.
@@ -15,12 +45,10 @@ export declare class Contentstack {
      * @api public
      * @example
      * const Stack = Contentstack.Stack('api_key', 'delivery_token')//or
-     * const Stack = Contentstack.Stack({
-     *  api_key: 'api_key',
-     *  token: 'delivery_token'
-     * })
+     * const Stack = Contentstack.Stack()
      *
      * @returns {Stack}
      */
-    static Stack(...stackArguments: any[]): Stack;
+    static Stack(stackArguments: any): Stack;
 }
+export {};
