@@ -1,7 +1,7 @@
 "use strict";
 /*!
- * contentstack-sync-filsystem-sdk
- * copyright (c) Contentstack LLC
+ * Contentstack datasync contentstore filesystem
+ * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -16,15 +16,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs_1 = __importDefault(require("fs"));
 const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
-const path_1 = __importDefault(require("path"));
+const path_1 = require("path");
 const sift_1 = __importDefault(require("sift"));
-const util_1 = require("util");
-const default_1 = require("./default");
+const fs_1 = require("./fs");
 const utils_1 = require("./utils");
-const readFile = util_1.promisify(fs_1.default.readFile);
 const extend = {
     compare(type) {
         return function (key, value) {
@@ -95,9 +92,10 @@ const extend = {
  * @returns {this} - Returns `stack's` instance
  */
 class Stack {
-    constructor(...stackArguments) {
+    constructor(config) {
         this.q = {};
-        this.config = lodash_1.merge(default_1.defaultConfig, ...stackArguments);
+        // app config
+        this.config = config;
         this.q = this.q || {};
         this.q.query = this.q.query || {};
         /**
@@ -329,7 +327,7 @@ class Stack {
          * @method and
          * @description Retrieve entries that satisfy all the provided conditions.
          * @param {object} queries - array of query objects or raw queries.
-         * @example
+         * @examplemerge(defaultConfig, ...stackArguments)
          * let Query1 = Stack.contentType('example').entries().equalTo('title', 'Demo')
          * let Query2 = Stack.contentType('example').entries().lessThan('comments', 10)
          * blogQuery.and(Query1, Query2).find()
@@ -357,19 +355,7 @@ class Stack {
         this.config = lodash_1.merge(this.config, overrides);
         return new Promise((resolve, reject) => {
             try {
-                this.baseDir = (process.env.CONTENT_DIR) ? path_1.default.resolve(process.env.CONTENT_DIR) :
-                    (fs_1.default.existsSync(path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)))) ?
-                        path_1.default.resolve(path_1.default.join(__dirname, '../../../', this.config.contentStore.baseDir)) :
-                        path_1.default.resolve(path_1.default.join(process.cwd(), '_contents'));
-                if (typeof this.baseDir !== 'string' || !fs_1.default.existsSync(this.baseDir)) {
-                    throw new Error('Could not resolve ' + this.baseDir);
-                }
-                if (!this.config.hasOwnProperty('locales') || !(Array.isArray(this.config.locales))
-                    || this.config.locales.length === 0) {
-                    throw new Error('Please provide locales with code and relative_url_prefix.');
-                }
-                this.masterLocale = this.config.locales[0].code;
-                return resolve(this.baseDir);
+                return resolve(this.config);
             }
             catch (error) {
                 reject(error);
@@ -394,14 +380,9 @@ class Stack {
      */
     contentType(uid) {
         const stack = new Stack(this.config);
-        stack.baseDir = this.baseDir;
-        stack.masterLocale = this.masterLocale;
-        if (!uid) {
-            throw new Error('Please provide valid uid');
-        }
-        else if (uid && typeof uid === 'string') {
+        if (uid && typeof uid === 'string') {
             stack.contentTypeUid = uid;
-            stack.type = 'contentType';
+            stack.q.content_type_uid = '_content_types';
         }
         return stack;
     }
@@ -414,9 +395,8 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     entries() {
-        this.q.isEntry = true;
-        if (this.type === undefined) {
-            throw new Error('Please call contentType(\'uid\') first');
+        if (typeof this.q.contentType_uid === 'undefined') {
+            throw new Error('Please call .contentType() before calling .entries()!');
         }
         return this;
     }
@@ -432,13 +412,12 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     entry(uid) {
-        this.q.isEntry = true;
-        this.q.single = true;
-        if (this.type === undefined) {
-            throw new Error('Please call contentType(\'uid\') first');
+        this.q.isSingle = true;
+        if (typeof this.q.content_type_uid === 'undefined') {
+            throw new Error('Please call .contentType() before calling .entries()!');
         }
         if (uid && typeof uid === 'string') {
-            this.entryUid = uid;
+            this.q.entryUid = uid;
             return this;
         }
         return this;
@@ -456,12 +435,9 @@ class Stack {
      */
     asset(uid) {
         const stack = new Stack(this.config);
-        stack.baseDir = this.baseDir;
-        stack.masterLocale = this.masterLocale;
-        stack.type = 'asset';
-        stack.q.single = true;
+        stack.q.isSingle = true;
         if (uid && typeof uid === 'string') {
-            stack.assetUid = uid;
+            stack.q.assetUid = uid;
             return stack;
         }
         return stack;
@@ -476,9 +452,7 @@ class Stack {
      */
     assets() {
         const stack = new Stack(this.config);
-        stack.baseDir = this.baseDir;
-        stack.masterLocale = this.masterLocale;
-        stack.type = 'asset';
+        stack.q.content_type_uid = '_assets';
         return stack;
     }
     /**
@@ -499,27 +473,33 @@ class Stack {
      */
     equalTo(key, value) {
         if (key && typeof key === 'string') {
-            this.q.query[key] = value;
+            // this.q.query[key] = value
+            // doing this, since if there are 2 conditions to be matched against a key!
+            if (this.q.query.hasOwnProperty(key)) {
+                if (this.q.query.hasOwnProperty('$or')) {
+                    this.q.query.$or.push({
+                        [key]: value,
+                    });
+                }
+                else {
+                    this.q.query.$or = [{
+                            [key]: value,
+                        }];
+                }
+            }
+            else {
+                this.q.query[key] = value;
+            }
             return this;
         }
-        throw new Error('Kindly provide valid parameters.');
+        throw new Error('Kindly provide valid parameters for .equalTo()!');
     }
     /**
      * @method where
      * @summary
-     *  Pass JS expression or a full function to the query system
+     * Pass JS expression or a full function to the query system
      * @description
-     *  - Use the $where operator to pass either a string containing a JavaScript expression
-     *    or a full JavaScript function to the query system.
-     *  - The $where provides greater flexibility, but requires that the database processes
-     *    the JavaScript expression or function for each document in the collection.
-     *  - Reference the document in the JavaScript expression or function using either this or obj.
-     * @note
-     *  - Only apply the $where query operator to top-level documents.
-     *  - The $where query operator will not work inside a nested document, for instance,
-     *    in an $elemMatch query.
-     * @link
-     *  https://docs.mongodb.com/manual/reference/operator/query/where/index.html
+     * Evaluate js expressions
      * @param field
      * @param value
      * @returns {this} - Returns `stack's` instance
@@ -527,10 +507,10 @@ class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.where("this.title === 'Amazon_Echo_Black'").find()
      * data.then(function(result) {
-     *        // ‘result’ contains the list of entries where value of
-     *        //‘title’ is equal to ‘Demo’.
-     * },function (error) {
-     *         // error function
+     *   // ‘result’ contains the list of entries where value of
+     *   //‘title’ is equal to ‘Demo’.
+     * }).catch(error) => {
+     *   // error function
      * })
      */
     where(expr) {
@@ -547,14 +527,14 @@ class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.count().find()
      * data.then(function(result) {
-     *      // ‘result’ contains the total count.
-     * },function (error) {
-     *      // error function
+     *  // returns 'example' content type's entries
+     * }).catch(error) => {
+     *   // error function
      * })
-     *@returns {this} - Returns `stack's` instance
+     * @returns {this} - Returns `stack's` instance
      */
     count() {
-        this.q.count = true;
+        this.q.queryType = 'count';
         return this;
     }
     /**
@@ -576,7 +556,7 @@ class Stack {
             this.q.query = lodash_1.merge(this.q.query, userQuery);
             return this;
         }
-        throw new Error('Kindly provide valid parameters');
+        throw new Error('Kindly provide valid parameters for .query()!');
     }
     /**
      * @method tags
@@ -593,11 +573,11 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     tags(values) {
-        if (Array.isArray(values)) {
-            this.q.tags = values;
+        if (values && typeof values === 'object' && values instanceof Array) {
+            this.q.query.$tags = values;
             return this;
         }
-        throw new Error('Kindly provide valid parameters');
+        throw new Error('Kindly provide valid parameters for .tags()!');
     }
     /**
      * @method includeCount
@@ -634,31 +614,31 @@ class Stack {
             this.q.locale = languageCode;
             return this;
         }
-        throw new Error('Argument should be a String.');
+        throw new Error(`${languageCode} should be of type string and non-empty!`);
     }
     /**
-   * @method include
-   * @summary
-   *  Includes references of provided fields of the entries being scanned
-   * @param {*} key - uid/uid's of the field
-   * @returns {this} - Returns `stack's` instance
-   * @example
-   * Stack().contentType('example').entries().include(['authors','categories']).find()
-   * .then(function(result) {
-   *        // ‘result’ inclueds entries with references of authors and categories filed's
-   * },function (error) {
-   *        // error function
-   * })
-   */
+     * @method include
+     * @summary
+     *  Includes references of provided fields of the entries being scanned
+     * @param {*} key - uid/uid's of the field
+     * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack().contentType('example').entries().include(['authors','categories']).find()
+     * .then(function(result) {
+     *        // ‘result’ inclueds entries with references of authors and categories filed's
+     * },function (error) {
+     *        // error function
+     * })
+     */
     include(fields) {
-        if (fields.length === 0) {
-            throw new Error('Kindly pass a valid reference field path to \'.include()\' ');
+        if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
+            this.q.include = fields;
         }
-        else if (typeof fields === 'string') {
-            this.q.includeSpecificReferences = [fields];
+        else if (fields && typeof fields === 'string') {
+            this.q.include = [fields];
         }
         else {
-            this.q.includeSpecificReferences = fields;
+            throw new Error(`Kindly pass 'string' OR 'array' fields for .include()!`);
         }
         return this;
     }
@@ -676,7 +656,7 @@ class Stack {
      * })
      */
     includeReferences() {
-        this.q.includeReferences = true;
+        this.q.includeAllReferences = true;
         return this;
     }
     /**
@@ -693,7 +673,7 @@ class Stack {
      *  })
      */
     excludeReferences() {
-        this.q.excludeReferences = true;
+        this.q.excludeAllReferences = true;
         return this;
     }
     /**
@@ -738,10 +718,30 @@ class Stack {
      */
     regex(key, value, options = 'g') {
         if (key && value && typeof key === 'string' && typeof value === 'string') {
-            this.q.query[key] = {
-                $options: options,
-                $regex: value,
-            };
+            if (this.q.query.hasOwnProperty(key)) {
+                if (this.q.query.hasOwnProperty('$or')) {
+                    this.q.query.$or.push({
+                        [key]: {
+                            $options: options,
+                            $regex: value,
+                        },
+                    });
+                }
+                else {
+                    this.q.query.$or = [
+                        {
+                            $options: options,
+                            $regex: value,
+                        },
+                    ];
+                }
+            }
+            else {
+                this.q.query[key] = {
+                    $options: options,
+                    $regex: value,
+                };
+            }
             return this;
         }
         throw new Error('Kindly provide valid parameters.');
@@ -759,12 +759,15 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     only(fields) {
-        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
-            throw new Error('Kindly provide valid \'field\' values for \'only()\'');
+        if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
+            this.q.only = {};
+            // tslint:disable-next-line: forin
+            for (const field in fields) {
+                this.q.only[field] = 1;
+            }
+            return this;
         }
-        this.q.only = this.q.only || {};
-        this.q.only = fields;
-        return this;
+        throw new Error('Kindly provide valid parameters for .only()!');
     }
     /**
      * @method except
@@ -779,12 +782,15 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     except(fields) {
-        if (!fields || typeof fields !== 'object' || !(fields instanceof Array) || fields.length === 0) {
-            throw new Error('Kindly provide valid \'field\' values for \'except()\'');
+        if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
+            this.q.only = {};
+            // tslint:disable-next-line: forin
+            for (const field in fields) {
+                this.q.except[field] = -1;
+            }
+            return this;
         }
-        this.q.except = this.q.except || {};
-        this.q.except = fields;
-        return this;
+        throw new Error('Kindly provide valid parameters for .except()!');
     }
     /**
      * @method queryReferences
@@ -809,7 +815,7 @@ class Stack {
             this.q.queryReferences = query;
             return this;
         }
-        throw new Error('Kindly pass a query object for \'.queryReferences()\'');
+        throw new Error('Kindly valid parameters for \'.queryReferences()\'!');
     }
     /**
      * @method find
@@ -830,25 +836,25 @@ class Stack {
      * @returns {object} - Returns a objects, that have been processed, filtered and referenced
      */
     find() {
-        const baseDir = this.baseDir;
-        const masterLocale = this.masterLocale;
-        const contentTypeUid = this.contentTypeUid;
-        const locale = (!this.q.locale) ? masterLocale : this.q.locale;
         return new Promise((resolve, reject) => {
             try {
-                let dataPath;
-                let schemaPath;
-                if (this.type === 'asset') {
-                    dataPath = path_1.default.join(baseDir, locale, 'assets', '_assets.json');
+                let filePath;
+                switch (this.q.content_type_uid) {
+                    case '_assets':
+                        filePath = utils_1.getAssetsPath(this.q.locale);
+                        break;
+                    case '_content_types':
+                        filePath = utils_1.getContentTypesPath(this.q.locale);
+                        break;
+                    default:
+                        filePath = utils_1.getEntriesPath(this.q.locale, this.q.contentType_uid);
+                        break;
                 }
-                else {
-                    dataPath = path_1.default.join(baseDir, locale, 'data', contentTypeUid, 'index.json');
-                    schemaPath = path_1.default.join(baseDir, locale, 'data', contentTypeUid, '_schema.json');
-                }
-                if (!fs_1.default.existsSync(dataPath)) {
+                const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us';
+                if (fs_1.existsSync(dataPath)) {
                     return reject('content-type or entry not found');
                 }
-                fs_1.default.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
+                fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
                     if (err) {
                         return reject(err);
                     }
@@ -888,7 +894,8 @@ class Stack {
                         }).catch(reject);
                     }
                     else if (this.q.includeSpecificReferences) {
-                        return this.includeSpecificReferences(filteredData, locale, {}, undefined, this.q.includeSpecificReferences)
+                        return this.includeSpecificReferences(filteredData, locale, {}, undefined, this.q
+                            .includeSpecificReferences)
                             .then(() => {
                             const preProcessedData = this.preProcess(filteredData);
                             this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
@@ -918,14 +925,14 @@ class Stack {
         });
     }
     /**
-   * @summary
-   *  Internal method, that iteratively calls itself and binds entries reference
-   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-   * @param {String} locale - Locale, in which the reference is to be found
-   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-   * @returns {Object} - Returns `entry`, that has all of its reference binded
-   */
+     * @summary
+     *  Internal method, that iteratively calls itself and binds entries reference
+     * @param {Object} entry - An entry or a collection of entries, who's references are to be found
+     * @param {String} locale - Locale, in which the reference is to be found
+     * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
+     * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
+     * @returns {Object} - Returns `entry`, that has all of its reference binded
+     */
     includeSpecificReferences(entry, locale, references, parentUid, includePths = [], parentField = '') {
         const self = this;
         return new Promise((resolve, reject) => {
@@ -962,7 +969,7 @@ class Stack {
                                 }
                                 if (entry[prop].reference_to !== '_assets') {
                                     uids = lodash_1.filter(uids, (uid) => {
-                                        return !(utils_1.checkCyclic(uid, references));
+                                        return !(checkCyclic(uid, references));
                                     });
                                 }
                                 if (uids.length) {
@@ -1081,15 +1088,15 @@ class Stack {
         return new Promise((resolve, reject) => {
             let pth;
             if (query.content_type_uid === '_assets') {
-                pth = path_1.default.join(this.baseDir, query.locale, 'assets', '_assets.json');
+                pth = path_1.join(this.baseDir, query.locale, 'assets', '_assets.json');
             }
             else {
-                pth = path_1.default.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
+                pth = path_1.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
             }
-            if (!fs_1.default.existsSync(pth)) {
+            if (!fs_1.existsSync(pth)) {
                 return resolve([]);
             }
-            return fs_1.default.readFile(pth, 'utf-8', (readError, data) => {
+            return fs_1.readFile(pth, 'utf-8', (readError, data) => {
                 if (readError) {
                     return reject(readError);
                 }
@@ -1130,7 +1137,7 @@ class Stack {
                                 }
                                 if (entry[prop].reference_to !== '_assets') {
                                     uids = lodash_1.filter(uids, (uid) => {
-                                        return !(utils_1.checkCyclic(uid, references));
+                                        return !(checkCyclic(uid, references));
                                     });
                                 }
                                 if (uids.length) {
@@ -1285,11 +1292,11 @@ class Stack {
                     }
                 }
                 if (this.q.include_content_type) {
-                    if (!fs_1.default.existsSync(schemaPath)) {
+                    if (!fs.existsSync(schemaPath)) {
                         return reject('content type not found');
                     }
                     let contents;
-                    readFile(schemaPath).then((data) => {
+                    fs_1.readFile(schemaPath).then((data) => {
                         contents = JSON.parse(data);
                         finalResult.content_type = contents;
                         return resolve(finalResult);

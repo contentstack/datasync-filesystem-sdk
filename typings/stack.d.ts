@@ -1,6 +1,6 @@
 /*!
- * contentstack-sync-filsystem-sdk
- * copyright (c) Contentstack LLC
+ * Contentstack datasync contentstore filesystem
+ * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
 /**
@@ -17,24 +17,24 @@ export declare class Stack {
     q: any;
     assetUid: any;
     entryUid: any;
-    lessThan: (key: any, value: any) => any;
-    lessThanOrEqualTo: (key: any, value: any) => any;
-    greaterThan: (key: any, value: any) => any;
-    greaterThanOrEqualTo: (key: any, value: any) => any;
-    notEqualTo: (key: any, value: any) => any;
-    containedIn: (key: any, value: any) => any;
-    notContainedIn: (key: any, value: any) => any;
-    exists: (key: any) => any;
-    notExists: (key: any) => any;
-    ascending: (key: any) => any;
-    descending: (key: any) => any;
+    lessThan: (key: string, value: any) => Stack;
+    lessThanOrEqualTo: (key: string, value: any) => Stack;
+    greaterThan: (key: string, value: any) => any;
+    greaterThanOrEqualTo: (key: string, value: any) => any;
+    notEqualTo: (key: string, value: any) => any;
+    containedIn: (key: string, value: any) => any;
+    notContainedIn: (key: string, value: any) => any;
+    exists: (key: string) => any;
+    notExists: (key: string) => any;
+    ascending: (key: string) => any;
+    descending: (key: string) => any;
     skip: (value: any) => any;
     limit: (value: any) => any;
     or: () => any;
     nor: () => any;
     not: () => any;
     and: () => any;
-    constructor(...stackArguments: any[]);
+    constructor(config: any);
     /**
      * @method connect
      * @summary
@@ -51,7 +51,7 @@ export declare class Stack {
      *
      * @returns {string} baseDir
      */
-    connect(overrides?: object): Promise<{}>;
+    connect(overrides?: any): Promise<unknown>;
     /**
      * @method contentType
      * @summary
@@ -131,19 +131,9 @@ export declare class Stack {
     /**
      * @method where
      * @summary
-     *  Pass JS expression or a full function to the query system
+     * Pass JS expression or a full function to the query system
      * @description
-     *  - Use the $where operator to pass either a string containing a JavaScript expression
-     *    or a full JavaScript function to the query system.
-     *  - The $where provides greater flexibility, but requires that the database processes
-     *    the JavaScript expression or function for each document in the collection.
-     *  - Reference the document in the JavaScript expression or function using either this or obj.
-     * @note
-     *  - Only apply the $where query operator to top-level documents.
-     *  - The $where query operator will not work inside a nested document, for instance,
-     *    in an $elemMatch query.
-     * @link
-     *  https://docs.mongodb.com/manual/reference/operator/query/where/index.html
+     * Evaluate js expressions
      * @param field
      * @param value
      * @returns {this} - Returns `stack's` instance
@@ -151,10 +141,10 @@ export declare class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.where("this.title === 'Amazon_Echo_Black'").find()
      * data.then(function(result) {
-     *        // ‘result’ contains the list of entries where value of
-     *        //‘title’ is equal to ‘Demo’.
-     * },function (error) {
-     *         // error function
+     *   // ‘result’ contains the list of entries where value of
+     *   //‘title’ is equal to ‘Demo’.
+     * }).catch(error) => {
+     *   // error function
      * })
      */
     where(expr: any): this;
@@ -165,11 +155,11 @@ export declare class Stack {
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.count().find()
      * data.then(function(result) {
-     *      // ‘result’ contains the total count.
-     * },function (error) {
-     *      // error function
+     *  // returns 'example' content type's entries
+     * }).catch(error) => {
+     *   // error function
      * })
-     *@returns {this} - Returns `stack's` instance
+     * @returns {this} - Returns `stack's` instance
      */
     count(): this;
     /**
@@ -231,19 +221,19 @@ export declare class Stack {
      */
     language(languageCode: any): this;
     /**
-   * @method include
-   * @summary
-   *  Includes references of provided fields of the entries being scanned
-   * @param {*} key - uid/uid's of the field
-   * @returns {this} - Returns `stack's` instance
-   * @example
-   * Stack().contentType('example').entries().include(['authors','categories']).find()
-   * .then(function(result) {
-   *        // ‘result’ inclueds entries with references of authors and categories filed's
-   * },function (error) {
-   *        // error function
-   * })
-   */
+     * @method include
+     * @summary
+     *  Includes references of provided fields of the entries being scanned
+     * @param {*} key - uid/uid's of the field
+     * @returns {this} - Returns `stack's` instance
+     * @example
+     * Stack().contentType('example').entries().include(['authors','categories']).find()
+     * .then(function(result) {
+     *        // ‘result’ inclueds entries with references of authors and categories filed's
+     * },function (error) {
+     *        // error function
+     * })
+     */
     include(fields: any): this;
     /**
      * @method includeReferences
@@ -372,16 +362,16 @@ export declare class Stack {
      * })
      * @returns {object} - Returns a objects, that have been processed, filtered and referenced
      */
-    find(): Promise<{}>;
+    find(): Promise<unknown>;
     /**
-   * @summary
-   *  Internal method, that iteratively calls itself and binds entries reference
-   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-   * @param {String} locale - Locale, in which the reference is to be found
-   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-   * @returns {Object} - Returns `entry`, that has all of its reference binded
-   */
+     * @summary
+     *  Internal method, that iteratively calls itself and binds entries reference
+     * @param {Object} entry - An entry or a collection of entries, who's references are to be found
+     * @param {String} locale - Locale, in which the reference is to be found
+     * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
+     * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
+     * @returns {Object} - Returns `entry`, that has all of its reference binded
+     */
     private includeSpecificReferences;
     private isPartOfInclude;
     /**
@@ -402,7 +392,7 @@ export declare class Stack {
      *
      * @returns {object} - Returns an object, that has been processed, filtered and referenced
      */
-    findOne(): Promise<{}>;
+    findOne(): Promise<unknown>;
     private queryOnReferences;
     private findReferences;
     private includeReferencesI;
