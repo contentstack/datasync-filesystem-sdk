@@ -33,7 +33,6 @@
     "prefer-readonly": true,
     "align": [true, "parameters", "statements"],
     "class-name": true,
-    "file-name-casing": true,
     "import-spacing": true,
     "interface-name": [true, "always-prefix"],
     "newline-before-return": true,
