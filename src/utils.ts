@@ -1,12 +1,22 @@
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
 
-import { isEqual, isObject, transform } from 'lodash'
-import { join } from 'path'
-import { getConfig } from './index'
+import {
+  isEqual,
+  isObject,
+  transform,
+  uniq,
+} from 'lodash'
+import {
+  join,
+} from 'path'
+import {
+  getConfig,
+} from './index'
 
 const localePaths = {}
 
@@ -133,4 +143,53 @@ export const getContentTypesPath = (locale) => {
   localePaths[locale]['_content_types'] = path
 
   return path
+}
+
+export const segregateQueries = (queries) => {
+  const aggQueries = {}
+  const contentTypes = []
+
+  queries.forEach((element) => {
+    if (element._content_type_uid) {
+      if (aggQueries.hasOwnProperty(element._content_type_uid)) {
+        aggQueries[element._content_type_uid].$or.push(element)
+      } else {
+        aggQueries[element._content_type_uid] = {
+          $or: [element],
+        }
+        contentTypes.push(element._content_type_uid)
+      }
+    }
+  })
+
+  return {
+    aggQueries,
+    contentTypes,
+  }
+}
+
+export const checkCyclic = (uid, mapping) => {
+  let flag = false
+  let list = [uid]
+  for (const i of list) {
+    const parent = getParents(i, mapping)
+    if (parent.indexOf(uid) !== -1) {
+      flag = true
+      break
+    }
+    list = uniq(list.concat(parent))
+  }
+
+  return flag
+}
+
+const getParents = (child, mapping) => {
+  const parents = []
+  for (const key in mapping) {
+    if (mapping[key].indexOf(child) !== -1) {
+      parents.push(key)
+    }
+  }
+
+  return parents
 }

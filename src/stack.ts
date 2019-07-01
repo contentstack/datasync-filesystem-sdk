@@ -1,9 +1,9 @@
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
-
 
 import mask from 'json-mask'
 import {
@@ -12,13 +12,35 @@ import {
   find,
   map,
   merge,
-  orderBy,
   uniq,
 } from 'lodash'
-import { join } from 'path'
 import sift from 'sift'
-import { existsSync, readFile } from './fs'
-import { difference, getAssetsPath, getContentTypesPath, getEntriesPath } from './utils'
+import {
+  existsSync,
+  readFile,
+} from './fs'
+import {
+  checkCyclic,
+  difference,
+  getAssetsPath,
+  getContentTypesPath,
+  getEntriesPath,
+  segregateQueries,
+} from './utils'
+
+interface IShelf {
+  path: string,
+    position: string,
+    uid: string,
+}
+
+interface IQueryInterface {
+  $or: Array < {
+    _content_type_uid: string,
+    uid: string,
+    locale: string,
+  } >
+}
 
 const extend = {
   compare (type) {
@@ -100,14 +122,8 @@ const extend = {
  * @returns {this} - Returns `stack's` instance
  */
 export class Stack {
-  public baseDir: any
-  public masterLocale: any
   public config: any
-  public contentTypeUid: string
-  public type: string
-  public q: any = {}
-  public assetUid: any
-  public entryUid: any
+  public q: any
   public lessThan: (key: string, value: any) => Stack
   public lessThanOrEqualTo: (key: string, value: any) => Stack
   public greaterThan: (key: string, value: any) => any
@@ -140,10 +156,10 @@ export class Stack {
      * @example 
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.lessThan('created_at','2015-06-22').find()
-     * data.then(function (result) {
+     * data.then(function(result) {
      *      // result content the data who's 'created_at date'
      *      //is less than '2015-06-22'
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -158,13 +174,13 @@ export class Stack {
      * @example 
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
-     * data.then(function (result) {
+     * data.then(function(result) {
      *      // result contain the data of entries where the
      *      //'created_at' date will be less than or equalto '2015-06-22'.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
-     *@returns {this} - Returns `stack's` instance
+     * @returns {this} - Returns `stack's` instance
      */
     this.lessThanOrEqualTo = extend.compare('$lte')
 
@@ -179,7 +195,7 @@ export class Stack {
      * data.then(function(result) {
      *      // result contains the data of entries where the
      *      //'created_at' date will be greaterthan '2015-06-22'
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -197,7 +213,7 @@ export class Stack {
      * data.then(function(result) {
      *      // result contains the data of entries where the
      *      //'created_at' date will be  greaterThan or equalto '2015-06-22'
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -215,7 +231,7 @@ export class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries where value
      *      //of the ‘title’ field will not be 'Demo'.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -233,7 +249,7 @@ export class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries where value of the
      *      // ‘title’ field will contain either 'Demo' or ‘Welcome’.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -252,10 +268,10 @@ export class Stack {
      * data.then(function(result) {
      *      // 'result' contains the list of entries where value of the
      *      //title field should not be either "Demo" or ‘Welcome’
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
-     *@returns {this} - Returns `stack's` instance
+     * @returns {this} - Returns `stack's` instance
      */
     this.notContainedIn = extend.contained(false)
 
@@ -268,7 +284,7 @@ export class Stack {
      * let data = blogQuery.exists('featured').find()
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries in which "featured" exists.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -284,7 +300,7 @@ export class Stack {
      * let data = blogQuery.notExists('featured').find()
      * data.then(function(result) {
      *      // result is the list of non-existing’featured’" data.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -301,7 +317,7 @@ export class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries which is sorted in
      *      //ascending order on the basis of ‘created_at’.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -318,7 +334,7 @@ export class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries which is sorted in
      *      //descending order on the basis of ‘created_at’.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -335,7 +351,7 @@ export class Stack {
      * let data = blogQuery.skip(5).find()
      * data.then(function(result) {
      *      //result 
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -351,7 +367,7 @@ export class Stack {
      * let data = blogQuery.limit(10).find()
      * data.then(function(result) {
      *      // result contains the limited number of entries
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -405,7 +421,7 @@ export class Stack {
     this.config = merge(this.config, overrides)
     return new Promise((resolve, reject) => {
       try {
-        
+
 
         return resolve(this.config)
       } catch (error) {
@@ -431,11 +447,11 @@ export class Stack {
    * 
    */
   public contentType(uid) {
-    const stack = new Stack(this.config)
-    if (uid && typeof uid === 'string') {
-      stack.contentTypeUid = uid
-      stack.q.content_type_uid = '_content_types'
+    if (typeof uid !== 'string' || uid.length === 0) {
+      throw new Error('Kindly provide a uid for .contentType()')
     }
+    const stack = new Stack(this.config)
+    stack.q.content_type_uid = uid
 
     return stack
   }
@@ -467,16 +483,14 @@ export class Stack {
    * @param {string} uid- Optional. uid of entry
    * @returns {this} - Returns `stack's` instance
    */
-  public entry(uid?) {
+  public entry(uid ? ) {
     this.q.isSingle = true
     if (typeof this.q.content_type_uid === 'undefined') {
       throw new Error('Please call .contentType() before calling .entries()!')
     }
-    
-    if (uid && typeof uid === 'string') {
-      this.q.entryUid = uid
 
-      return this
+    if (uid && typeof uid === 'string') {
+      this.q.query[uid] = uid
     }
 
     return this
@@ -497,9 +511,7 @@ export class Stack {
     const stack = new Stack(this.config)
     stack.q.isSingle = true
     if (uid && typeof uid === 'string') {
-      stack.q.assetUid = uid
-
-      return stack
+      stack.q.query[uid] = uid
     }
 
     return stack
@@ -531,7 +543,7 @@ export class Stack {
    * data.then(function(result) {
    *      // ‘result’ contains the list of entries where value of 
    *      //‘title’ is equal to ‘Demo’.
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -643,7 +655,7 @@ export class Stack {
    * let data = blogQuery.tags(['technology', 'business']).find()
    * data.then(function(result) {
    *      // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -665,7 +677,7 @@ export class Stack {
    * let data = blogQuery.includeCount().find()
    * data.then(function(result) {
    *      // ‘result’ contains a list of entries in which count of object is present at array[1] position.
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -684,7 +696,7 @@ export class Stack {
    * let data = blogQuery.language('fr-fr').find()
    * data.then(function(result) {
    *      // ‘result’ contains a list of entries of locale fr-fr
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -708,7 +720,7 @@ export class Stack {
    * Stack().contentType('example').entries().include(['authors','categories']).find()
    * .then(function(result) {
    *        // ‘result’ inclueds entries with references of authors and categories filed's
-   * },function (error) {
+   * }).catch((error) => {
    *        // error function
    * })
    */
@@ -733,7 +745,7 @@ export class Stack {
    * Stack().contentType('example').entries().includeReferences().find()
    * .then(function(result) {
    *        // ‘result’ entries with references
-   * },function (error) {
+   * }).catch((error) => {
    *        // error function
    * })
    */
@@ -752,7 +764,7 @@ export class Stack {
    * Stack().contentType('example').entries().excludeReferences().find()
    * .then(function(result) {
    *    // ‘result’ entries without references
-   *  },function (error) {
+   *  }).catch((error) => {
    *    // error function
    *  })
    */
@@ -770,7 +782,7 @@ export class Stack {
    * let data = blogQuery.includeContentType().find()
    * data.then(function(result) {
    *      // ‘result’ contains a list of entries along contentType
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -817,12 +829,10 @@ export class Stack {
             },
           })
         } else {
-          this.q.query.$or = [
-            {
-              $options: options,
-              $regex: value,
-            },
-          ]
+          this.q.query.$or = [{
+            $options: options,
+            $regex: value,
+          }, ]
         }
       } else {
         this.q.query[key] = {
@@ -843,7 +853,7 @@ export class Stack {
    * let data = blogQuery.only(['title','uid']).find()
    * data.then(function(result) {
    *      // ‘result’ contains a list of entries with field title and uid only
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -869,7 +879,7 @@ export class Stack {
    * let data = blogQuery.except(['title','uid']).find()
    * data.then(function(result) {
    *      // ‘result’ contains a list of entries without fields title and uid only
-   * },function (error) {
+   * }).catch((error) => {
    *      // error function
    * })
    * @returns {this} - Returns `stack's` instance
@@ -935,99 +945,60 @@ export class Stack {
    */
 
   public find() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
       try {
+        const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us'
+        const finalResult = {
+          content_type_uid: this.q.content_type_uid,
+          locale,
+        }
+        let keyNamePlural: string
+        let keyNameSingular: string
         let filePath: string
         switch (this.q.content_type_uid) {
-          case '_assets':
-            filePath = getAssetsPath(this.q.locale)
-            break
-          case '_content_types':
-            filePath = getContentTypesPath(this.q.locale)
-            break
-          default:
-            filePath = getEntriesPath(this.q.locale, this.q.contentType_uid)
-            break
+        case '_assets':
+          filePath = getAssetsPath(locale) + '.json'
+          keyNamePlural = 'assets'
+          keyNameSingular = 'asset'
+          break
+        case '_content_types':
+          filePath = getContentTypesPath(locale) + '.json'
+          keyNamePlural = 'content_types'
+          keyNameSingular = 'content_type'
+          break
+        default:
+          filePath = getEntriesPath(locale, this.q.contentType_uid) + '.json'
+          keyNamePlural = 'entries'
+          keyNameSingular = 'entry'
+          break
         }
-        const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us'
 
-        if (existsSync(dataPath)) {
+        if (!existsSync(filePath)) {
 
           return reject('content-type or entry not found')
         }
 
-        fs.readFile(dataPath, 'utf8', async (err, data) => {
-          if (err) {
-            return reject(err)
-          }
-          const finalResult = {
-            content_type_uid: this.contentTypeUid || '_assets',
-            locale,
-          }
-          let type = (this.type !== 'asset') ? 'entries' : 'assets'
-          if (data === undefined || data === '') {
+        let data: any[] = await readFile(filePath)
 
-            if (this.q.single) {
-              type = (type === 'entries') ? 'entry' : 'asset'
-              finalResult[type] = {}
-              this.q = {}
+        data = data.filter(sift(this.q.query))
 
-              return resolve(finalResult)
-            }
-            finalResult[type] = []
-            this.q = {}
-
-            return resolve(finalResult)
-          }
-          data = JSON.parse(data)
-          let filteredData = map(data, 'data')
-          if (this.assetUid || this.entryUid) {
-            const uid = this.assetUid || this.entryUid
-            filteredData = find(filteredData, ['uid', uid])
-          }
-
-          if (this.q.queryReferences) {
-            return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
-              .then(resolve)
-              .catch(reject)
-          }
-
-          if (this.q.excludeReferences) {
-            const preProcessedData = this.preProcess(filteredData)
-            this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-              .then((result) => {
-                this.q = {}
-
-                return resolve(result)
-              }).catch(reject)
-
-          } else if (this.q.includeSpecificReferences) {
-            return this.includeSpecificReferences(filteredData, locale, {}, undefined, this.q
-                .includeSpecificReferences)
-              .then(() => {
-                const preProcessedData = this.preProcess(filteredData)
-                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                  .then((result) => {
-                    this.q = {}
-
-                    return resolve(result)
-                  }).catch(reject)
-              }).catch(reject)
+        if (this.q.excludeAllReferences || this.q.content_type_uid === '_assets' || this.q.content_type_uid ===
+          '_content_types') {
+          if (this.q.isSingle) {
+            finalResult[keyNameSingular] = (data.length) ? data[0] : null
           } else {
-            return this.includeReferencesI(filteredData, locale, {}, undefined)
-              .then(async () => {
-                const preProcessedData = this.preProcess(filteredData)
-                this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                  .then((result) => {
-                    this.q = {}
-
-                    return resolve(result)
-                  }).catch(reject)
-              })
-              .catch(reject)
+            finalResult[keyNameSingular] = data
           }
 
-        })
+          return resolve(finalResult)
+        } else if (this.q.includeSpecificReferences) {
+          await this
+            .includeSpecificReferences(data, this.q.content_type_uid, this.q.locale, this.q
+              .includeSpecificReferences)
+        } else if (this.q.queryOnReferences) {
+          await this.includeReferencesI(data, locale, {})
+        }
+
 
       } catch (error) {
 
@@ -1036,134 +1007,6 @@ export class Stack {
       }
     })
 
-  }
-
-  /**
-   * @summary
-   *  Internal method, that iteratively calls itself and binds entries reference
-   * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-   * @param {String} locale - Locale, in which the reference is to be found
-   * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-   * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-   * @returns {Object} - Returns `entry`, that has all of its reference binded
-   */
-  private includeSpecificReferences(entry, locale, references, parentUid ? , includePths = [], parentField = '') {
-    const self = this
-
-    return new Promise((resolve, reject) => {
-      if (entry === null || typeof entry !== 'object') {
-        return resolve()
-      }
-
-      // current entry becomes the parent
-      if (entry.uid) {
-        parentUid = entry.uid
-      }
-
-      const referencesFound = []
-
-      // iterate over each key in the object
-      for (const prop in entry) {
-        if (entry[prop] !== null && typeof entry[prop] === 'object') {
-          let currentPth
-          if (parentField === '' && isNaN(parseInt(prop))) {
-            currentPth = prop
-          } else if (parentField === '' && !isNaN(parseInt(prop))) {
-            currentPth = parentField
-          } else {
-            currentPth = parentField.concat('.', prop)
-          }
-
-          if (entry[prop] && entry[prop].reference_to) {
-            if (entry[prop].reference_to === '_assets' || this.isPartOfInclude(currentPth, includePths)) {
-              if (entry[prop].values.length === 0) {
-                entry[prop] = []
-              } else {
-                let uids = entry[prop].values
-                if (typeof uids === 'string') {
-                  uids = [uids]
-                }
-                if (entry[prop].reference_to !== '_assets') {
-                  uids = filter(uids, (uid) => {
-                    return !(checkCyclic(uid, references))
-                  })
-                }
-                if (uids.length) {
-                  const query = {
-                    content_type_uid: entry[prop].reference_to,
-                    locale,
-                    query: {
-                      uid: {
-                        $in: uids,
-                      },
-                    },
-                  }
-
-
-                  referencesFound.push(new Promise((rs, rj) => {
-
-                    return self.findReferences(query).then((entities) => {
-                      entities = cloneDeep(entities)
-                      if ((entities as any).length === 0) {
-                        entry[prop] = []
-
-                        return rs()
-                      } else if (parentUid) {
-                        references[parentUid] = references[parentUid] || []
-                        references[parentUid] = uniq(references[parentUid]
-                          .concat(map((entities as any), 'uid')))
-                      }
-                      if (typeof entry[prop].values === 'string') {
-                        entry[prop] = ((entities === null) ||
-                            (entities as any).length === 0) ? null
-                          : entities[0]
-                      } else {
-                        // format the references in order
-                        const referenceBucket = []
-                        query.query.uid.$in.forEach((entityUid) => {
-                          const elem = find(entities, (entity) => {
-
-                            return (entity as any).uid === entityUid
-                          })
-                          if (elem) {
-                            referenceBucket.push(elem)
-                          }
-                        })
-                        entry[prop] = referenceBucket
-                      }
-
-                      return self.includeSpecificReferences(entry[prop], locale, references, parentUid,
-                          includePths, currentPth)
-                        .then(rs)
-                        .catch(rj)
-                    })
-                  }))
-                }
-              }
-            } else {
-              entry[prop] = {}
-            }
-          } else {
-            referencesFound.push(self.includeSpecificReferences(entry[prop], locale, references, parentUid,
-              includePths, currentPth))
-          }
-        }
-      }
-
-      return Promise.all(referencesFound)
-        .then(resolve)
-        .catch(reject)
-    })
-  }
-
-  private isPartOfInclude(pth, include) {
-    for (let i = 0, j = include.length; i < j; i++) {
-      if (include[i].indexOf(pth) !== -1) {
-        return true
-      }
-    }
-
-    return false
   }
 
   /**
@@ -1199,54 +1042,305 @@ export class Stack {
     })
   }
 
-  private queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
-    return new Promise((resolve, reject) => {
+  private async includeSpecificReferences (entries: any[], contentTypeUid: string, locale: string, include: string[]) {
+    const ctQuery = {
+      _content_type_uid: '_content_types',
+      uid: contentTypeUid,
+    }
 
-      return this.includeReferencesI(filteredData, locale, {}, undefined)
-        .then(async () => {
-          const result = sift(this.q.queryReferences, filteredData)
-          const preProcessedData = this.preProcess(result)
-          this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
-            this.q = {}
+    const {
+      paths, // ref. fields in the current content types
+      pendingPath, // left over of *paths*
+      schemaList, // list of content type uids, the current content types refer to
+    } = await this.getReferencePath(ctQuery, locale, include)
 
-            return resolve(res)
-          })
+    const queries = {
+      $or: [],
+    } // reference field paths
+    const shelf = [] // a mapper object, that holds pointer to the original element
 
-        })
-        .catch(reject)
+    // iterate over each path in the entries and fetch the references
+    // while fetching, keep track of their location
+    for (let i = 0, j = paths.length; i < j; i++) {
+      this.fetchPathDetails(entries, locale, paths[i].split('.'), queries, shelf, true, entries, 0)
+    }
 
-    })
+    // even after traversing, if no references were found, simply return the entries found thusfar
+    if (shelf.length === 0) {
+      return entries
+    }
+
+    // else, self-recursively iterate and fetch references
+    // Note: Shelf is the one holding `pointers` to the actual entry
+    // Once the pointer has been used, for GC, point the object to null
+    return this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
   }
 
-  private findReferences(query) {
-    return new Promise((resolve, reject) => {
-      let pth
-      if (query.content_type_uid === '_assets') {
-        pth = join(this.baseDir, query.locale, 'assets', '_assets.json')
-      } else {
-        pth = join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json')
-      }
-      if (!existsSync(pth)) {
+  private async includeReferenceIteration (eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf:
+    IShelf[]) {
+    if (oldShelf.length === 0 || ctQuery.$or.length === 0) {
+      return
+    }
 
-        return resolve([])
-      }
+    const {
+      paths,
+      pendingPath,
+      schemaList,
+    } = await this.getReferencePath(ctQuery, locale, include)
 
-      return readFile(pth, 'utf-8', (readError, data) => {
-        if (readError) {
+    const queries = {
+      $or: [],
+    }
+    let result = []
+    const shelf = []
+    await this.subIncludeReferenceIteration(eQuery, locale, paths, include, queries, result, shelf)
 
-          return reject(readError)
+    // GC to avoid mem leaks!
+    eQuery = null
+
+    for (let i = 0, j = oldShelf.length; i < j; i++) {
+      const element: IShelf = oldShelf[i]
+      for (let k = 0, l = result.length; k < l; k++) {
+        if (result[k].uid === element.uid) {
+          element.path[element.position] = result[k]
+          break
         }
-        if (!data) {
+      }
+    }
 
-          return resolve()
-        }
-        data = JSON.parse(data)
-        data = (map(data, 'data') as any)
-        data = sift(query.query, (data as any))
+    // GC to avoid mem leaks!
+    oldShelf = null
+    result = null
 
-        return resolve(data)
-      })
+    // Iterative loops, that traverses paths and binds them onto entries
+    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
+
+    return
+  }
+
+  private async subIncludeReferenceIteration (eQuieries, locale, paths, include, queries, result, shelf) {
+    /**
+     * Segregate eQueries based on their content types
+     * {
+     *    content_type_uid: [],
+     *    ...
+     * }
+     */
+    const {
+      contentTypes,
+      aggQueries
+    } = segregateQueries(eQuieries.$or)
+    const promises = []
+
+    contentTypes.forEach((contentType) => {
+      promises.push(this.fetchEntries(aggQueries[contentType], locale, contentType, paths, include, queries,
+        result,
+        shelf))
     })
+
+    // wait for all promises to be resolved
+    await Promise.all(promises)
+
+    return {
+      queries,
+      result,
+      shelf,
+    }
+  }
+
+  private async getReferencePath (query, locale, currentInclude) {
+    const data: any[] = await readFile(getContentTypesPath(locale) + '.json')
+    const schemas: any[] = data.filter(sift(query))
+    const pendingPath = []
+    const schemasReferred = []
+    const paths = []
+    const schemaList = {
+      $or: [],
+    }
+
+    if (schemas.length === 0) {
+      return {
+        paths,
+        pendingPath,
+        schemaList,
+      }
+    }
+
+    let entryReferences = {}
+
+    schemas.forEach((schema) => {
+      // Entry references
+      entryReferences = merge(entryReferences, schema._references)
+      // tslint:disable-next-line: forin
+      for (const path in schema._assets) {
+        paths.push(path)
+      }
+    })
+
+    for (let i = 0, j = currentInclude.length; i < j; i++) {
+      const includePath = currentInclude[i]
+      // tslint:disable-next-line: forin
+      for (const path in entryReferences) {
+        const idx = includePath.indexOf(path)
+        if (~idx) {
+          let subPath
+          // Its the complete path!! Hurrah!
+          if (path.length !== includePath.length) {
+            subPath = includePath.slice(0, path.length)
+            pendingPath.push(includePath.slice(path.length + 1))
+          } else {
+            subPath = includePath
+          }
+
+          if (typeof entryReferences[path] === 'string') {
+            schemasReferred.push({
+              _content_type_uid: '_content_types',
+              uid: entryReferences[path],
+            })
+          } else {
+
+            entryReferences[path].forEach((contentTypeUid) => {
+              schemasReferred.push({
+                _content_type_uid: '_content_types',
+                uid: contentTypeUid,
+              })
+            })
+          }
+
+          paths.push(subPath)
+          break
+        }
+      }
+    }
+
+    schemaList.$or = schemasReferred
+
+    return {
+      // path, that's possible in the current schema
+      paths,
+      // paths, that's yet to be traversed
+      pendingPath,
+      // schemas, to be loaded!
+      schemaList,
+    }
+  }
+
+  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQueryInterface, shelf,
+    assetsOnly = false, parent, pos, counter = 0) {
+    if (counter === (pathArr.length)) {
+      if (data && typeof data === 'object') {
+        if (data instanceof Array && data.length) {
+          data.forEach((elem, idx) => {
+            if (typeof elem === 'string') {
+              queryBucket.$or.push({
+                _content_type_uid: '_assets',
+                locale,
+                uid: elem,
+              })
+
+              shelf.push({
+                path: data,
+                position: idx,
+                uid: elem,
+              })
+            } else if (elem && typeof elem === 'object' && elem.hasOwnProperty('_content_type_uid')) {
+              queryBucket.$or.push({
+                _content_type_uid: elem._content_type_uid,
+                locale,
+                uid: elem.uid,
+              })
+
+              shelf.push({
+                path: data,
+                position: idx,
+                uid: elem.uid,
+              })
+            }
+          })
+        } else if (typeof data === 'object') {
+          if (data.hasOwnProperty('_content_type_uid')) {
+            queryBucket.$or.push({
+              _content_type_uid: data._content_type_uid,
+              locale,
+              uid: data.uid,
+            })
+
+            shelf.push({
+              path: parent,
+              position: pos,
+              uid: data.uid,
+            })
+          }
+        }
+      } else if (typeof data === 'string') {
+        queryBucket.$or.push({
+          _content_type_uid: '_assets',
+          locale,
+          uid: data,
+        })
+
+        shelf.push({
+          path: parent,
+          position: pos,
+          uid: data,
+        })
+      }
+    } else {
+      const currentField = pathArr[counter]
+      counter++
+      if (data instanceof Array) {
+        // tslint:disable-next-line: prefer-for-of
+        for (let i = 0; i < data.length; i++) {
+          if (data[i][currentField]) {
+            this.fetchPathDetails(data[i][currentField], locale, pathArr, queryBucket, shelf, assetsOnly, data[i],
+              currentField, counter)
+          }
+        }
+      } else {
+        if (data[currentField]) {
+          this.fetchPathDetails(data[currentField], locale, pathArr, queryBucket, shelf, assetsOnly, data,
+            currentField, counter)
+        }
+      }
+    }
+
+    // since we've reached last of the paths, return!
+    return
+  }
+
+  private async fetchEntries (query: any, locale: string, contentTypeUid: string, paths: string[], include: string[],
+    queries: IQueryInterface, result: any[], bookRack: IShelf) {
+    const contents: any[] = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
+    result = result.concat(contents.filter(sift(query)))
+
+    if (result.length === 0) {
+      return
+    }
+
+    if (include.length) {
+      paths.forEach((path) => {
+        // console.log('path:', path)
+        this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, false, result, 0)
+      })
+    } else {
+      // if there are no includes, only fetch assets
+      paths.forEach((path) => {
+        this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, true, result, 0)
+      })
+    }
+
+    return
+  }
+
+  private async findReferences (query) {
+    const path = getEntriesPath(query.locale, query.content_type_uid) + '.json'
+    const data = await readFile(path)
+    if (data.length === 0) {
+
+      return []
+    }
+
+    return data.filter(sift(query.query))
   }
 
   private includeReferencesI(entry, locale, references, parentUid ? ) {
@@ -1347,126 +1441,48 @@ export class Stack {
     })
   }
 
+  private processResult(data) {
+    // TODO: include count
+    // TODO: sorting logic
 
-
-  private preProcess(filteredData) {
-    filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'))
-    const sortKeys: any = ['asc', 'desc']
-
-    const sortQuery: any = Object.keys(this.q)
-      .filter((key) => sortKeys.includes(key))
-      .reduce((obj, key) => {
-
-        return {
-          ...obj,
-          [key]: this.q[key],
-        }
-      }, {})
-    if (this.q.asc || this.q.desc) {
-      const value: any = (Object as any).values(sortQuery)
-      const key: any[] = Object.keys(sortQuery)
-      filteredData = orderBy(filteredData, value, key)
+    // data filtering
+    if (this.q.query) {
+      data = data.filter(sift(this.q.query))
     }
 
-    if (this.q.query && Object.keys(this.q.query).length > 0) {
-      filteredData = sift(this.q.query, filteredData)
-    } else if (this.q.logical) {
-      const operator = Object.keys(this.q.logical)[0]
-      const vals: any = (Object as any).values(this.q.logical)
-      const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'))
-      const logicalQuery = {}
-      logicalQuery[operator] = values
-      filteredData = sift(logicalQuery, filteredData)
-    } else {
-      filteredData = filteredData
+    if (this.q.skip) {
+      data.splice(0, this.q.skip)
     }
 
-    if ((this.q.skip) && ((this.q.limit))) {
-      filteredData = filteredData.splice(this.q.skip, this.q.limit)
-    } else if ((this.q.skip)) {
-      filteredData = filteredData.slice(this.q.skip)
-    } else if (this.q.limit) {
-      filteredData = filteredData.splice(0, this.q.limit)
+    if (this.q.limit) {
+      data = data.splice(0, this.q.limit)
     }
 
     if (this.q.only) {
       const only = this.q.only.toString().replace(/\./g, '/')
-      filteredData = mask(filteredData, only)
-    }
-
-    if (this.q.except) {
+      data = mask(data, only)
+    } else if (this.q.except) {
       const bukcet = this.q.except.toString().replace(/\./g, '/')
-      const except = mask(filteredData, bukcet)
-      filteredData = difference(filteredData, except)
+      const except = mask(data, bukcet)
+      data = difference(data, except)
     }
 
-    if (this.q.tags) {
-      filteredData = sift({
-        tags: {
-          $in: this.q.tags,
-        },
-      }, filteredData)
-    }
-    return filteredData
+    return data
   }
 
-  private postProcessResult(finalResult, result, type, schemaPath) {
-    return new Promise((resolve, reject) => {
-      try {
-        if (this.q.count) {
-          if (result instanceof Array) {
-            (finalResult as any).count = result.length
-          } else if (this.q.single && result !== undefined) {
-            (finalResult as any).count = 1
-          } else {
-            (finalResult as any).count = 0
-          }
-        } else {
-          finalResult[type] = result
+  private async postProcessResult (result, output) {
+    if (this.q.include_content_type) {
+      const path = getContentTypesPath(this.q.locale) + '.json'
+      const contents: string = await readFile(path)
+      const contentTypes: any[] = JSON.parse(contents)
+      for (let i = 0, j = contentTypes.length; i < j; i++) {
+        if (contentTypes[i].uid === this.q.content_type_uid) {
+          output.content_type = contentTypes[i]
+          break
         }
-
-        if (this.q.single) {
-          delete finalResult[type]
-          type = (type === 'entries') ? 'entry' : 'asset'
-          if (result === undefined) {
-            finalResult[type] = {}
-          } else {
-            finalResult[type] = result[0] || result
-          }
-        }
-
-        if (this.q.include_count) {
-          if (result instanceof Array) {
-            (finalResult as any).count = result.length
-          } else if (this.q.single && result !== undefined) {
-            (finalResult as any).count = 1
-          } else {
-            (finalResult as any).count = 0
-          }
-
-        }
-
-        if (this.q.include_content_type) {
-          if (!fs.existsSync(schemaPath)) {
-            return reject('content type not found')
-          }
-          let contents
-          readFile(schemaPath).then((data) => {
-            contents = JSON.parse(data);
-            (finalResult as any).content_type = contents
-
-            return resolve(finalResult)
-          }).catch(() => {
-            (finalResult as any).content_type = {}
-
-            return resolve(finalResult)
-          })
-        } else {
-          return resolve(finalResult)
-        }
-      } catch (error) {
-        return reject(error)
       }
-    })
+    }
+
+    return output
   }
 }
