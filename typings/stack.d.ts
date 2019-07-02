@@ -1,5 +1,6 @@
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
@@ -9,14 +10,8 @@
  * @returns {this} - Returns `stack's` instance
  */
 export declare class Stack {
-    baseDir: any;
-    masterLocale: any;
     config: any;
-    contentTypeUid: string;
-    type: string;
     q: any;
-    assetUid: any;
-    entryUid: any;
     lessThan: (key: string, value: any) => Stack;
     lessThanOrEqualTo: (key: string, value: any) => Stack;
     greaterThan: (key: string, value: any) => any;
@@ -36,6 +31,7 @@ export declare class Stack {
     and: () => any;
     constructor(config: any);
     /**
+     * TODO
      * @method connect
      * @summary
      *  Establish connection to filesytem
@@ -43,7 +39,7 @@ export declare class Stack {
      * @example
      * Stack.connect({overrides})
      *  .then((result) => {
-     *
+     *    // db instance
      *  })
      *  .catch((error) => {
      *    // handle query errors
@@ -67,6 +63,7 @@ export declare class Stack {
      *    // handle query errors
      *  })
      *
+     * @returns {Stack} instance
      */
     contentType(uid: any): Stack;
     /**
@@ -122,7 +119,7 @@ export declare class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries where value of
      *      //‘title’ is equal to ‘Demo’.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -186,7 +183,7 @@ export declare class Stack {
      * let data = blogQuery.tags(['technology', 'business']).find()
      * data.then(function(result) {
      *      // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -200,7 +197,7 @@ export declare class Stack {
      * let data = blogQuery.includeCount().find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries in which count of object is present at array[1] position.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -214,7 +211,7 @@ export declare class Stack {
      * let data = blogQuery.language('fr-fr').find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries of locale fr-fr
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -230,7 +227,7 @@ export declare class Stack {
      * Stack().contentType('example').entries().include(['authors','categories']).find()
      * .then(function(result) {
      *        // ‘result’ inclueds entries with references of authors and categories filed's
-     * },function (error) {
+     * }).catch((error) => {
      *        // error function
      * })
      */
@@ -244,7 +241,7 @@ export declare class Stack {
      * Stack().contentType('example').entries().includeReferences().find()
      * .then(function(result) {
      *        // ‘result’ entries with references
-     * },function (error) {
+     * }).catch((error) => {
      *        // error function
      * })
      */
@@ -258,7 +255,7 @@ export declare class Stack {
      * Stack().contentType('example').entries().excludeReferences().find()
      * .then(function(result) {
      *    // ‘result’ entries without references
-     *  },function (error) {
+     *  }).catch((error) => {
      *    // error function
      *  })
      */
@@ -271,7 +268,7 @@ export declare class Stack {
      * let data = blogQuery.includeContentType().find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries along contentType
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -281,7 +278,7 @@ export declare class Stack {
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
      * @example
-     * Stack.contentType('contentType_uid').eqaulTo('title','Demo').getQuery().find()
+     * Stack.contentType('content_type_uid').eqaulTo('title','Demo').getQuery().find()
      * @returns {this} - Returns `stack's` instance
      */
     getQuery(): any;
@@ -306,7 +303,7 @@ export declare class Stack {
      * let data = blogQuery.only(['title','uid']).find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries with field title and uid only
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -319,7 +316,7 @@ export declare class Stack {
      * let data = blogQuery.except(['title','uid']).find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries without fields title and uid only
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -364,17 +361,6 @@ export declare class Stack {
      */
     find(): Promise<unknown>;
     /**
-     * @summary
-     *  Internal method, that iteratively calls itself and binds entries reference
-     * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-     * @param {String} locale - Locale, in which the reference is to be found
-     * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-     * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-     * @returns {Object} - Returns `entry`, that has all of its reference binded
-     */
-    private includeSpecificReferences;
-    private isPartOfInclude;
-    /**
      * @method findOne
      * @description
      * Queries the db using the query built/passed. Returns a single entry/asset/content type object
@@ -393,9 +379,15 @@ export declare class Stack {
      * @returns {object} - Returns an object, that has been processed, filtered and referenced
      */
     findOne(): Promise<unknown>;
-    private queryOnReferences;
+    private includeSpecificReferences;
+    private includeReferenceIteration;
+    private subIncludeReferenceIteration;
+    private getReferencePath;
+    private fetchPathDetails;
+    private fetchEntries;
+    private includeAssetsOnly;
     private findReferences;
-    private includeReferencesI;
+    private includeAllReferences;
     private preProcess;
-    private postProcessResult;
+    private postProcess;
 }

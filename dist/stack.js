@@ -1,6 +1,7 @@
 "use strict";
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
@@ -18,7 +19,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
-const path_1 = require("path");
 const sift_1 = __importDefault(require("sift"));
 const fs_1 = require("./fs");
 const utils_1 = require("./utils");
@@ -27,11 +27,11 @@ const extend = {
         return function (key, value) {
             if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
                 this.q.query = this.q.query || {};
-                this.q.query[key] = this.q.query.file_size || {};
+                this.q.query[key] = this.q.query[key] || {};
                 this.q.query[key][type] = value;
                 return this;
             }
-            throw new Error('Kindly provide valid parameters.');
+            throw new Error(`Kindly provide valid parameters for ${type}`);
         };
     },
     contained(bool) {
@@ -44,7 +44,7 @@ const extend = {
                 this.q.query[key][type] = this.q.query[key][type].concat(value);
                 return this;
             }
-            throw new Error('Kindly provide valid parameters.');
+            throw new Error(`Kindly provide valid parameters for ${bool}`);
         };
     },
     exists(bool) {
@@ -55,9 +55,10 @@ const extend = {
                 this.q.query[key].$exists = bool;
                 return this;
             }
-            throw new Error('Kindly provide valid parameters.');
+            throw new Error(`Kindly provide valid parameters for ${bool}`);
         };
     },
+    // TODO
     logical(type) {
         return function () {
             this.q.logical = this.q.logical || {};
@@ -73,7 +74,7 @@ const extend = {
                 this.q[type] = key;
                 return this;
             }
-            throw new Error('Argument should be a string.');
+            throw new Error(`Kindly provide valid parameters for sort-${type}`);
         };
     },
     pagination(type) {
@@ -93,7 +94,6 @@ const extend = {
  */
 class Stack {
     constructor(config) {
-        this.q = {};
         // app config
         this.config = config;
         this.q = this.q || {};
@@ -106,10 +106,10 @@ class Stack {
          * @example
          * let blogQuery = Stack().contentType('example').entries();
          * let data = blogQuery.lessThan('created_at','2015-06-22').find()
-         * data.then(function (result) {
+         * data.then(function(result) {
          *      // result content the data who's 'created_at date'
          *      //is less than '2015-06-22'
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -123,13 +123,13 @@ class Stack {
          * @example
          * let blogQuery = Stack().contentType('example').entries();
          * let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
-         * data.then(function (result) {
+         * data.then(function(result) {
          *      // result contain the data of entries where the
          *      //'created_at' date will be less than or equalto '2015-06-22'.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
-         *@returns {this} - Returns `stack's` instance
+         * @returns {this} - Returns `stack's` instance
          */
         this.lessThanOrEqualTo = extend.compare('$lte');
         /**
@@ -143,7 +143,7 @@ class Stack {
          * data.then(function(result) {
          *      // result contains the data of entries where the
          *      //'created_at' date will be greaterthan '2015-06-22'
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -160,7 +160,7 @@ class Stack {
          * data.then(function(result) {
          *      // result contains the data of entries where the
          *      //'created_at' date will be  greaterThan or equalto '2015-06-22'
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -177,7 +177,7 @@ class Stack {
          * data.then(function(result) {
          *      // ‘result’ contains the list of entries where value
          *      //of the ‘title’ field will not be 'Demo'.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -194,7 +194,7 @@ class Stack {
          * data.then(function(result) {
          *      // ‘result’ contains the list of entries where value of the
          *      // ‘title’ field will contain either 'Demo' or ‘Welcome’.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -212,10 +212,10 @@ class Stack {
          * data.then(function(result) {
          *      // 'result' contains the list of entries where value of the
          *      //title field should not be either "Demo" or ‘Welcome’
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
-         *@returns {this} - Returns `stack's` instance
+         * @returns {this} - Returns `stack's` instance
          */
         this.notContainedIn = extend.contained(false);
         /**
@@ -227,7 +227,7 @@ class Stack {
          * let data = blogQuery.exists('featured').find()
          * data.then(function(result) {
          *      // ‘result’ contains the list of entries in which "featured" exists.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -242,7 +242,7 @@ class Stack {
          * let data = blogQuery.notExists('featured').find()
          * data.then(function(result) {
          *      // result is the list of non-existing’featured’" data.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -258,7 +258,7 @@ class Stack {
          * data.then(function(result) {
          *      // ‘result’ contains the list of entries which is sorted in
          *      //ascending order on the basis of ‘created_at’.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -274,7 +274,7 @@ class Stack {
          * data.then(function(result) {
          *      // ‘result’ contains the list of entries which is sorted in
          *      //descending order on the basis of ‘created_at’.
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -289,7 +289,7 @@ class Stack {
          * let data = blogQuery.skip(5).find()
          * data.then(function(result) {
          *      //result
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -304,7 +304,7 @@ class Stack {
          * let data = blogQuery.limit(10).find()
          * data.then(function(result) {
          *      // result contains the limited number of entries
-         * },function (error) {
+         * }).catch((error) => {
          *      // error function
          * })
          * @returns {this} - Returns `stack's` instance
@@ -336,6 +336,7 @@ class Stack {
         this.and = extend.logical('$and');
     }
     /**
+     * TODO
      * @method connect
      * @summary
      *  Establish connection to filesytem
@@ -343,7 +344,7 @@ class Stack {
      * @example
      * Stack.connect({overrides})
      *  .then((result) => {
-     *
+     *    // db instance
      *  })
      *  .catch((error) => {
      *    // handle query errors
@@ -377,13 +378,14 @@ class Stack {
      *    // handle query errors
      *  })
      *
+     * @returns {Stack} instance
      */
     contentType(uid) {
-        const stack = new Stack(this.config);
-        if (uid && typeof uid === 'string') {
-            stack.contentTypeUid = uid;
-            stack.q.content_type_uid = '_content_types';
+        if (typeof uid !== 'string' || uid.length === 0) {
+            throw new Error('Kindly provide a uid for .contentType()');
         }
+        const stack = new Stack(this.config);
+        stack.q.content_type_uid = uid;
         return stack;
     }
     /**
@@ -395,7 +397,7 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     entries() {
-        if (typeof this.q.contentType_uid === 'undefined') {
+        if (typeof this.q.content_type_uid === 'undefined') {
             throw new Error('Please call .contentType() before calling .entries()!');
         }
         return this;
@@ -417,8 +419,7 @@ class Stack {
             throw new Error('Please call .contentType() before calling .entries()!');
         }
         if (uid && typeof uid === 'string') {
-            this.q.entryUid = uid;
-            return this;
+            this.q.query[uid] = uid;
         }
         return this;
     }
@@ -437,8 +438,7 @@ class Stack {
         const stack = new Stack(this.config);
         stack.q.isSingle = true;
         if (uid && typeof uid === 'string') {
-            stack.q.assetUid = uid;
-            return stack;
+            stack.q.query[uid] = uid;
         }
         return stack;
     }
@@ -466,7 +466,7 @@ class Stack {
      * data.then(function(result) {
      *      // ‘result’ contains the list of entries where value of
      *      //‘title’ is equal to ‘Demo’.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -567,7 +567,7 @@ class Stack {
      * let data = blogQuery.tags(['technology', 'business']).find()
      * data.then(function(result) {
      *      // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -587,7 +587,7 @@ class Stack {
      * let data = blogQuery.includeCount().find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries in which count of object is present at array[1] position.
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -604,7 +604,7 @@ class Stack {
      * let data = blogQuery.language('fr-fr').find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries of locale fr-fr
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -626,7 +626,7 @@ class Stack {
      * Stack().contentType('example').entries().include(['authors','categories']).find()
      * .then(function(result) {
      *        // ‘result’ inclueds entries with references of authors and categories filed's
-     * },function (error) {
+     * }).catch((error) => {
      *        // error function
      * })
      */
@@ -638,7 +638,7 @@ class Stack {
             this.q.include = [fields];
         }
         else {
-            throw new Error(`Kindly pass 'string' OR 'array' fields for .include()!`);
+            throw new Error('Kindly pass \'string\' OR \'array\' fields for .include()!');
         }
         return this;
     }
@@ -651,7 +651,7 @@ class Stack {
      * Stack().contentType('example').entries().includeReferences().find()
      * .then(function(result) {
      *        // ‘result’ entries with references
-     * },function (error) {
+     * }).catch((error) => {
      *        // error function
      * })
      */
@@ -668,7 +668,7 @@ class Stack {
      * Stack().contentType('example').entries().excludeReferences().find()
      * .then(function(result) {
      *    // ‘result’ entries without references
-     *  },function (error) {
+     *  }).catch((error) => {
      *    // error function
      *  })
      */
@@ -684,7 +684,7 @@ class Stack {
      * let data = blogQuery.includeContentType().find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries along contentType
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -697,7 +697,7 @@ class Stack {
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
      * @example
-     * Stack.contentType('contentType_uid').eqaulTo('title','Demo').getQuery().find()
+     * Stack.contentType('content_type_uid').eqaulTo('title','Demo').getQuery().find()
      * @returns {this} - Returns `stack's` instance
      */
     getQuery() {
@@ -728,12 +728,10 @@ class Stack {
                     });
                 }
                 else {
-                    this.q.query.$or = [
-                        {
+                    this.q.query.$or = [{
                             $options: options,
                             $regex: value,
-                        },
-                    ];
+                        }];
                 }
             }
             else {
@@ -753,7 +751,7 @@ class Stack {
      * let data = blogQuery.only(['title','uid']).find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries with field title and uid only
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -776,7 +774,7 @@ class Stack {
      * let data = blogQuery.except(['title','uid']).find()
      * data.then(function(result) {
      *      // ‘result’ contains a list of entries without fields title and uid only
-     * },function (error) {
+     * }).catch((error) => {
      *      // error function
      * })
      * @returns {this} - Returns `stack's` instance
@@ -836,211 +834,33 @@ class Stack {
      * @returns {object} - Returns a objects, that have been processed, filtered and referenced
      */
     find() {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
-                let filePath;
-                switch (this.q.content_type_uid) {
-                    case '_assets':
-                        filePath = utils_1.getAssetsPath(this.q.locale);
-                        break;
-                    case '_content_types':
-                        filePath = utils_1.getContentTypesPath(this.q.locale);
-                        break;
-                    default:
-                        filePath = utils_1.getEntriesPath(this.q.locale, this.q.contentType_uid);
-                        break;
+                const { filePath, key, locale, } = this.preProcess();
+                let data = yield fs_1.readFile(filePath);
+                data = data.filter(sift_1.default(this.q.query));
+                if (this.q.includeSpecificReferences) {
+                    yield this
+                        .includeSpecificReferences(data, this.q.content_type_uid, this.q.locale, this.q
+                        .includeSpecificReferences);
                 }
-                const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us';
-                if (fs_1.existsSync(dataPath)) {
-                    return reject('content-type or entry not found');
+                else if (this.q.queryOnReferences) {
+                    yield this.includeAllReferences(data, locale, {});
+                    data = data.filter(sift_1.default(this.q.queryOnReferences));
                 }
-                fs.readFile(dataPath, 'utf8', (err, data) => __awaiter(this, void 0, void 0, function* () {
-                    if (err) {
-                        return reject(err);
-                    }
-                    const finalResult = {
-                        content_type_uid: this.contentTypeUid || '_assets',
-                        locale,
-                    };
-                    let type = (this.type !== 'asset') ? 'entries' : 'assets';
-                    if (data === undefined || data === '') {
-                        if (this.q.single) {
-                            type = (type === 'entries') ? 'entry' : 'asset';
-                            finalResult[type] = {};
-                            this.q = {};
-                            return resolve(finalResult);
-                        }
-                        finalResult[type] = [];
-                        this.q = {};
-                        return resolve(finalResult);
-                    }
-                    data = JSON.parse(data);
-                    let filteredData = lodash_1.map(data, 'data');
-                    if (this.assetUid || this.entryUid) {
-                        const uid = this.assetUid || this.entryUid;
-                        filteredData = lodash_1.find(filteredData, ['uid', uid]);
-                    }
-                    if (this.q.queryReferences) {
-                        return this.queryOnReferences(filteredData, finalResult, locale, type, schemaPath)
-                            .then(resolve)
-                            .catch(reject);
-                    }
-                    if (this.q.excludeReferences) {
-                        const preProcessedData = this.preProcess(filteredData);
-                        this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                            .then((result) => {
-                            this.q = {};
-                            return resolve(result);
-                        }).catch(reject);
-                    }
-                    else if (this.q.includeSpecificReferences) {
-                        return this.includeSpecificReferences(filteredData, locale, {}, undefined, this.q
-                            .includeSpecificReferences)
-                            .then(() => {
-                            const preProcessedData = this.preProcess(filteredData);
-                            this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                                .then((result) => {
-                                this.q = {};
-                                return resolve(result);
-                            }).catch(reject);
-                        }).catch(reject);
-                    }
-                    else {
-                        return this.includeReferencesI(filteredData, locale, {}, undefined)
-                            .then(() => __awaiter(this, void 0, void 0, function* () {
-                            const preProcessedData = this.preProcess(filteredData);
-                            this.postProcessResult(finalResult, preProcessedData, type, schemaPath)
-                                .then((result) => {
-                                this.q = {};
-                                return resolve(result);
-                            }).catch(reject);
-                        }))
-                            .catch(reject);
-                    }
-                }));
+                else if (this.q.includeAllReferences) {
+                    yield this.includeAllReferences(data, locale, {});
+                }
+                else {
+                    yield this.includeAssetsOnly(data, locale, this.q.content_type_uid);
+                }
+                const { output } = yield this.postProcess(data, key, locale);
+                return resolve(output);
             }
             catch (error) {
                 return reject(error);
             }
-        });
-    }
-    /**
-     * @summary
-     *  Internal method, that iteratively calls itself and binds entries reference
-     * @param {Object} entry - An entry or a collection of entries, who's references are to be found
-     * @param {String} locale - Locale, in which the reference is to be found
-     * @param {Object} references - A map of uids tracked thusfar (used to detect cycle)
-     * @param {String} parentUid - Entry uid, which is the parent of the current `entry` object
-     * @returns {Object} - Returns `entry`, that has all of its reference binded
-     */
-    includeSpecificReferences(entry, locale, references, parentUid, includePths = [], parentField = '') {
-        const self = this;
-        return new Promise((resolve, reject) => {
-            if (entry === null || typeof entry !== 'object') {
-                return resolve();
-            }
-            // current entry becomes the parent
-            if (entry.uid) {
-                parentUid = entry.uid;
-            }
-            const referencesFound = [];
-            // iterate over each key in the object
-            for (const prop in entry) {
-                if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    let currentPth;
-                    if (parentField === '' && isNaN(parseInt(prop))) {
-                        currentPth = prop;
-                    }
-                    else if (parentField === '' && !isNaN(parseInt(prop))) {
-                        currentPth = parentField;
-                    }
-                    else {
-                        currentPth = parentField.concat('.', prop);
-                    }
-                    if (entry[prop] && entry[prop].reference_to) {
-                        if (entry[prop].reference_to === '_assets' || this.isPartOfInclude(currentPth, includePths)) {
-                            if (entry[prop].values.length === 0) {
-                                entry[prop] = [];
-                            }
-                            else {
-                                let uids = entry[prop].values;
-                                if (typeof uids === 'string') {
-                                    uids = [uids];
-                                }
-                                if (entry[prop].reference_to !== '_assets') {
-                                    uids = lodash_1.filter(uids, (uid) => {
-                                        return !(checkCyclic(uid, references));
-                                    });
-                                }
-                                if (uids.length) {
-                                    const query = {
-                                        content_type_uid: entry[prop].reference_to,
-                                        locale,
-                                        query: {
-                                            uid: {
-                                                $in: uids,
-                                            },
-                                        },
-                                    };
-                                    referencesFound.push(new Promise((rs, rj) => {
-                                        return self.findReferences(query).then((entities) => {
-                                            entities = lodash_1.cloneDeep(entities);
-                                            if (entities.length === 0) {
-                                                entry[prop] = [];
-                                                return rs();
-                                            }
-                                            else if (parentUid) {
-                                                references[parentUid] = references[parentUid] || [];
-                                                references[parentUid] = lodash_1.uniq(references[parentUid]
-                                                    .concat(lodash_1.map(entities, 'uid')));
-                                            }
-                                            if (typeof entry[prop].values === 'string') {
-                                                entry[prop] = ((entities === null) ||
-                                                    entities.length === 0) ? null
-                                                    : entities[0];
-                                            }
-                                            else {
-                                                // format the references in order
-                                                const referenceBucket = [];
-                                                query.query.uid.$in.forEach((entityUid) => {
-                                                    const elem = lodash_1.find(entities, (entity) => {
-                                                        return entity.uid === entityUid;
-                                                    });
-                                                    if (elem) {
-                                                        referenceBucket.push(elem);
-                                                    }
-                                                });
-                                                entry[prop] = referenceBucket;
-                                            }
-                                            return self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth)
-                                                .then(rs)
-                                                .catch(rj);
-                                        });
-                                    }));
-                                }
-                            }
-                        }
-                        else {
-                            entry[prop] = {};
-                        }
-                    }
-                    else {
-                        referencesFound.push(self.includeSpecificReferences(entry[prop], locale, references, parentUid, includePths, currentPth));
-                    }
-                }
-            }
-            return Promise.all(referencesFound)
-                .then(resolve)
-                .catch(reject);
-        });
-    }
-    isPartOfInclude(pth, include) {
-        for (let i = 0, j = include.length; i < j; i++) {
-            if (include[i].indexOf(pth) !== -1) {
-                return true;
-            }
-        }
-        return false;
+        }));
     }
     /**
      * @method findOne
@@ -1070,47 +890,309 @@ class Stack {
             });
         });
     }
-    queryOnReferences(filteredData, finalResult, locale, type, schemaPath) {
-        return new Promise((resolve, reject) => {
-            return this.includeReferencesI(filteredData, locale, {}, undefined)
-                .then(() => __awaiter(this, void 0, void 0, function* () {
-                const result = sift_1.default(this.q.queryReferences, filteredData);
-                const preProcessedData = this.preProcess(result);
-                this.postProcessResult(finalResult, preProcessedData, type, schemaPath).then((res) => {
-                    this.q = {};
-                    return resolve(res);
+    includeSpecificReferences(entries, contentTypeUid, locale, include) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const ctQuery = {
+                _content_type_uid: '_content_types',
+                uid: contentTypeUid,
+            };
+            const { paths, // ref. fields in the current content types
+            pendingPath, // left over of *paths*
+            schemaList, } = yield this.getReferencePath(ctQuery, locale, include);
+            const queries = {
+                $or: [],
+            }; // reference field paths
+            const shelf = []; // a mapper object, that holds pointer to the original element
+            // iterate over each path in the entries and fetch the references
+            // while fetching, keep track of their location
+            for (let i = 0, j = paths.length; i < j; i++) {
+                this.fetchPathDetails(entries, locale, paths[i].split('.'), queries, shelf, true, entries, 0);
+            }
+            // even after traversing, if no references were found, simply return the entries found thusfar
+            if (shelf.length === 0) {
+                return entries;
+            }
+            // else, self-recursively iterate and fetch references
+            // Note: Shelf is the one holding `pointers` to the actual entry
+            // Once the pointer has been used, for GC, point the object to null
+            return this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf);
+        });
+    }
+    includeReferenceIteration(eQuery, ctQuery, locale, include, oldShelf) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (oldShelf.length === 0 || ctQuery.$or.length === 0) {
+                return;
+            }
+            const { paths, pendingPath, schemaList, } = yield this.getReferencePath(ctQuery, locale, include);
+            const queries = {
+                $or: [],
+            };
+            let result = [];
+            const shelf = [];
+            yield this.subIncludeReferenceIteration(eQuery, locale, paths, include, queries, result, shelf);
+            // GC to avoid mem leaks!
+            eQuery = null;
+            for (let i = 0, j = oldShelf.length; i < j; i++) {
+                const element = oldShelf[i];
+                for (let k = 0, l = result.length; k < l; k++) {
+                    if (result[k].uid === element.uid) {
+                        element.path[element.position] = result[k];
+                        break;
+                    }
+                }
+            }
+            // GC to avoid mem leaks!
+            oldShelf = null;
+            result = null;
+            // Iterative loops, that traverses paths and binds them onto entries
+            yield this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf);
+            return;
+        });
+    }
+    subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
+        return __awaiter(this, void 0, void 0, function* () {
+            /**
+             * Segregate eQueries based on their content types
+             * {
+             *    content_type_uid: [],
+             *    ...
+             * }
+             */
+            const { contentTypes, aggQueries, } = utils_1.segregateQueries(eQuieries.$or);
+            const promises = [];
+            contentTypes.forEach((contentType) => {
+                promises.push(this.fetchEntries(aggQueries[contentType], locale, contentType, paths, include, queries, result, shelf));
+            });
+            // wait for all promises to be resolved
+            yield Promise.all(promises);
+            return {
+                queries,
+                result,
+                shelf,
+            };
+        });
+    }
+    getReferencePath(query, locale, currentInclude) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
+            const schemas = data.filter(sift_1.default(query));
+            const pendingPath = [];
+            const schemasReferred = [];
+            const paths = [];
+            const schemaList = {
+                $or: [],
+            };
+            if (schemas.length === 0) {
+                return {
+                    paths,
+                    pendingPath,
+                    schemaList,
+                };
+            }
+            let entryReferences = {};
+            schemas.forEach((schema) => {
+                // Entry references
+                entryReferences = lodash_1.merge(entryReferences, schema._references);
+                // tslint:disable-next-line: forin
+                for (const path in schema._assets) {
+                    paths.push(path);
+                }
+            });
+            for (let i = 0, j = currentInclude.length; i < j; i++) {
+                const includePath = currentInclude[i];
+                // tslint:disable-next-line: forin
+                for (const path in entryReferences) {
+                    const idx = includePath.indexOf(path);
+                    if (~idx) {
+                        let subPath;
+                        // Its the complete path!! Hurrah!
+                        if (path.length !== includePath.length) {
+                            subPath = includePath.slice(0, path.length);
+                            pendingPath.push(includePath.slice(path.length + 1));
+                        }
+                        else {
+                            subPath = includePath;
+                        }
+                        if (typeof entryReferences[path] === 'string') {
+                            schemasReferred.push({
+                                _content_type_uid: '_content_types',
+                                uid: entryReferences[path],
+                            });
+                        }
+                        else {
+                            entryReferences[path].forEach((contentTypeUid) => {
+                                schemasReferred.push({
+                                    _content_type_uid: '_content_types',
+                                    uid: contentTypeUid,
+                                });
+                            });
+                        }
+                        paths.push(subPath);
+                        break;
+                    }
+                }
+            }
+            schemaList.$or = schemasReferred;
+            return {
+                // path, that's possible in the current schema
+                paths,
+                // paths, that's yet to be traversed
+                pendingPath,
+                // schemas, to be loaded!
+                schemaList,
+            };
+        });
+    }
+    fetchPathDetails(data, locale, pathArr, queryBucket, shelf, assetsOnly = false, parent, pos, counter = 0) {
+        if (counter === (pathArr.length)) {
+            if (data && typeof data === 'object') {
+                if (data instanceof Array && data.length) {
+                    data.forEach((elem, idx) => {
+                        if (typeof elem === 'string') {
+                            queryBucket.$or.push({
+                                _content_type_uid: '_assets',
+                                locale,
+                                uid: elem,
+                            });
+                            shelf.push({
+                                path: data,
+                                position: idx,
+                                uid: elem,
+                            });
+                        }
+                        else if (elem && typeof elem === 'object' && elem.hasOwnProperty('_content_type_uid')) {
+                            queryBucket.$or.push({
+                                _content_type_uid: elem._content_type_uid,
+                                locale,
+                                uid: elem.uid,
+                            });
+                            shelf.push({
+                                path: data,
+                                position: idx,
+                                uid: elem.uid,
+                            });
+                        }
+                    });
+                }
+                else if (typeof data === 'object') {
+                    if (data.hasOwnProperty('_content_type_uid')) {
+                        queryBucket.$or.push({
+                            _content_type_uid: data._content_type_uid,
+                            locale,
+                            uid: data.uid,
+                        });
+                        shelf.push({
+                            path: parent,
+                            position: pos,
+                            uid: data.uid,
+                        });
+                    }
+                }
+            }
+            else if (typeof data === 'string') {
+                queryBucket.$or.push({
+                    _content_type_uid: '_assets',
+                    locale,
+                    uid: data,
                 });
-            }))
-                .catch(reject);
+                shelf.push({
+                    path: parent,
+                    position: pos,
+                    uid: data,
+                });
+            }
+        }
+        else {
+            const currentField = pathArr[counter];
+            counter++;
+            if (data instanceof Array) {
+                // tslint:disable-next-line: prefer-for-of
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i][currentField]) {
+                        this.fetchPathDetails(data[i][currentField], locale, pathArr, queryBucket, shelf, assetsOnly, data[i], currentField, counter);
+                    }
+                }
+            }
+            else {
+                if (data[currentField]) {
+                    this.fetchPathDetails(data[currentField], locale, pathArr, queryBucket, shelf, assetsOnly, data, currentField, counter);
+                }
+            }
+        }
+        // since we've reached last of the paths, return!
+        return;
+    }
+    fetchEntries(query, locale, contentTypeUid, paths, include, queries, result, bookRack) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const contents = yield fs_1.readFile(utils_1.getEntriesPath(locale, contentTypeUid) + '.json');
+            result = result.concat(contents.filter(sift_1.default(query)));
+            if (result.length === 0) {
+                return;
+            }
+            if (include.length) {
+                paths.forEach((path) => {
+                    // console.log('path:', path)
+                    this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, false, result, 0);
+                });
+            }
+            else {
+                // if there are no includes, only fetch assets
+                paths.forEach((path) => {
+                    this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, true, result, 0);
+                });
+            }
+            return;
+        });
+    }
+    includeAssetsOnly(entries, contentTypeUid, locale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const schemas = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
+            let schema;
+            for (let i = 0, j = schema.length; i < j; i++) {
+                if (schemas[i].uid === contentTypeUid) {
+                    schema = schemas[i];
+                    break;
+                }
+            }
+            // should not enter this section
+            // if the schema doesn't exist, error should have occurred before
+            if (typeof schema === 'undefined') {
+                return;
+            }
+            const assetPaths = schema._assets;
+            const paths = Object.keys(assetPaths);
+            const shelf = [];
+            const queryBucket = {
+                $or: [],
+            };
+            for (let i = 0, j = paths.length; i < j; i++) {
+                this.fetchPathDetails(entries, locale, paths[i].split('.'), queryBucket, shelf, true, entries, 0);
+            }
+            if (shelf.length === 0) {
+                return;
+            }
+            const assets = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
+            // might not be required
+            const filteredAssets = assets.filter(sift_1.default(queryBucket));
+            for (let l = 0, m = shelf.length; l < m; l++) {
+                for (let n = 0, o = filteredAssets.length; n < o; n++) {
+                    if (shelf[l].uid === filteredAssets[n].uid) {
+                        shelf[l].path[shelf[l].position] = filteredAssets[n];
+                        break;
+                    }
+                }
+            }
+            return;
         });
     }
     findReferences(query) {
-        return new Promise((resolve, reject) => {
-            let pth;
-            if (query.content_type_uid === '_assets') {
-                pth = path_1.join(this.baseDir, query.locale, 'assets', '_assets.json');
-            }
-            else {
-                pth = path_1.join(this.baseDir, query.locale, 'data', query.content_type_uid, 'index.json');
-            }
-            if (!fs_1.existsSync(pth)) {
-                return resolve([]);
-            }
-            return fs_1.readFile(pth, 'utf-8', (readError, data) => {
-                if (readError) {
-                    return reject(readError);
-                }
-                if (!data) {
-                    return resolve();
-                }
-                data = JSON.parse(data);
-                data = lodash_1.map(data, 'data');
-                data = sift_1.default(query.query, data);
-                return resolve(data);
-            });
+        return __awaiter(this, void 0, void 0, function* () {
+            const path = utils_1.getEntriesPath(query.locale, query.content_type_uid) + '.json';
+            const data = yield fs_1.readFile(path);
+            return data.filter(sift_1.default(query.query));
         });
     }
-    includeReferencesI(entry, locale, references, parentUid) {
+    includeAllReferences(entry, locale, references, parentUid) {
         const self = this;
         return new Promise((resolve, reject) => {
             if (entry === null || typeof entry !== 'object') {
@@ -1137,7 +1219,7 @@ class Stack {
                                 }
                                 if (entry[prop].reference_to !== '_assets') {
                                     uids = lodash_1.filter(uids, (uid) => {
-                                        return !(checkCyclic(uid, references));
+                                        return !(utils_1.checkCyclic(uid, references));
                                     });
                                 }
                                 if (uids.length) {
@@ -1180,7 +1262,7 @@ class Stack {
                                                 });
                                                 entry[prop] = referenceBucket;
                                             }
-                                            return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                                            return self.includeAllReferences(entry[prop], locale, references, parentUid)
                                                 .then(rs)
                                                 .catch(rj);
                                         });
@@ -1190,7 +1272,7 @@ class Stack {
                         }
                     }
                     else {
-                        referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid));
+                        referencesFound.push(self.includeAllReferences(entry[prop], locale, references, parentUid));
                     }
                 }
             }
@@ -1199,119 +1281,78 @@ class Stack {
                 .catch(reject);
         });
     }
-    preProcess(filteredData) {
-        filteredData = filteredData.filter(data => !data.hasOwnProperty('download_id'));
-        const sortKeys = ['asc', 'desc'];
-        const sortQuery = Object.keys(this.q)
-            .filter((key) => sortKeys.includes(key))
-            .reduce((obj, key) => {
-            return Object.assign({}, obj, { [key]: this.q[key] });
-        }, {});
-        if (this.q.asc || this.q.desc) {
-            const value = Object.values(sortQuery);
-            const key = Object.keys(sortQuery);
-            filteredData = lodash_1.orderBy(filteredData, value, key);
+    preProcess() {
+        const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us';
+        let key;
+        let filePath;
+        switch (this.q.content_type_uid) {
+            case '_assets':
+                filePath = utils_1.getAssetsPath(locale) + '.json';
+                key = (this.q.isSingle) ? 'asset' : 'assets';
+                break;
+            case '_content_types':
+                filePath = utils_1.getContentTypesPath(locale) + '.json';
+                key = (this.q.isSingle) ? 'content_type' : 'content_types';
+                break;
+            default:
+                filePath = utils_1.getEntriesPath(locale, this.q.content_type_uid) + '.json';
+                key = (this.q.isSingle) ? 'entry' : 'entries';
+                break;
         }
-        if (this.q.query && Object.keys(this.q.query).length > 0) {
-            filteredData = sift_1.default(this.q.query, filteredData);
+        if (!fs_1.existsSync(filePath)) {
+            throw new Error(`Queried content type ${this.q.content_type_uid} was not found at ${filePath}!`);
         }
-        else if (this.q.logical) {
-            const operator = Object.keys(this.q.logical)[0];
-            const vals = Object.values(this.q.logical);
-            const values = JSON.parse(JSON.stringify(vals).replace(/\,/, '},{'));
-            const logicalQuery = {};
-            logicalQuery[operator] = values;
-            filteredData = sift_1.default(logicalQuery, filteredData);
-        }
-        else {
-            filteredData = filteredData;
-        }
-        if ((this.q.skip) && ((this.q.limit))) {
-            filteredData = filteredData.splice(this.q.skip, this.q.limit);
-        }
-        else if ((this.q.skip)) {
-            filteredData = filteredData.slice(this.q.skip);
-        }
-        else if (this.q.limit) {
-            filteredData = filteredData.splice(0, this.q.limit);
-        }
-        if (this.q.only) {
-            const only = this.q.only.toString().replace(/\./g, '/');
-            filteredData = json_mask_1.default(filteredData, only);
-        }
-        if (this.q.except) {
-            const bukcet = this.q.except.toString().replace(/\./g, '/');
-            const except = json_mask_1.default(filteredData, bukcet);
-            filteredData = utils_1.difference(filteredData, except);
-        }
-        if (this.q.tags) {
-            filteredData = sift_1.default({
-                tags: {
-                    $in: this.q.tags,
-                },
-            }, filteredData);
-        }
-        return filteredData;
+        return {
+            filePath,
+            key,
+            locale,
+        };
     }
-    postProcessResult(finalResult, result, type, schemaPath) {
-        return new Promise((resolve, reject) => {
-            try {
-                if (this.q.count) {
-                    if (result instanceof Array) {
-                        finalResult.count = result.length;
+    postProcess(data, key, locale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const output = {
+                content_type_uid: this.q.content_type_uid,
+                locale,
+            };
+            if (this.q.count) {
+                output.count = data.length;
+            }
+            // data filtering
+            if (this.q.query) {
+                data = data.filter(sift_1.default(this.q.query));
+            }
+            if (this.q.include_content_type) {
+                const path = utils_1.getContentTypesPath(this.q.locale) + '.json';
+                // ideally, if the content type doesn't exist, an error will be thrown before it reaches this line
+                const contentTypes = yield fs_1.readFile(path);
+                for (let i = 0, j = contentTypes.length; i < j; i++) {
+                    if (contentTypes[i].uid === this.q.content_type_uid) {
+                        output.content_type = contentTypes[i];
+                        break;
                     }
-                    else if (this.q.single && result !== undefined) {
-                        finalResult.count = 1;
-                    }
-                    else {
-                        finalResult.count = 0;
-                    }
-                }
-                else {
-                    finalResult[type] = result;
-                }
-                if (this.q.single) {
-                    delete finalResult[type];
-                    type = (type === 'entries') ? 'entry' : 'asset';
-                    if (result === undefined) {
-                        finalResult[type] = {};
-                    }
-                    else {
-                        finalResult[type] = result[0] || result;
-                    }
-                }
-                if (this.q.include_count) {
-                    if (result instanceof Array) {
-                        finalResult.count = result.length;
-                    }
-                    else if (this.q.single && result !== undefined) {
-                        finalResult.count = 1;
-                    }
-                    else {
-                        finalResult.count = 0;
-                    }
-                }
-                if (this.q.include_content_type) {
-                    if (!fs.existsSync(schemaPath)) {
-                        return reject('content type not found');
-                    }
-                    let contents;
-                    fs_1.readFile(schemaPath).then((data) => {
-                        contents = JSON.parse(data);
-                        finalResult.content_type = contents;
-                        return resolve(finalResult);
-                    }).catch(() => {
-                        finalResult.content_type = {};
-                        return resolve(finalResult);
-                    });
-                }
-                else {
-                    return resolve(finalResult);
                 }
             }
-            catch (error) {
-                return reject(error);
+            if (this.q.isSingle) {
+                output[key] = (data.length) ? data[0] : null;
+                return output;
             }
+            // TODO: sorting logic
+            if (this.q.skip) {
+                data.splice(0, this.q.skip);
+            }
+            if (this.q.limit) {
+                data = data.splice(0, this.q.limit);
+            }
+            if (this.q.only) {
+                const only = this.q.only.toString().replace(/\./g, '/');
+                data = json_mask_1.default(data, only);
+            }
+            else if (this.q.except) {
+                const bukcet = this.q.except.toString().replace(/\./g, '/');
+                const except = json_mask_1.default(data, bukcet);
+                data = utils_1.difference(data, except);
+            }
+            return output;
         });
     }
 }
