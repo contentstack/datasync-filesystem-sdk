@@ -1,6 +1,7 @@
 "use strict";
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
@@ -119,4 +120,47 @@ exports.getContentTypesPath = (locale) => {
     // tslint:disable-next-line: no-string-literal
     localePaths[locale]['_content_types'] = path;
     return path;
+};
+exports.segregateQueries = (queries) => {
+    const aggQueries = {};
+    const contentTypes = [];
+    queries.forEach((element) => {
+        if (element._content_type_uid) {
+            if (aggQueries.hasOwnProperty(element._content_type_uid)) {
+                aggQueries[element._content_type_uid].$or.push(element);
+            }
+            else {
+                aggQueries[element._content_type_uid] = {
+                    $or: [element],
+                };
+                contentTypes.push(element._content_type_uid);
+            }
+        }
+    });
+    return {
+        aggQueries,
+        contentTypes,
+    };
+};
+exports.checkCyclic = (uid, mapping) => {
+    let flag = false;
+    let list = [uid];
+    for (const i of list) {
+        const parent = getParents(i, mapping);
+        if (parent.indexOf(uid) !== -1) {
+            flag = true;
+            break;
+        }
+        list = lodash_1.uniq(list.concat(parent));
+    }
+    return flag;
+};
+const getParents = (child, mapping) => {
+    const parents = [];
+    for (const key in mapping) {
+        if (mapping[key].indexOf(child) !== -1) {
+            parents.push(key);
+        }
+    }
+    return parents;
 };

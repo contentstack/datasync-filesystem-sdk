@@ -43,23 +43,23 @@ interface IQueryInterface {
 }
 
 const extend = {
-  compare (type) {
-    return function (key, value) {
+  compare(type) {
+    return function(key, value) {
       if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
         this.q.query = this.q.query || {}
-        this.q.query[key] = this.q.query.file_size || {}
+        this.q.query[key] = this.q.query[key] || {}
         this.q.query[key][type] = value
 
         return this
       }
-      throw new Error('Kindly provide valid parameters.')
+      throw new Error(`Kindly provide valid parameters for ${type}`)
 
     }
   },
-  contained (bool) {
+  contained(bool) {
     const type = (bool) ? '$in' : '$nin'
 
-    return function (key, value) {
+    return function(key, value) {
       if (key && value && typeof key === 'string' && Array.isArray(value)) {
         this.q.query = this.q.query || {}
         this.q.query[key] = this.q.query[key] || {}
@@ -68,11 +68,11 @@ const extend = {
 
         return this
       }
-      throw new Error('Kindly provide valid parameters.')
+      throw new Error(`Kindly provide valid parameters for ${bool}`)
     }
   },
-  exists (bool) {
-    return function (key) {
+  exists(bool) {
+    return function(key) {
       if (key && typeof key === 'string') {
         this.q.query = this.q.query || {}
         this.q.query[key] = this.q.query[key] || {}
@@ -80,11 +80,12 @@ const extend = {
 
         return this
       }
-      throw new Error('Kindly provide valid parameters.')
+      throw new Error(`Kindly provide valid parameters for ${bool}`)
     }
   },
-  logical (type) {
-    return function () {
+  // TODO
+  logical(type) {
+    return function() {
       this.q.logical = this.q.logical || {}
       this.q.logical[type] = this.q.logical[type] || {}
       this.q.logical[type] = this.q.query
@@ -93,19 +94,18 @@ const extend = {
       return this
     }
   },
-  sort (type) {
-    return function (key) {
+  sort(type) {
+    return function(key) {
       if (key && typeof key === 'string') {
         this.q[type] = key
 
         return this
       }
-      throw new Error('Argument should be a string.')
-
+      throw new Error(`Kindly provide valid parameters for sort-${type}`)
     }
   },
-  pagination (type) {
-    return function (value) {
+  pagination(type) {
+    return function(value) {
       if (typeof value === 'number') {
         this.q[type] = value
 
@@ -153,7 +153,7 @@ export class Stack {
      * @description Retrieves entries in which the value of a field is lesser than the provided value
      * @param {String} key - uid of the field
      * @param {*} value - Value used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.lessThan('created_at','2015-06-22').find()
      * data.then(function(result) {
@@ -171,7 +171,7 @@ export class Stack {
      * @description Retrieves entries in which the value of a field is lesser than or equal to the provided value.
      * @param {String} key - uid of the field
      * @param {*} value - Value used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.lessThanOrEqualTo('created_at','2015-06-22').find()
      * data.then(function(result) {
@@ -207,7 +207,7 @@ export class Stack {
      * @description Retrieves entries in which the value for a field is greater than or equal to the provided value.
      * @param {String} key - uid of the field
      * @param {*} value - Value used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.greaterThanOrEqualTo('created_at','2015-03-12').find()
      * data.then(function(result) {
@@ -225,7 +225,7 @@ export class Stack {
      * @description Retrieves entries in which the value for a field does not match the provided value.
      * @param {String} key - uid of the field
      * @param {*} value - Value used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.notEqualTo('title','Demo').find()
      * data.then(function(result) {
@@ -243,7 +243,7 @@ export class Stack {
      * @description Retrieve entries in which the value of a field matches with any of the provided array of values
      * @param {String} key - uid of the field
      * @param {*} value - Array of values that are to be used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries().query();
      * let data = blogQuery.containedIn('title', ['Demo', 'Welcome']).find()
      * data.then(function(result) {
@@ -262,7 +262,7 @@ export class Stack {
      *              with any of the provided array of values.
      * @param {String} key - uid of the field
      * @param {Array} value - Array of values that are to be used to match or compare
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.notContainedIn('title', ['Demo', 'Welcome']).find()
      * data.then(function(result) {
@@ -279,7 +279,7 @@ export class Stack {
      * @method exists
      * @description Retrieve entries if value of the field, mentioned in the condition, exists.
      * @param {String} key - uid of the field
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.exists('featured').find()
      * data.then(function(result) {
@@ -295,7 +295,7 @@ export class Stack {
      * @method notExists
      * @description Retrieve entries if value of the field, mentioned in the condition, does not exists.
      * @param {String} key - uid of the field
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.notExists('featured').find()
      * data.then(function(result) {
@@ -311,7 +311,7 @@ export class Stack {
      * @method ascending
      * @description Sort fetched entries in the ascending order with respect to a specific field.
      * @param {String} key - field uid based on which the ordering will be done
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.ascending('created_at').find()
      * data.then(function(result) {
@@ -328,7 +328,7 @@ export class Stack {
      * @method descending
      * @description Sort fetched entries in the descending order with respect to a specific field
      * @param {String} key - field uid based on which the ordering will be done.
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.descending('created_at').find()
      * data.then(function(result) {
@@ -346,11 +346,11 @@ export class Stack {
      * @method skip
      * @description Skips at specific number of entries.
      * @param {Number} skip - number of entries to be skipped
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.skip(5).find()
      * data.then(function(result) {
-     *      //result 
+     *      //result
      * }).catch((error) => {
      *      // error function
      * })
@@ -362,7 +362,7 @@ export class Stack {
      * @method limit
      * @description Returns a specific number of entries based on the set limit
      * @param {Number} limit - maximum number of entries to be returned
-     * @example 
+     * @example
      * let blogQuery = Stack().contentType('example').entries();
      * let data = blogQuery.limit(10).find()
      * data.then(function(result) {
@@ -402,6 +402,7 @@ export class Stack {
   }
 
   /**
+   * TODO
    * @method connect
    * @summary
    *  Establish connection to filesytem
@@ -409,16 +410,17 @@ export class Stack {
    * @example
    * Stack.connect({overrides})
    *  .then((result) => {
-   *    
+   *    // db instance
    *  })
    *  .catch((error) => {
    *    // handle query errors
    *  })
-   * 
+   *
    * @returns {string} baseDir
    */
   public connect(overrides: any = {}) {
     this.config = merge(this.config, overrides)
+
     return new Promise((resolve, reject) => {
       try {
 
@@ -444,7 +446,8 @@ export class Stack {
    *  .catch((error) => {
    *    // handle query errors
    *  })
-   * 
+   *
+   * @returns {Stack} instance
    */
   public contentType(uid) {
     if (typeof uid !== 'string' || uid.length === 0) {
@@ -460,12 +463,12 @@ export class Stack {
    * @method entries
    * @summary
    *  To get entries from contentType
-   * @example 
+   * @example
    * Stack.contentType('example').entries().find()
    * @returns {this} - Returns `stack's` instance
    */
   public entries() {
-    if (typeof this.q.contentType_uid === 'undefined') {
+    if (typeof this.q.content_type_uid === 'undefined') {
       throw new Error('Please call .contentType() before calling .entries()!')
     }
 
@@ -476,7 +479,7 @@ export class Stack {
    * @method entry
    * @summary
    *  To get entry from contentType
-   * @example 
+   * @example
    * Stack.contentType('example').entry('bltabcd12345').find()
    * //or
    * Stack.contentType('example').entry().find()
@@ -500,7 +503,7 @@ export class Stack {
    * @method asset
    * @summary
    *  To get single asset
-   * @example 
+   * @example
    * Stack.asset('bltabced12435').find()
    * //or
    * Stack.asset().find()
@@ -521,7 +524,7 @@ export class Stack {
    * @method assets
    * @summary
    * To get assets
-   * @example 
+   * @example
    * Stack.assets().find()
    * @returns {this} - Returns `stack's` instance
    */
@@ -537,11 +540,11 @@ export class Stack {
    * @description Retrieve entries in which a specific field satisfies the value provided
    * @param {String} key - uid of the field
    * @param {*} value - value used to match or compare
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.equalTo('title','Demo').find()
    * data.then(function(result) {
-   *      // ‘result’ contains the list of entries where value of 
+   *      // ‘result’ contains the list of entries where value of
    *      //‘title’ is equal to ‘Demo’.
    * }).catch((error) => {
    *      // error function
@@ -581,11 +584,11 @@ export class Stack {
    * @param field
    * @param value
    * @returns {this} - Returns `stack's` instance
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.where("this.title === 'Amazon_Echo_Black'").find()
    * data.then(function(result) {
-   *   // ‘result’ contains the list of entries where value of 
+   *   // ‘result’ contains the list of entries where value of
    *   //‘title’ is equal to ‘Demo’.
    * }).catch(error) => {
    *   // error function
@@ -606,7 +609,7 @@ export class Stack {
   /**
    * @method count
    * @description Returns the total number of entries
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.count().find()
    * data.then(function(result) {
@@ -691,7 +694,7 @@ export class Stack {
   /**
    * @method language
    * @description to retrive the result bsed on the specific locale.
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.language('fr-fr').find()
    * data.then(function(result) {
@@ -716,7 +719,7 @@ export class Stack {
    *  Includes references of provided fields of the entries being scanned
    * @param {*} key - uid/uid's of the field
    * @returns {this} - Returns `stack's` instance
-   * @example 
+   * @example
    * Stack().contentType('example').entries().include(['authors','categories']).find()
    * .then(function(result) {
    *        // ‘result’ inclueds entries with references of authors and categories filed's
@@ -730,7 +733,7 @@ export class Stack {
     } else if (fields && typeof fields === 'string') {
       this.q.include = [fields]
     } else {
-      throw new Error(`Kindly pass 'string' OR 'array' fields for .include()!`)
+      throw new Error('Kindly pass \'string\' OR \'array\' fields for .include()!')
     }
 
     return this
@@ -741,7 +744,7 @@ export class Stack {
    * @summary
    *  Includes all references of the entries being scanned
    * @returns {this} - Returns `stack's` instance
-   * @example 
+   * @example
    * Stack().contentType('example').entries().includeReferences().find()
    * .then(function(result) {
    *        // ‘result’ entries with references
@@ -777,7 +780,7 @@ export class Stack {
   /**
    * @method includeContentType
    * @description Includes the total number of entries returned in the response.
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.includeContentType().find()
    * data.then(function(result) {
@@ -797,8 +800,8 @@ export class Stack {
   /**
    * @method getQuery
    * @description Returns the raw (JSON) query based on the filters applied on Query object.
-   * @example 
-   * Stack.contentType('contentType_uid').eqaulTo('title','Demo').getQuery().find()
+   * @example
+   * Stack.contentType('content_type_uid').eqaulTo('title','Demo').getQuery().find()
    * @returns {this} - Returns `stack's` instance
    */
   public getQuery() {
@@ -832,7 +835,7 @@ export class Stack {
           this.q.query.$or = [{
             $options: options,
             $regex: value,
-          }, ]
+          }]
         }
       } else {
         this.q.query[key] = {
@@ -848,7 +851,7 @@ export class Stack {
 
   /**
    * @method only
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.only(['title','uid']).find()
    * data.then(function(result) {
@@ -874,7 +877,7 @@ export class Stack {
 
   /**
    * @method except
-   * @example 
+   * @example
    * let blogQuery = Stack().contentType('example').entries();
    * let data = blogQuery.except(['title','uid']).find()
    * data.then(function(result) {
@@ -947,63 +950,33 @@ export class Stack {
   public find() {
     return new Promise(async (resolve, reject) => {
       try {
-        const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us'
-        const finalResult = {
-          content_type_uid: this.q.content_type_uid,
+        const {
+          filePath,
+          key,
           locale,
-        }
-        let keyNamePlural: string
-        let keyNameSingular: string
-        let filePath: string
-        switch (this.q.content_type_uid) {
-        case '_assets':
-          filePath = getAssetsPath(locale) + '.json'
-          keyNamePlural = 'assets'
-          keyNameSingular = 'asset'
-          break
-        case '_content_types':
-          filePath = getContentTypesPath(locale) + '.json'
-          keyNamePlural = 'content_types'
-          keyNameSingular = 'content_type'
-          break
-        default:
-          filePath = getEntriesPath(locale, this.q.contentType_uid) + '.json'
-          keyNamePlural = 'entries'
-          keyNameSingular = 'entry'
-          break
-        }
-
-        if (!existsSync(filePath)) {
-
-          return reject('content-type or entry not found')
-        }
-
+        } = this.preProcess()
         let data: any[] = await readFile(filePath)
-
         data = data.filter(sift(this.q.query))
 
-        if (this.q.excludeAllReferences || this.q.content_type_uid === '_assets' || this.q.content_type_uid ===
-          '_content_types') {
-          if (this.q.isSingle) {
-            finalResult[keyNameSingular] = (data.length) ? data[0] : null
-          } else {
-            finalResult[keyNameSingular] = data
-          }
-
-          return resolve(finalResult)
-        } else if (this.q.includeSpecificReferences) {
+        if (this.q.includeSpecificReferences) {
           await this
             .includeSpecificReferences(data, this.q.content_type_uid, this.q.locale, this.q
               .includeSpecificReferences)
         } else if (this.q.queryOnReferences) {
-          await this.includeReferencesI(data, locale, {})
+          await this.includeAllReferences(data, locale, {})
+
+          data = data.filter(sift(this.q.queryOnReferences))
+        } else if (this.q.includeAllReferences) {
+          await this.includeAllReferences(data, locale, {})
+        } else {
+          await this.includeAssetsOnly(data, locale, this.q.content_type_uid)
         }
 
+        const { output } = await this.postProcess(data, key, locale)
 
+        return resolve(output)
       } catch (error) {
-
         return reject(error)
-
       }
     })
 
@@ -1015,7 +988,7 @@ export class Stack {
    * Queries the db using the query built/passed. Returns a single entry/asset/content type object
    * Does all the processing, filtering, referencing after querying the DB
    * @param {object} query Optional query object, that overrides all the previously build queries
-   * 
+   *
    * @example
    * Stack.contentType('blog').entries().findOne()
    * .then((result) => {
@@ -1024,7 +997,7 @@ export class Stack {
    * .catch((error) => {
    *    // handle query errors
    * })
-   * 
+   *
    * @returns {object} - Returns an object, that has been processed, filtered and referenced
    */
 
@@ -1042,7 +1015,7 @@ export class Stack {
     })
   }
 
-  private async includeSpecificReferences (entries: any[], contentTypeUid: string, locale: string, include: string[]) {
+  private async includeSpecificReferences(entries: any[], contentTypeUid: string, locale: string, include: string[]) {
     const ctQuery = {
       _content_type_uid: '_content_types',
       uid: contentTypeUid,
@@ -1076,7 +1049,7 @@ export class Stack {
     return this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
   }
 
-  private async includeReferenceIteration (eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf:
+  private async includeReferenceIteration(eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf:
     IShelf[]) {
     if (oldShelf.length === 0 || ctQuery.$or.length === 0) {
       return
@@ -1118,7 +1091,7 @@ export class Stack {
     return
   }
 
-  private async subIncludeReferenceIteration (eQuieries, locale, paths, include, queries, result, shelf) {
+  private async subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
     /**
      * Segregate eQueries based on their content types
      * {
@@ -1128,7 +1101,7 @@ export class Stack {
      */
     const {
       contentTypes,
-      aggQueries
+      aggQueries,
     } = segregateQueries(eQuieries.$or)
     const promises = []
 
@@ -1148,7 +1121,7 @@ export class Stack {
     }
   }
 
-  private async getReferencePath (query, locale, currentInclude) {
+  private async getReferencePath(query, locale, currentInclude) {
     const data: any[] = await readFile(getContentTypesPath(locale) + '.json')
     const schemas: any[] = data.filter(sift(query))
     const pendingPath = []
@@ -1226,7 +1199,7 @@ export class Stack {
   }
 
   private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQueryInterface, shelf,
-    assetsOnly = false, parent, pos, counter = 0) {
+                           assetsOnly = false, parent, pos, counter = 0) {
     if (counter === (pathArr.length)) {
       if (data && typeof data === 'object') {
         if (data instanceof Array && data.length) {
@@ -1308,8 +1281,8 @@ export class Stack {
     return
   }
 
-  private async fetchEntries (query: any, locale: string, contentTypeUid: string, paths: string[], include: string[],
-    queries: IQueryInterface, result: any[], bookRack: IShelf) {
+  private async fetchEntries(query: any, locale: string, contentTypeUid: string, paths: string[], include: string[],
+                             queries: IQueryInterface, result: any[], bookRack: IShelf) {
     const contents: any[] = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
     result = result.concat(contents.filter(sift(query)))
 
@@ -1332,18 +1305,62 @@ export class Stack {
     return
   }
 
-  private async findReferences (query) {
+  private async includeAssetsOnly(entries: any[], contentTypeUid: string, locale: string) {
+    const schemas = await readFile(getContentTypesPath(locale) + '.json')
+    let schema
+    for (let i = 0, j = schema.length; i < j; i++) {
+      if (schemas[i].uid === contentTypeUid) {
+        schema = schemas[i]
+        break
+      }
+    }
+
+    // should not enter this section
+    // if the schema doesn't exist, error should have occurred before
+    if (typeof schema === 'undefined') {
+      return
+    }
+
+    const assetPaths = schema._assets
+    const paths = Object.keys(assetPaths)
+    const shelf = []
+    const queryBucket: any = {
+      $or: [],
+    }
+
+    for (let i = 0, j = paths.length; i < j; i++) {
+      this.fetchPathDetails(entries, locale, paths[i].split('.'), queryBucket, shelf, true, entries, 0)
+    }
+
+    if (shelf.length === 0) {
+      return
+    }
+
+    const assets = await readFile(getAssetsPath(locale) + '.json')
+    // might not be required
+    const filteredAssets = assets.filter(sift(queryBucket))
+
+    for (let l = 0, m = shelf.length; l < m; l++) {
+      for (let n = 0, o = filteredAssets.length; n < o; n++) {
+        if (shelf[l].uid === filteredAssets[n].uid) {
+          shelf[l].path[shelf[l].position] = filteredAssets[n]
+          break
+        }
+      }
+    }
+
+    return
+  }
+
+
+  private async findReferences(query) {
     const path = getEntriesPath(query.locale, query.content_type_uid) + '.json'
     const data = await readFile(path)
-    if (data.length === 0) {
-
-      return []
-    }
 
     return data.filter(sift(query.query))
   }
 
-  private includeReferencesI(entry, locale, references, parentUid ? ) {
+  private includeAllReferences(entry, locale, references, parentUid ? ) {
     const self = this
 
     return new Promise((resolve, reject) => {
@@ -1421,7 +1438,7 @@ export class Stack {
                         entry[prop] = referenceBucket
                       }
 
-                      return self.includeReferencesI(entry[prop], locale, references, parentUid)
+                      return self.includeAllReferences(entry[prop], locale, references, parentUid)
                         .then(rs)
                         .catch(rj)
                     })
@@ -1430,7 +1447,7 @@ export class Stack {
               }
             }
           } else {
-            referencesFound.push(self.includeReferencesI(entry[prop], locale, references, parentUid))
+            referencesFound.push(self.includeAllReferences(entry[prop], locale, references, parentUid))
           }
         }
       }
@@ -1441,14 +1458,70 @@ export class Stack {
     })
   }
 
-  private processResult(data) {
-    // TODO: include count
-    // TODO: sorting logic
+  private preProcess() {
+    const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us'
+    let key: string
+    let filePath: string
+    switch (this.q.content_type_uid) {
+    case '_assets':
+      filePath = getAssetsPath(locale) + '.json'
+      key = (this.q.isSingle) ? 'asset' : 'assets'
+      break
+    case '_content_types':
+      filePath = getContentTypesPath(locale) + '.json'
+      key = (this.q.isSingle) ? 'content_type' : 'content_types'
+      break
+    default:
+      filePath = getEntriesPath(locale, this.q.content_type_uid) + '.json'
+      key = (this.q.isSingle) ? 'entry' : 'entries'
+      break
+    }
 
+    if (!existsSync(filePath)) {
+
+      throw new Error(`Queried content type ${this.q.content_type_uid} was not found at ${filePath}!`)
+    }
+
+    return {
+      filePath,
+      key,
+      locale,
+    }
+  }
+
+  private async postProcess(data, key, locale) {
+    const output: any = {
+      content_type_uid: this.q.content_type_uid,
+      locale,
+    }
+    if (this.q.count) {
+      output.count = data.length
+    }
     // data filtering
     if (this.q.query) {
       data = data.filter(sift(this.q.query))
     }
+
+    if (this.q.include_content_type) {
+      const path = getContentTypesPath(this.q.locale) + '.json'
+      // ideally, if the content type doesn't exist, an error will be thrown before it reaches this line
+      const contentTypes: any[] = await readFile(path)
+
+      for (let i = 0, j = contentTypes.length; i < j; i++) {
+        if (contentTypes[i].uid === this.q.content_type_uid) {
+          output.content_type = contentTypes[i]
+          break
+        }
+      }
+    }
+
+    if (this.q.isSingle) {
+      output[key] = (data.length) ? data[0] : null
+
+      return output
+    }
+
+    // TODO: sorting logic
 
     if (this.q.skip) {
       data.splice(0, this.q.skip)
@@ -1465,22 +1538,6 @@ export class Stack {
       const bukcet = this.q.except.toString().replace(/\./g, '/')
       const except = mask(data, bukcet)
       data = difference(data, except)
-    }
-
-    return data
-  }
-
-  private async postProcessResult (result, output) {
-    if (this.q.include_content_type) {
-      const path = getContentTypesPath(this.q.locale) + '.json'
-      const contents: string = await readFile(path)
-      const contentTypes: any[] = JSON.parse(contents)
-      for (let i = 0, j = contentTypes.length; i < j; i++) {
-        if (contentTypes[i].uid === this.q.content_type_uid) {
-          output.content_type = contentTypes[i]
-          break
-        }
-      }
     }
 
     return output
