@@ -60,7 +60,6 @@ exports.getBaseDir = ({ baseDir }) => {
     else {
         const appPath = path_1.join(__dirname, '..', '..', '..');
         contentDir = path_1.join(appPath, baseDir);
-        console.log('content dir', contentDir);
         if (!fs_1.existsSync(contentDir)) {
             mkdirp_1.sync(contentDir);
         }
@@ -167,26 +166,4 @@ exports.segregateQueries = (queries) => {
         aggQueries,
         contentTypes,
     };
-};
-exports.checkCyclic = (uid, mapping) => {
-    let flag = false;
-    let list = [uid];
-    for (const i of list) {
-        const parent = getParents(i, mapping);
-        if (parent.indexOf(uid) !== -1) {
-            flag = true;
-            break;
-        }
-        list = lodash_1.uniq(list.concat(parent));
-    }
-    return flag;
-};
-const getParents = (child, mapping) => {
-    const parents = [];
-    for (const key in mapping) {
-        if (mapping[key].indexOf(child) !== -1) {
-            parents.push(key);
-        }
-    }
-    return parents;
 };

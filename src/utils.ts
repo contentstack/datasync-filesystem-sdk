@@ -9,7 +9,6 @@ import {
   isEqual,
   isObject,
   transform,
-  uniq,
 } from 'lodash'
 import { sync } from 'mkdirp'
 import {
@@ -74,7 +73,6 @@ export const getBaseDir = ({baseDir}) => {
   } else {
     const appPath = join(__dirname, '..', '..', '..')
     contentDir = join(appPath, baseDir)
-    console.log('content dir', contentDir)
     if (!existsSync(contentDir)) {
       sync(contentDir)
     }
@@ -195,30 +193,4 @@ export const segregateQueries = (queries) => {
     aggQueries,
     contentTypes,
   }
-}
-
-export const checkCyclic = (uid, mapping) => {
-  let flag = false
-  let list = [uid]
-  for (const i of list) {
-    const parent = getParents(i, mapping)
-    if (parent.indexOf(uid) !== -1) {
-      flag = true
-      break
-    }
-    list = uniq(list.concat(parent))
-  }
-
-  return flag
-}
-
-const getParents = (child, mapping) => {
-  const parents = []
-  for (const key in mapping) {
-    if (mapping[key].indexOf(child) !== -1) {
-      parents.push(key)
-    }
-  }
-
-  return parents
 }

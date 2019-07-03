@@ -7,12 +7,7 @@
 
 import mask from 'json-mask'
 import {
-  cloneDeep,
-  filter,
-  find,
-  map,
   merge,
-  uniq,
 } from 'lodash'
 import sift from 'sift'
 import {
@@ -20,7 +15,6 @@ import {
   readFile,
 } from './fs'
 import {
-  checkCyclic,
   difference,
   getAssetsPath,
   getContentTypesPath,
