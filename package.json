@@ -24,7 +24,7 @@
     "email": "support@contentstack.com"
   },
   "dependencies": {
-    "json-mask": "^0.3.8",
+    "json-mask": "0.3.8",
     "lodash": "^4.17.11",
     "sift": "8.5.0"
   },

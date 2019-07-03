@@ -883,14 +883,8 @@ class Stack {
      * @returns {object} - Returns an object, that has been processed, filtered and referenced
      */
     findOne() {
-        this.q.single = true;
-        return new Promise((resolve, reject) => {
-            this.find().then((result) => {
-                return resolve(result);
-            }).catch((error) => {
-                return reject(error);
-            });
-        });
+        this.q.isSingle = true;
+        return this.find();
     }
     includeSpecificReferences(entries, contentTypeUid, locale, include) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -959,7 +953,7 @@ class Stack {
             const { contentTypes, aggQueries, } = utils_1.segregateQueries(eQuieries.$or);
             const promises = [];
             contentTypes.forEach((contentType) => {
-                promises.push(this.fetchEntries(aggQueries[contentType], locale, contentType, paths, include, queries, result, shelf));
+                promises.push(this.fetchDocuments(aggQueries[contentType], locale, contentType, paths, include, queries, result, shelf));
             });
             // wait for all promises to be resolved
             yield Promise.all(promises);
@@ -1049,6 +1043,7 @@ class Stack {
                         if (typeof elem === 'string') {
                             queryBucket.$or.push({
                                 _content_type_uid: '_assets',
+                                // _version: { $exists: true },
                                 locale,
                                 uid: elem,
                             });
@@ -1090,6 +1085,7 @@ class Stack {
             else if (typeof data === 'string') {
                 queryBucket.$or.push({
                     _content_type_uid: '_assets',
+                    // _version: { $exists: true },
                     locale,
                     uid: data,
                 });
@@ -1120,7 +1116,7 @@ class Stack {
         // since we've reached last of the paths, return!
         return;
     }
-    fetchEntries(query, locale, contentTypeUid, paths, include, queries, result, bookRack) {
+    fetchDocuments(query, locale, contentTypeUid, paths, include, queries, result, bookRack) {
         return __awaiter(this, void 0, void 0, function* () {
             let contents;
             if (contentTypeUid === '_assets') {
