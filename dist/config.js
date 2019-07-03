@@ -24,15 +24,12 @@ exports.defaultConfig = {
         projections: {
             assets: {
                 _content_type_uid: 0,
-                publish_details: 0,
             },
             content_types: {
                 _content_type_uid: 0,
-                publish_details: 0,
             },
             entries: {
                 _content_type_uid: 0,
-                publish_details: 0,
             },
         },
     },
