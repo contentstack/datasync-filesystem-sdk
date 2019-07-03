@@ -1,6 +1,7 @@
 "use strict";
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
@@ -16,9 +17,9 @@ exports.getConfig = () => {
     return config;
 };
 /**
- *
+ * @public
+ * @class Contentstack
  * @description Creates an instance of `Contentstack`.
- * @api public
  */
 class Contentstack {
     /**
