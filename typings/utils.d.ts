@@ -5,6 +5,11 @@
  * MIT Licensed
  */
 export declare const difference: (obj: any, baseObj: any) => unknown[];
+export declare const getBaseDir: ({ baseDir }: {
+    baseDir: any;
+}) => {
+    contentDir: string;
+};
 /**
  * @public
  * @method getEntriesPath
@@ -24,8 +29,14 @@ export declare const getAssetsPath: (locale: any) => any;
  * @param locale Locale from which the contents have to be read
  */
 export declare const getContentTypesPath: (locale: any) => any;
+interface IContentTypes {
+    _assets?: any;
+    _content_types?: any;
+    [propName: string]: any;
+}
 export declare const segregateQueries: (queries: any) => {
-    aggQueries: {};
+    aggQueries: IContentTypes;
     contentTypes: any[];
 };
 export declare const checkCyclic: (uid: any, mapping: any) => boolean;
+export {};

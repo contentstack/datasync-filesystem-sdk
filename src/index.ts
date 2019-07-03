@@ -1,5 +1,6 @@
 /*!
- * Contentstack datasync contentstore filesystem
+ * Contentstack DataSync Filesystem SDK.
+ * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
@@ -22,7 +23,8 @@ interface IUserConfig {
 }
 
 interface IAppConfig extends IUserConfig {
-  contentStore?: {
+  contentStore: {
+    baseDir: string,
     internal?: {
       locale?: string,
       types?: {
@@ -49,9 +51,9 @@ export const getConfig = (): IAppConfig => {
 }
 
 /**
- * 
+ * @public
+ * @class Contentstack
  * @description Creates an instance of `Contentstack`.
- * @api public
  */
 export class Contentstack {
   /**
@@ -65,6 +67,7 @@ export class Contentstack {
    */
   public static Stack(stackArguments) {
     config = merge(config, stackArguments)
+
     return new Stack(config)
   }
 }
