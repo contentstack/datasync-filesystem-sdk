@@ -38,5 +38,4 @@ export declare const segregateQueries: (queries: any) => {
     aggQueries: IContentTypes;
     contentTypes: any[];
 };
-export declare const checkCyclic: (uid: any, mapping: any) => boolean;
 export {};
