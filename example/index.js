@@ -13,6 +13,9 @@ function connect () {
 function find (contentType = 'blog') {
   return Stack.contentType(contentType)
     .entries()
+    .include([
+      'modular_blocks.block_1.reference'
+    ])
     .find()
 }
 

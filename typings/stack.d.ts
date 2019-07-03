@@ -384,7 +384,7 @@ export declare class Stack {
     private subIncludeReferenceIteration;
     private getReferencePath;
     private fetchPathDetails;
-    private fetchEntries;
+    private fetchDocuments;
     private includeAssetsOnly;
     private preProcess;
     private postProcess;

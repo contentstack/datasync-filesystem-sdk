@@ -22,15 +22,12 @@ export declare const defaultConfig: {
         projections: {
             assets: {
                 _content_type_uid: number;
-                publish_details: number;
             };
             content_types: {
                 _content_type_uid: number;
-                publish_details: number;
             };
             entries: {
                 _content_type_uid: number;
-                publish_details: number;
             };
         };
     };
