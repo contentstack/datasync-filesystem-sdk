@@ -7,7 +7,9 @@
  */
 Object.defineProperty(exports, "__esModule", { value: true });
 const lodash_1 = require("lodash");
+const mkdirp_1 = require("mkdirp");
 const path_1 = require("path");
+const fs_1 = require("./fs");
 const index_1 = require("./index");
 const localePaths = {};
 exports.difference = (obj, baseObj) => {
@@ -26,6 +28,7 @@ const buildPath = (pattern, data) => {
         patternKeys.splice(0, 1);
     }
     const pathKeys = [];
+    // console.log('patternkeys', patternKeys)
     for (let i = 0, keyLength = patternKeys.length; i < keyLength; i++) {
         if (patternKeys[i].charAt(0) === ':') {
             let k = patternKeys[i].substring(1);
@@ -37,7 +40,7 @@ const buildPath = (pattern, data) => {
                 pathKeys.push(data[k]);
             }
             else {
-                throw new TypeError(`The key ${pathKeys[i]} did not exist on ${JSON.stringify(data)}`);
+                throw new TypeError(`The key ${k} did not exist on ${JSON.stringify(data)}`);
             }
         }
         else {
@@ -45,6 +48,24 @@ const buildPath = (pattern, data) => {
         }
     }
     return path_1.join.apply(this, pathKeys);
+};
+exports.getBaseDir = ({ baseDir }) => {
+    let contentDir;
+    if (path_1.isAbsolute(baseDir)) {
+        if (!fs_1.existsSync(baseDir)) {
+            mkdirp_1.sync(baseDir);
+        }
+        contentDir = baseDir;
+    }
+    else {
+        const appPath = path_1.join(__dirname, '..', '..', '..');
+        contentDir = path_1.join(appPath, baseDir);
+        console.log('content dir', contentDir);
+        if (!fs_1.existsSync(contentDir)) {
+            mkdirp_1.sync(contentDir);
+        }
+    }
+    return { contentDir };
 };
 /**
  * @public
@@ -59,20 +80,17 @@ exports.getEntriesPath = (locale, contentTypeUid) => {
             return localePaths[locale][contentTypeUid];
         }
     }
+    else {
+        localePaths[locale] = {};
+    }
     const data = {
         _content_type_uid: contentTypeUid,
         locale,
     };
     const config = index_1.getConfig().contentStore;
-    const path = buildPath(config.patterns.entries, data);
-    if (localePaths[locale]) {
-        localePaths[locale][contentTypeUid] = path;
-    }
-    else {
-        localePaths[locale] = {
-            [contentTypeUid]: path,
-        };
-    }
+    const { contentDir } = exports.getBaseDir(config);
+    const path = path_1.join(contentDir, buildPath(config.patterns.entries, data));
+    localePaths[locale][contentTypeUid] = path;
     return path;
 };
 /**
@@ -88,12 +106,16 @@ exports.getAssetsPath = (locale) => {
             return localePaths[locale]['_assets'];
         }
     }
+    else {
+        localePaths[locale] = {};
+    }
     const data = {
         _content_type_uid: '_assets',
         locale,
     };
     const config = index_1.getConfig().contentStore;
-    const path = buildPath(config.patterns.entries, data);
+    const { contentDir } = exports.getBaseDir(config);
+    const path = path_1.join(contentDir, buildPath(config.patterns.assets, data));
     // tslint:disable-next-line: no-string-literal
     localePaths[locale]['_assets'] = path;
     return path;
@@ -111,12 +133,16 @@ exports.getContentTypesPath = (locale) => {
             return localePaths[locale]['_content_types'];
         }
     }
+    else {
+        localePaths[locale] = {};
+    }
     const data = {
         _content_type_uid: '_content_types',
         locale,
     };
     const config = index_1.getConfig().contentStore;
-    const path = buildPath(config.patterns.content_types, data);
+    const { contentDir } = exports.getBaseDir(config);
+    const path = path_1.join(contentDir, buildPath(config.patterns.content_types, data));
     // tslint:disable-next-line: no-string-literal
     localePaths[locale]['_content_types'] = path;
     return path;

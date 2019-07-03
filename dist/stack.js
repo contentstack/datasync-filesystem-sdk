@@ -632,10 +632,10 @@ class Stack {
      */
     include(fields) {
         if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
-            this.q.include = fields;
+            this.q.includeSpecificReferences = fields;
         }
         else if (fields && typeof fields === 'string') {
-            this.q.include = [fields];
+            this.q.includeSpecificReferences = [fields];
         }
         else {
             throw new Error('Kindly pass \'string\' OR \'array\' fields for .include()!');
@@ -841,15 +841,17 @@ class Stack {
                 data = data.filter(sift_1.default(this.q.query));
                 if (this.q.includeSpecificReferences) {
                     yield this
-                        .includeSpecificReferences(data, this.q.content_type_uid, this.q.locale, this.q
+                        .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
                         .includeSpecificReferences);
                 }
                 else if (this.q.queryOnReferences) {
-                    yield this.includeAllReferences(data, locale, {});
-                    data = data.filter(sift_1.default(this.q.queryOnReferences));
+                    // await this.includeAllReferences(data, locale, {})
+                    // need re-writes
+                    // data = data.filter(sift(this.q.queryOnReferences))
                 }
                 else if (this.q.includeAllReferences) {
-                    yield this.includeAllReferences(data, locale, {});
+                    // need re-writes
+                    // await this.includeAllReferences(data, locale, {})
                 }
                 else {
                     yield this.includeAssetsOnly(data, locale, this.q.content_type_uid);
@@ -910,12 +912,13 @@ class Stack {
             }
             // even after traversing, if no references were found, simply return the entries found thusfar
             if (shelf.length === 0) {
-                return entries;
+                return;
             }
             // else, self-recursively iterate and fetch references
             // Note: Shelf is the one holding `pointers` to the actual entry
             // Once the pointer has been used, for GC, point the object to null
-            return this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf);
+            yield this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf);
+            return;
         });
     }
     includeReferenceIteration(eQuery, ctQuery, locale, include, oldShelf) {
@@ -927,16 +930,18 @@ class Stack {
             const queries = {
                 $or: [],
             };
-            let result = [];
+            let result = {
+                docs: [],
+            };
             const shelf = [];
             yield this.subIncludeReferenceIteration(eQuery, locale, paths, include, queries, result, shelf);
             // GC to avoid mem leaks!
             eQuery = null;
             for (let i = 0, j = oldShelf.length; i < j; i++) {
                 const element = oldShelf[i];
-                for (let k = 0, l = result.length; k < l; k++) {
-                    if (result[k].uid === element.uid) {
-                        element.path[element.position] = result[k];
+                for (let k = 0, l = result.docs.length; k < l; k++) {
+                    if (result.docs[k].uid === element.uid) {
+                        element.path[element.position] = result.docs[k];
                         break;
                     }
                 }
@@ -951,13 +956,6 @@ class Stack {
     }
     subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
         return __awaiter(this, void 0, void 0, function* () {
-            /**
-             * Segregate eQueries based on their content types
-             * {
-             *    content_type_uid: [],
-             *    ...
-             * }
-             */
             const { contentTypes, aggQueries, } = utils_1.segregateQueries(eQuieries.$or);
             const promises = [];
             contentTypes.forEach((contentType) => {
@@ -1124,31 +1122,36 @@ class Stack {
     }
     fetchEntries(query, locale, contentTypeUid, paths, include, queries, result, bookRack) {
         return __awaiter(this, void 0, void 0, function* () {
-            const contents = yield fs_1.readFile(utils_1.getEntriesPath(locale, contentTypeUid) + '.json');
-            result = result.concat(contents.filter(sift_1.default(query)));
+            let contents;
+            if (contentTypeUid === '_assets') {
+                contents = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
+            }
+            else {
+                contents = yield fs_1.readFile(utils_1.getEntriesPath(locale, contentTypeUid) + '.json');
+            }
+            result.docs = result.docs.concat(contents.filter(sift_1.default(query)));
             if (result.length === 0) {
                 return;
             }
             if (include.length) {
                 paths.forEach((path) => {
-                    // console.log('path:', path)
-                    this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, false, result, 0);
+                    this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, false, result, 0);
                 });
             }
             else {
                 // if there are no includes, only fetch assets
                 paths.forEach((path) => {
-                    this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, true, result, 0);
+                    this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, true, result, 0);
                 });
             }
             return;
         });
     }
-    includeAssetsOnly(entries, contentTypeUid, locale) {
+    includeAssetsOnly(entries, locale, contentTypeUid) {
         return __awaiter(this, void 0, void 0, function* () {
             const schemas = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
             let schema;
-            for (let i = 0, j = schema.length; i < j; i++) {
+            for (let i = 0, j = schemas.length; i < j; i++) {
                 if (schemas[i].uid === contentTypeUid) {
                     schema = schemas[i];
                     break;
@@ -1183,102 +1186,6 @@ class Stack {
                 }
             }
             return;
-        });
-    }
-    findReferences(query) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const path = utils_1.getEntriesPath(query.locale, query.content_type_uid) + '.json';
-            const data = yield fs_1.readFile(path);
-            return data.filter(sift_1.default(query.query));
-        });
-    }
-    includeAllReferences(entry, locale, references, parentUid) {
-        const self = this;
-        return new Promise((resolve, reject) => {
-            if (entry === null || typeof entry !== 'object') {
-                return resolve();
-            }
-            // current entry becomes the parent
-            if (entry.uid) {
-                parentUid = entry.uid;
-            }
-            const referencesFound = [];
-            // iterate over each key in the object
-            for (const prop in entry) {
-                if (entry[prop] !== null && typeof entry[prop] === 'object') {
-                    if (entry[prop] && entry[prop].reference_to) {
-                        if ((!(this.q.includeReferences) && entry[prop].reference_to === '_assets')
-                            || this.q.includeReferences) {
-                            if (entry[prop].values.length === 0) {
-                                entry[prop] = [];
-                            }
-                            else {
-                                let uids = entry[prop].values;
-                                if (typeof uids === 'string') {
-                                    uids = [uids];
-                                }
-                                if (entry[prop].reference_to !== '_assets') {
-                                    uids = lodash_1.filter(uids, (uid) => {
-                                        return !(utils_1.checkCyclic(uid, references));
-                                    });
-                                }
-                                if (uids.length) {
-                                    const query = {
-                                        content_type_uid: entry[prop].reference_to,
-                                        locale,
-                                        query: {
-                                            uid: {
-                                                $in: uids,
-                                            },
-                                        },
-                                    };
-                                    referencesFound.push(new Promise((rs, rj) => {
-                                        return self.findReferences(query).then((entities) => {
-                                            entities = lodash_1.cloneDeep(entities);
-                                            if (entities.length === 0) {
-                                                entry[prop] = [];
-                                                return rs();
-                                            }
-                                            else if (parentUid) {
-                                                references[parentUid] = references[parentUid] || [];
-                                                references[parentUid] = lodash_1.uniq(references[parentUid]
-                                                    .concat(lodash_1.map(entities, 'uid')));
-                                            }
-                                            if (typeof entry[prop].values === 'string') {
-                                                entry[prop] = ((entities === null) ||
-                                                    entities.length === 0) ? null
-                                                    : entities[0];
-                                            }
-                                            else {
-                                                // format the references in order
-                                                const referenceBucket = [];
-                                                query.query.uid.$in.forEach((entityUid) => {
-                                                    const elem = lodash_1.find(entities, (entity) => {
-                                                        return entity.uid === entityUid;
-                                                    });
-                                                    if (elem) {
-                                                        referenceBucket.push(elem);
-                                                    }
-                                                });
-                                                entry[prop] = referenceBucket;
-                                            }
-                                            return self.includeAllReferences(entry[prop], locale, references, parentUid)
-                                                .then(rs)
-                                                .catch(rj);
-                                        });
-                                    }));
-                                }
-                            }
-                        }
-                    }
-                    else {
-                        referencesFound.push(self.includeAllReferences(entry[prop], locale, references, parentUid));
-                    }
-                }
-            }
-            return Promise.all(referencesFound)
-                .then(resolve)
-                .catch(reject);
         });
     }
     preProcess() {
@@ -1317,14 +1224,9 @@ class Stack {
             if (this.q.count) {
                 output.count = data.length;
             }
-            // data filtering
-            if (this.q.query) {
-                data = data.filter(sift_1.default(this.q.query));
-            }
             if (this.q.include_content_type) {
-                const path = utils_1.getContentTypesPath(this.q.locale) + '.json';
                 // ideally, if the content type doesn't exist, an error will be thrown before it reaches this line
-                const contentTypes = yield fs_1.readFile(path);
+                const contentTypes = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
                 for (let i = 0, j = contentTypes.length; i < j; i++) {
                     if (contentTypes[i].uid === this.q.content_type_uid) {
                         output.content_type = contentTypes[i];
@@ -1352,7 +1254,8 @@ class Stack {
                 const except = json_mask_1.default(data, bukcet);
                 data = utils_1.difference(data, except);
             }
-            return output;
+            output[key] = data;
+            return { output };
         });
     }
 }

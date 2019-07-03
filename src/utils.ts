@@ -11,9 +11,12 @@ import {
   transform,
   uniq,
 } from 'lodash'
+import { sync } from 'mkdirp'
 import {
+  isAbsolute,
   join,
 } from 'path'
+import { existsSync } from './fs'
 import {
   getConfig,
 } from './index'
@@ -40,7 +43,7 @@ const buildPath = (pattern, data) => {
   }
 
   const pathKeys = []
-
+  // console.log('patternkeys', patternKeys)
   for (let i = 0, keyLength = patternKeys.length; i < keyLength; i++) {
     if (patternKeys[i].charAt(0) === ':') {
       let k = patternKeys[i].substring(1)
@@ -51,7 +54,7 @@ const buildPath = (pattern, data) => {
       if (data[k]) {
         pathKeys.push(data[k])
       } else {
-        throw new TypeError(`The key ${pathKeys[i]} did not exist on ${JSON.stringify(data)}`)
+        throw new TypeError(`The key ${k} did not exist on ${JSON.stringify(data)}`)
       }
     } else {
       pathKeys.push(patternKeys[i])
@@ -59,6 +62,25 @@ const buildPath = (pattern, data) => {
   }
 
   return join.apply(this, pathKeys)
+}
+
+export const getBaseDir = ({baseDir}) => {
+  let contentDir: string
+  if (isAbsolute(baseDir)) {
+    if (!existsSync(baseDir)) {
+      sync(baseDir)
+    }
+    contentDir = baseDir
+  } else {
+    const appPath = join(__dirname, '..', '..', '..')
+    contentDir = join(appPath, baseDir)
+    console.log('content dir', contentDir)
+    if (!existsSync(contentDir)) {
+      sync(contentDir)
+    }
+  }
+
+  return { contentDir }
 }
 
 /**
@@ -73,6 +95,8 @@ export const getEntriesPath = (locale, contentTypeUid) => {
     if (localePaths[locale].hasOwnProperty(contentTypeUid)) {
       return localePaths[locale][contentTypeUid]
     }
+  } else {
+    localePaths[locale] = {}
   }
 
   const data = {
@@ -80,15 +104,9 @@ export const getEntriesPath = (locale, contentTypeUid) => {
     locale,
   }
   const config = getConfig().contentStore
-  const path = buildPath(config.patterns.entries, data)
-
-  if (localePaths[locale]) {
-    localePaths[locale][contentTypeUid] = path
-  } else {
-    localePaths[locale] = {
-      [contentTypeUid]: path,
-    }
-  }
+  const { contentDir } = getBaseDir(config)
+  const path = join(contentDir, buildPath(config.patterns.entries, data))
+  localePaths[locale][contentTypeUid] = path
 
   return path
 }
@@ -105,6 +123,8 @@ export const getAssetsPath = (locale) => {
       // tslint:disable-next-line: no-string-literal
       return localePaths[locale]['_assets']
     }
+  } else {
+    localePaths[locale] = {}
   }
 
   const data = {
@@ -112,7 +132,8 @@ export const getAssetsPath = (locale) => {
     locale,
   }
   const config = getConfig().contentStore
-  const path = buildPath(config.patterns.entries, data)
+  const { contentDir } = getBaseDir(config)
+  const path = join(contentDir, buildPath(config.patterns.assets, data))
   // tslint:disable-next-line: no-string-literal
   localePaths[locale]['_assets'] = path
 
@@ -131,22 +152,30 @@ export const getContentTypesPath = (locale) => {
       // tslint:disable-next-line: no-string-literal
       return localePaths[locale]['_content_types']
     }
+  } else {
+    localePaths[locale] = {}
   }
-
   const data = {
     _content_type_uid: '_content_types',
     locale,
   }
   const config = getConfig().contentStore
-  const path = buildPath(config.patterns.content_types, data)
+  const { contentDir } = getBaseDir(config)
+  const path = join(contentDir, buildPath(config.patterns.content_types, data))
   // tslint:disable-next-line: no-string-literal
   localePaths[locale]['_content_types'] = path
 
   return path
 }
 
+interface IContentTypes {
+  _assets?: any,
+  _content_types?: any,
+  [propName: string]: any,
+}
+
 export const segregateQueries = (queries) => {
-  const aggQueries = {}
+  const aggQueries: IContentTypes = {}
   const contentTypes = []
 
   queries.forEach((element) => {
