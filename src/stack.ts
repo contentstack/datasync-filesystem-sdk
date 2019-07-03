@@ -729,9 +729,9 @@ export class Stack {
    */
   public include(fields) {
     if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
-      this.q.include = fields
+      this.q.includeSpecificReferences = fields
     } else if (fields && typeof fields === 'string') {
-      this.q.include = [fields]
+      this.q.includeSpecificReferences = [fields]
     } else {
       throw new Error('Kindly pass \'string\' OR \'array\' fields for .include()!')
     }
@@ -946,7 +946,6 @@ export class Stack {
    * })
    * @returns {object} - Returns a objects, that have been processed, filtered and referenced
    */
-
   public find() {
     return new Promise(async (resolve, reject) => {
       try {
@@ -960,14 +959,15 @@ export class Stack {
 
         if (this.q.includeSpecificReferences) {
           await this
-            .includeSpecificReferences(data, this.q.content_type_uid, this.q.locale, this.q
+            .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
               .includeSpecificReferences)
         } else if (this.q.queryOnReferences) {
-          await this.includeAllReferences(data, locale, {})
-
-          data = data.filter(sift(this.q.queryOnReferences))
+          // await this.includeAllReferences(data, locale, {})
+          // need re-writes
+          // data = data.filter(sift(this.q.queryOnReferences))
         } else if (this.q.includeAllReferences) {
-          await this.includeAllReferences(data, locale, {})
+          // need re-writes
+          // await this.includeAllReferences(data, locale, {})
         } else {
           await this.includeAssetsOnly(data, locale, this.q.content_type_uid)
         }
@@ -1000,7 +1000,6 @@ export class Stack {
    *
    * @returns {object} - Returns an object, that has been processed, filtered and referenced
    */
-
   public findOne() {
     this.q.single = true
 
@@ -1040,13 +1039,15 @@ export class Stack {
 
     // even after traversing, if no references were found, simply return the entries found thusfar
     if (shelf.length === 0) {
-      return entries
+      return
     }
 
     // else, self-recursively iterate and fetch references
     // Note: Shelf is the one holding `pointers` to the actual entry
     // Once the pointer has been used, for GC, point the object to null
-    return this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
+    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
+
+    return
   }
 
   private async includeReferenceIteration(eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf:
@@ -1064,7 +1065,9 @@ export class Stack {
     const queries = {
       $or: [],
     }
-    let result = []
+    let result = {
+      docs: [],
+    }
     const shelf = []
     await this.subIncludeReferenceIteration(eQuery, locale, paths, include, queries, result, shelf)
 
@@ -1073,9 +1076,9 @@ export class Stack {
 
     for (let i = 0, j = oldShelf.length; i < j; i++) {
       const element: IShelf = oldShelf[i]
-      for (let k = 0, l = result.length; k < l; k++) {
-        if (result[k].uid === element.uid) {
-          element.path[element.position] = result[k]
+      for (let k = 0, l = result.docs.length; k < l; k++) {
+        if (result.docs[k].uid === element.uid) {
+          element.path[element.position] = result.docs[k]
           break
         }
       }
@@ -1092,13 +1095,6 @@ export class Stack {
   }
 
   private async subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
-    /**
-     * Segregate eQueries based on their content types
-     * {
-     *    content_type_uid: [],
-     *    ...
-     * }
-     */
     const {
       contentTypes,
       aggQueries,
@@ -1152,6 +1148,7 @@ export class Stack {
 
     for (let i = 0, j = currentInclude.length; i < j; i++) {
       const includePath = currentInclude[i]
+
       // tslint:disable-next-line: forin
       for (const path in entryReferences) {
         const idx = includePath.indexOf(path)
@@ -1282,33 +1279,37 @@ export class Stack {
   }
 
   private async fetchEntries(query: any, locale: string, contentTypeUid: string, paths: string[], include: string[],
-                             queries: IQueryInterface, result: any[], bookRack: IShelf) {
-    const contents: any[] = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
-    result = result.concat(contents.filter(sift(query)))
+                             queries: IQueryInterface, result: any, bookRack: IShelf) {
+    let contents: any[]
+    if (contentTypeUid === '_assets') {
+      contents = await readFile(getAssetsPath(locale) + '.json')
+    } else {
+      contents = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
+    }
 
+    result.docs = result.docs.concat(contents.filter(sift(query)))
     if (result.length === 0) {
       return
     }
 
     if (include.length) {
       paths.forEach((path) => {
-        // console.log('path:', path)
-        this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, false, result, 0)
+        this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, false, result, 0)
       })
     } else {
       // if there are no includes, only fetch assets
       paths.forEach((path) => {
-        this.fetchPathDetails(result, locale, path.split('.'), queries, bookRack, true, result, 0)
+        this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, true, result, 0)
       })
     }
 
     return
   }
 
-  private async includeAssetsOnly(entries: any[], contentTypeUid: string, locale: string) {
+  private async includeAssetsOnly(entries: any[], locale: string, contentTypeUid: string) {
     const schemas = await readFile(getContentTypesPath(locale) + '.json')
     let schema
-    for (let i = 0, j = schema.length; i < j; i++) {
+    for (let i = 0, j = schemas.length; i < j; i++) {
       if (schemas[i].uid === contentTypeUid) {
         schema = schemas[i]
         break
@@ -1352,129 +1353,23 @@ export class Stack {
     return
   }
 
-
-  private async findReferences(query) {
-    const path = getEntriesPath(query.locale, query.content_type_uid) + '.json'
-    const data = await readFile(path)
-
-    return data.filter(sift(query.query))
-  }
-
-  private includeAllReferences(entry, locale, references, parentUid ? ) {
-    const self = this
-
-    return new Promise((resolve, reject) => {
-      if (entry === null || typeof entry !== 'object') {
-
-        return resolve()
-      }
-
-      // current entry becomes the parent
-      if (entry.uid) {
-        parentUid = entry.uid
-      }
-
-      const referencesFound = []
-
-      // iterate over each key in the object
-      for (const prop in entry) {
-        if (entry[prop] !== null && typeof entry[prop] === 'object') {
-          if (entry[prop] && entry[prop].reference_to) {
-            if ((!(this.q.includeReferences) && entry[prop].reference_to === '_assets')
-              || this.q.includeReferences) {
-              if (entry[prop].values.length === 0) {
-                entry[prop] = []
-              } else {
-                let uids = entry[prop].values
-                if (typeof uids === 'string') {
-                  uids = [uids]
-                }
-                if (entry[prop].reference_to !== '_assets') {
-                  uids = filter(uids, (uid) => {
-
-                    return !(checkCyclic(uid, references))
-                  })
-                }
-                if (uids.length) {
-                  const query = {
-                    content_type_uid: entry[prop].reference_to,
-                    locale,
-                    query: {
-                      uid: {
-                        $in: uids,
-                      },
-                    },
-                  }
-
-                  referencesFound.push(new Promise((rs, rj) => {
-
-                    return self.findReferences(query).then((entities) => {
-                      entities = cloneDeep(entities)
-                      if ((entities as any).length === 0) {
-                        entry[prop] = []
-
-                        return rs()
-                      } else if (parentUid) {
-                        references[parentUid] = references[parentUid] || []
-                        references[parentUid] = uniq(references[parentUid]
-                          .concat(map((entities as any), 'uid')))
-                      }
-                      if (typeof entry[prop].values === 'string') {
-                        entry[prop] = ((entities === null) ||
-                            (entities as any).length === 0) ? null
-                          : entities[0]
-                      } else {
-                        // format the references in order
-                        const referenceBucket = []
-                        query.query.uid.$in.forEach((entityUid) => {
-                          const elem = find(entities, (entity) => {
-
-                            return (entity as any).uid === entityUid
-                          })
-                          if (elem) {
-                            referenceBucket.push(elem)
-                          }
-                        })
-                        entry[prop] = referenceBucket
-                      }
-
-                      return self.includeAllReferences(entry[prop], locale, references, parentUid)
-                        .then(rs)
-                        .catch(rj)
-                    })
-                  }))
-                }
-              }
-            }
-          } else {
-            referencesFound.push(self.includeAllReferences(entry[prop], locale, references, parentUid))
-          }
-        }
-      }
-
-      return Promise.all(referencesFound)
-        .then(resolve)
-        .catch(reject)
-    })
-  }
-
   private preProcess() {
     const locale = (typeof this.q.locale === 'string') ? this.q.locale : 'en-us'
     let key: string
     let filePath: string
     switch (this.q.content_type_uid) {
-    case '_assets':
-      filePath = getAssetsPath(locale) + '.json'
-      key = (this.q.isSingle) ? 'asset' : 'assets'
-      break
-    case '_content_types':
-      filePath = getContentTypesPath(locale) + '.json'
-      key = (this.q.isSingle) ? 'content_type' : 'content_types'
-      break
-    default:
-      filePath = getEntriesPath(locale, this.q.content_type_uid) + '.json'
-      key = (this.q.isSingle) ? 'entry' : 'entries'
-      break
+      case '_assets':
+        filePath = getAssetsPath(locale) + '.json'
+        key = (this.q.isSingle) ? 'asset' : 'assets'
+        break
+      case '_content_types':
+        filePath = getContentTypesPath(locale) + '.json'
+        key = (this.q.isSingle) ? 'content_type' : 'content_types'
+        break
+      default:
+        filePath = getEntriesPath(locale, this.q.content_type_uid) + '.json'
+        key = (this.q.isSingle) ? 'entry' : 'entries'
+        break
     }
 
     if (!existsSync(filePath)) {
@@ -1497,15 +1392,9 @@ export class Stack {
     if (this.q.count) {
       output.count = data.length
     }
-    // data filtering
-    if (this.q.query) {
-      data = data.filter(sift(this.q.query))
-    }
-
     if (this.q.include_content_type) {
-      const path = getContentTypesPath(this.q.locale) + '.json'
       // ideally, if the content type doesn't exist, an error will be thrown before it reaches this line
-      const contentTypes: any[] = await readFile(path)
+      const contentTypes: any[] = await readFile(getContentTypesPath(locale) + '.json')
 
       for (let i = 0, j = contentTypes.length; i < j; i++) {
         if (contentTypes[i].uid === this.q.content_type_uid) {
@@ -1540,6 +1429,8 @@ export class Stack {
       data = difference(data, except)
     }
 
-    return output
+    output[key] = data
+
+    return { output }
   }
 }

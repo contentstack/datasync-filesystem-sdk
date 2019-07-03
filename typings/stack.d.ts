@@ -386,8 +386,6 @@ export declare class Stack {
     private fetchPathDetails;
     private fetchEntries;
     private includeAssetsOnly;
-    private findReferences;
-    private includeAllReferences;
     private preProcess;
     private postProcess;
 }
