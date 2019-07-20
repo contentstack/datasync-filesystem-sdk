@@ -21,16 +21,14 @@ exports.defaultConfig = {
             content_types: '/:locale/data/content_types',
             entries: '/:locale/data/:_content_type_uid',
         },
+        // TODO
+        // Eval if this is slowing down the response
         projections: {
-            assets: {
-                _content_type_uid: 0,
-            },
-            content_types: {
-                _content_type_uid: 0,
-            },
-            entries: {
-                _content_type_uid: 0,
-            },
+            _content_type_uid: 0,
+            _version: 0,
+            created_at: 0,
+            updated_at: 0,
         },
+        referenceDepth: 4,
     },
 };

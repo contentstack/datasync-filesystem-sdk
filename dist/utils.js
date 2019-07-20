@@ -28,7 +28,6 @@ const buildPath = (pattern, data) => {
         patternKeys.splice(0, 1);
     }
     const pathKeys = [];
-    // console.log('patternkeys', patternKeys)
     for (let i = 0, keyLength = patternKeys.length; i < keyLength; i++) {
         if (patternKeys[i].charAt(0) === ':') {
             let k = patternKeys[i].substring(1);
@@ -166,4 +165,11 @@ exports.segregateQueries = (queries) => {
         aggQueries,
         contentTypes,
     };
+};
+exports.doNothingClause = () => {
+    if (this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
+        this.types.assets || this.q.countOnly || this.q.excludeAllReferences) {
+        return true;
+    }
+    return false;
 };

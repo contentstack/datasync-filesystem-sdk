@@ -8,3 +8,6 @@ coverage
 # Examples
 example/**/*
 !example/index.js
+
+# Misc
+_old_test_backup
