@@ -7,7 +7,7 @@ import { existsSync, writeFile } from 'fs'
 import { cloneDeep } from 'lodash'
 import { sync as mkdirSync } from 'mkdirp'
 import { join, sep } from 'path'
-// import { sync as rimrafSync } from 'rimraf'
+import { sync as rimrafSync } from 'rimraf'
 import { promisify } from 'util'
 import { Contentstack } from '../src'
 import { getAssetsPath, getContentTypesPath, getEntriesPath } from '../src/utils'
@@ -59,6 +59,7 @@ describe('# Core', () => {
   // Connect to DB
   beforeAll(() => {
     debug('Connecting to Stack')
+    expect(Stack).toHaveProperty('connect')
 
     return Stack.connect()
   })
@@ -77,13 +78,7 @@ describe('# Core', () => {
     const asset = assets[0]
     const assetPath = getAssetsPath(asset.locale) + '.json'
     debug(`Asset path ${assetPath}`)
-    const assetFolderPathKeys = assetPath.split(sep)
-    debug(`Asset folder path keys ${assetFolderPathKeys}`)
-    assetFolderPathKeys.splice(assetFolderPathKeys.length - 1)
-    let folderPath = join.apply(this, assetFolderPathKeys)
-    if (assetPath.charAt(0) !== folderPath.charAt(0)) {
-      folderPath = assetPath.charAt(0) + folderPath
-    }
+    const folderPath = assetPath.slice(0, assetPath.lastIndexOf(sep))
     if (!existsSync(folderPath)) {
       debug(`${folderPath} did not exist. Creating..`)
       mkdirSync(folderPath)
@@ -96,13 +91,7 @@ describe('# Core', () => {
     const product = products[1]
     const productPath = getEntriesPath(product.locale, product._content_type_uid) + '.json'
     debug(`Product path ${productPath}`)
-    const productFolderPathKeys = productPath.split(sep)
-    debug(`Product folder path keys ${productFolderPathKeys}`)
-    productFolderPathKeys.splice(productFolderPathKeys.length - 1)
-    let productFolderPath = join.apply(this, productFolderPathKeys)
-    if (productPath.charAt(0) !== productFolderPath.charAt(0)) {
-      productFolderPath = productPath.charAt(0) + productFolderPath
-    }
+    const productFolderPath = productPath.slice(0, productPath.lastIndexOf(sep))
     if (!existsSync(productFolderPath)) {
       debug(`${productFolderPath} did not exist. Creating..`)
       mkdirSync(productFolderPath)
@@ -116,9 +105,7 @@ describe('# Core', () => {
   beforeAll(() => {
     const contentType = content_types[0]
     const contentTypePath = getContentTypesPath(contentType.locale) + '.json'
-    const contentTypeFolderPathKeys = contentTypePath.split(sep)
-    contentTypeFolderPathKeys.splice(contentTypeFolderPathKeys.length - 1)
-    const folderPath = join.apply(this, contentTypeFolderPathKeys)
+    const folderPath = contentTypePath.slice(0, contentTypePath.lastIndexOf(sep))
     if (!existsSync(folderPath)) {
       mkdirSync(folderPath)
     }
@@ -130,20 +117,16 @@ describe('# Core', () => {
   beforeAll(async () => {
     const author = authors[0]
     const authorPath = getEntriesPath(author.locale, author._content_type_uid) + '.json'
-    const authorFolderPathKeys = authorPath.split(sep)
-    authorFolderPathKeys.splice(authorFolderPathKeys.length - 1)
-    const assetFolderPath = join.apply(this, authorFolderPathKeys)
-    if (!existsSync(assetFolderPath)) {
-      mkdirSync(assetFolderPath)
+    const authorFolderPath = authorPath.slice(0, authorPath.lastIndexOf(sep))
+    if (!existsSync(authorFolderPath)) {
+      mkdirSync(authorFolderPath)
     }
 
     await writeFileP(authorPath, JSON.stringify(authors))
 
     const blog = blogs[0]
     const blogPath = getEntriesPath(blog.locale, blog._content_type_uid) + '.json'
-    const blogFolderPathKeys = blogPath.split(sep)
-    blogFolderPathKeys.splice(blogFolderPathKeys.length - 1)
-    const blogFolderPath = join.apply(this, blogFolderPathKeys)
+    const blogFolderPath = blogPath.slice(0, blogPath.lastIndexOf(sep))
     if (!existsSync(blogFolderPath)) {
       mkdirSync(blogFolderPath)
     }
@@ -152,9 +135,7 @@ describe('# Core', () => {
 
     const category = categories[0]
     const categoryPath = getEntriesPath(category.locale, category._content_type_uid) + '.json'
-    const categoryFolderPathKeys = categoryPath.split(sep)
-    categoryFolderPathKeys.splice(categoryFolderPathKeys.length - 1)
-    const categoryFolderPath = join.apply(this, categoryFolderPathKeys)
+    const categoryFolderPath = categoryPath.slice(0, categoryPath.lastIndexOf(sep))
     if (!existsSync(categoryFolderPath)) {
       mkdirSync(categoryFolderPath)
     }
@@ -163,9 +144,7 @@ describe('# Core', () => {
 
     const product = products[0]
     const productPath = getEntriesPath(product.locale, product._content_type_uid) + '.json'
-    const productFolderPathKeys = productPath.split(sep)
-    productFolderPathKeys.splice(productFolderPathKeys.length - 1)
-    const productFolderPath = join.apply(this, productFolderPathKeys)
+    const productFolderPath = productPath.slice(0, productPath.lastIndexOf(sep))
     if (!existsSync(productFolderPath)) {
       mkdirSync(productFolderPath)
     }
@@ -175,7 +154,7 @@ describe('# Core', () => {
 
   // Destroy the data
   afterAll(() => {
-    // rimrafSync(scriptConfig.contentStore.baseDir)
+    rimrafSync(scriptConfig.contentStore.baseDir)
 
     return
   })
@@ -186,6 +165,7 @@ describe('# Core', () => {
         .entries()
         .find()
         .then((result: any) => {
+          debug(`# core: entries.find result: ${JSON.stringify(result)}`)
           checkEntries(result)
           expect(result.content_type_uid).toEqual('blog')
           expect(result.entries).toHaveLength(5)
@@ -200,13 +180,14 @@ describe('# Core', () => {
         .language('es-es')
         .find()
         .then((result: any) => {
+          debug(`# core: entries.find-language result: ${JSON.stringify(result)}`)
           // checkEntries(result)
           expect(result).toHaveProperty('entries')
           expect(result).toHaveProperty('locale')
           expect(result).toHaveProperty('content_type_uid')
           expect(result.locale).toEqual('es-es')
           expect(result.content_type_uid).toEqual('product')
-          expect(result.entries).toHaveLength(1)
+          expect(result.entries).toHaveLength(2)
           expect(result.entries instanceof Array).toBeTruthy()
           result.entries.forEach((item) => {
             expect(item).not.toHaveProperty('_version')
@@ -224,6 +205,7 @@ describe('# Core', () => {
         .entries()
         .findOne()
         .then((result: any) => {
+          debug(`# core: entries.findOne result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('entry')
           expect(result).toHaveProperty('content_type_uid')
           expect(result).toHaveProperty('locale')
@@ -244,19 +226,26 @@ describe('# Core', () => {
         .entries()
         .count()
         .then((result: any) => {
+          debug(`# core: entries.count result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('count')
           expect(result.count).toEqual(5)
+          expect(result).toHaveProperty('content_type_uid')
+          expect(result.content_type_uid).toEqual('blog')
+          expect(result).toHaveProperty('locale')
+          expect(result.locale).toEqual('en-us')
+          expect(Object.keys(result).length).toEqual(3)
         }).catch((error) => {
           expect(error).toBeNull()
         })
     })
   })
 
-  describe('assets', () => {
+  describe('# core-assets', () => {
     test('find', () => {
       return Stack.assets()
         .find()
         .then((result: any) => {
+          debug(`# core: assets.find result: ${JSON.stringify(result)}`)
           checkAssets(result)
           expect(result.assets).toHaveLength(3)
         }).catch((error) => {
@@ -268,6 +257,7 @@ describe('# Core', () => {
       return Stack.assets()
         .findOne()
         .then((result: any) => {
+          debug(`# core: assets.findOne result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('asset')
           expect(result).toHaveProperty('content_type_uid')
           expect(result).toHaveProperty('locale')
@@ -287,19 +277,26 @@ describe('# Core', () => {
       return Stack.assets()
         .count()
         .then((result: any) => {
+          debug(`# core: assets.count result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('count')
           expect(result.count).toEqual(3)
+          expect(result).toHaveProperty('content_type_uid')
+          expect(result.content_type_uid).toEqual('assets')
+          expect(result).toHaveProperty('locale')
+          expect(result.locale).toEqual('en-us')
+          expect(Object.keys(result).length).toEqual(3)
         }).catch((error) => {
           expect(error).toBeNull()
         })
     })
   })
 
-  describe('schemas', () => {
+  describe('# core-schemas', () => {
     test('find', () => {
       return Stack.schemas()
         .find()
         .then((result: any) => {
+          debug(`# core: schemas.find result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('locale')
           expect(result.locale).toEqual('en-us')
           expect(result).toHaveProperty('content_types')
@@ -315,7 +312,12 @@ describe('# Core', () => {
       return Stack.schemas()
         .findOne()
         .then((result: any) => {
+          debug(`# core: schemas.findOne result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('content_type')
+          expect(result).toHaveProperty('content_type_uid')
+          expect(result).toHaveProperty('locale')
+          expect(result.content_type_uid).toEqual('content_types')
+          expect(result.locale).toEqual('en-us')
           expect(result.content_type_uid).toEqual('content_types')
           expect(result.content_type).toHaveProperty('title')
         }).catch((error) => {
@@ -327,30 +329,33 @@ describe('# Core', () => {
       return Stack.schemas()
         .count()
         .then((result: any) => {
+          debug(`# core: schemas.count result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('count')
           expect(result).toHaveProperty('locale')
+          expect(result).toHaveProperty('content_type_uid')
           expect(result.locale).toEqual('en-us')
+          expect(result.content_type_uid).toEqual('content_types')
           expect(result.count).toEqual(4)
-          expect(Object.keys(result).length).toEqual(2)
+          expect(Object.keys(result).length).toEqual(3)
         }).catch((error) => {
           expect(error).toBeNull()
         })
     })
   })
 
-  describe('entry', () => {
+  describe('# core-entry', () => {
     test('find', () => {
       return Stack.contentType('blog')
         .entry()
         .find()
         .then((result: any) => {
+          debug(`# core: entry.find result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('entry')
           expect(result).toHaveProperty('content_type_uid')
           expect(result).toHaveProperty('locale')
           expect(result.content_type_uid).toEqual('blog')
           expect(result.locale).toEqual('en-us')
           expect(result.entry).toHaveProperty('title')
-          expect(result.entry).not.toHaveProperty('sys_keys')
           expect(result.entry).not.toHaveProperty('_version')
           expect(result.entry).not.toHaveProperty('content_type_uid')
           expect(result.entry).not.toHaveProperty('created_at')
@@ -361,18 +366,18 @@ describe('# Core', () => {
     })
   })
 
-  describe('asset', () => {
+  describe('# core-asset', () => {
     test('find', () => {
       return Stack.asset()
         .find()
         .then((result: any) => {
+          debug(`# core: asset.find result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('asset')
           expect(result).toHaveProperty('content_type_uid')
           expect(result).toHaveProperty('locale')
           expect(result.content_type_uid).toEqual('assets')
           expect(result.locale).toEqual('en-us')
           expect(result.asset).toHaveProperty('title')
-          expect(result.asset).not.toHaveProperty('sys_keys')
           expect(result.asset).not.toHaveProperty('_version')
           expect(result.asset).not.toHaveProperty('content_type_uid')
           expect(result.asset).not.toHaveProperty('created_at')
@@ -383,32 +388,25 @@ describe('# Core', () => {
     })
   })
 
-  describe('schema', () => {
+  describe('# core-schema', () => {
     test('find', () => {
       return Stack.schema()
         .find()
         .then((result: any) => {
+          debug(`# core: schema.find result: ${JSON.stringify(result)}`)
           expect(result).toHaveProperty('locale')
           expect(result).toHaveProperty('content_type')
           expect(result).toHaveProperty('content_type_uid')
           expect(result.locale).toEqual('en-us')
           expect(result.content_type_uid).toEqual('content_types')
           expect(result.content_type).toHaveProperty('title')
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-
-    test('count', () => {
-      return Stack.schemas()
-        .count()
-        .then((result: any) => {
-          expect(result).toHaveProperty('count')
-          expect(result.count).toEqual(4)
+          expect(result.content_type).not.toHaveProperty('_version')
+          expect(result.content_type).not.toHaveProperty('content_type_uid')
+          expect(result.content_type).not.toHaveProperty('created_at')
+          expect(result.content_type).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })
     })
   })
 })
-
