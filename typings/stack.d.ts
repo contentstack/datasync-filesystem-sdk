@@ -13,24 +13,25 @@ export declare class Stack {
     config: any;
     readonly contentStore: any;
     readonly types: any;
-    q: any;
-    lessThan: (key: string, value: any) => Stack;
-    lessThanOrEqualTo: (key: string, value: any) => Stack;
-    greaterThan: (key: string, value: any) => any;
-    greaterThanOrEqualTo: (key: string, value: any) => any;
-    notEqualTo: (key: string, value: any) => any;
-    containedIn: (key: string, value: any) => any;
-    notContainedIn: (key: string, value: any) => any;
-    exists: (key: string) => any;
-    notExists: (key: string) => any;
-    ascending: (key: string) => any;
-    descending: (key: string) => any;
-    skip: (value: any) => any;
-    limit: (value: any) => any;
-    or: (query: any) => Stack;
-    nor: (query: any) => Stack;
-    not: (query: any) => Stack;
-    and: (query: any) => Stack;
+    readonly projections: string[];
+    readonly q: any;
+    readonly lessThan: (key: string, value: any) => Stack;
+    readonly lessThanOrEqualTo: (key: string, value: any) => Stack;
+    readonly greaterThan: (key: string, value: any) => Stack;
+    readonly greaterThanOrEqualTo: (key: string, value: any) => Stack;
+    readonly notEqualTo: (key: string, value: any) => Stack;
+    readonly containedIn: (key: string, value: any) => Stack;
+    readonly notContainedIn: (key: string, value: any) => Stack;
+    readonly exists: (key: string) => Stack;
+    readonly notExists: (key: string) => Stack;
+    readonly ascending: (key: string) => Stack;
+    readonly descending: (key: string) => Stack;
+    readonly skip: (value: any) => Stack;
+    readonly limit: (value: any) => Stack;
+    readonly or: (query: any) => Stack;
+    readonly nor: (query: any) => Stack;
+    readonly not: (query: any) => Stack;
+    readonly and: (query: any) => Stack;
     constructor(config: any);
     /**
      * TODO
@@ -50,7 +51,7 @@ export declare class Stack {
      *
      * @returns {string} baseDir
      */
-    connect(overrides?: any): Promise<unknown>;
+    connect(overrides?: any): Promise<any>;
     /**
      * @public
      * @method contentType
@@ -118,6 +119,30 @@ export declare class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     assets(): Stack;
+    /**
+     * @public
+     * @method schemas
+     * @summary
+     *  Query content type schemas
+     * @example
+     * Stack.schemas()
+     *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    schemas(): Stack;
+    /**
+     * @public
+     * @method schema
+     * @summary
+     *  Query a single content type's schema
+     * @example
+     * Stack.schema(uid?: string)
+     *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    schema(uid?: string): Stack;
     /**
      * @public
      * @method equalTo
@@ -355,30 +380,6 @@ export declare class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     queryReferences(query: any): this;
-    /**
-     * @public
-     * @method schemas
-     * @summary
-     *  Query content type schemas
-     * @example
-     * Stack.schemas()
-     *  .find()
-     *
-     * @returns {this} - Returns `stack's` instance
-     */
-    schemas(): this;
-    /**
-     * @public
-     * @method schema
-     * @summary
-     *  Query a single content type's schema
-     * @example
-     * Stack.schema(uid?: string)
-     *  .find()
-     *
-     * @returns {this} - Returns `stack's` instance
-     */
-    schema(uid?: string): this;
     /**
      * @public
      * @method referenceDepth

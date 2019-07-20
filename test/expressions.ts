@@ -2,6 +2,7 @@
  * @description Test contentstack-mongodb-sdk basic methods
  */
 
+import Debug from 'debug'
 import { existsSync, writeFile } from 'fs'
 import { cloneDeep } from 'lodash'
 import { sync as mkdirSync } from 'mkdirp'
@@ -18,6 +19,7 @@ import { entries as categories } from './data/category'
 import { content_types } from './data/content_types'
 import { entries as products } from './data/products'
 
+const debug = new Debug('test:expressions')
 const writeFileP = promisify(writeFile)
 
 const scriptConfig = cloneDeep(config)
@@ -45,34 +47,53 @@ function fnWhere() {
 describe('# Expressional Operators', () => {
   // Connect to DB
   beforeAll(() => {
+    debug('Connecting to Stack')
+
     return Stack.connect()
   })
 
   // Populate assets data for this test suite
   beforeAll(() => {
     if (!existsSync(scriptConfig.contentStore.baseDir)) {
+      debug(`${scriptConfig.contentStore.baseDir} did not exist. Creating..`)
       mkdirSync(scriptConfig.contentStore.baseDir)
+      debug(
+        // tslint:disable-next-line: max-line-length
+        `${scriptConfig.contentStore.baseDir} did not exist. Created successfully! ${existsSync(scriptConfig.contentStore.baseDir)}`,
+        )
     }
 
     const asset = assets[0]
     const assetPath = getAssetsPath(asset.locale) + '.json'
-    const assetFolderPathKeys = assetPath.split(sep)
-    assetFolderPathKeys.splice(assetFolderPathKeys.length - 1)
-    const folderPath = join.apply(this, assetFolderPathKeys)
+    debug(`Asset path ${assetPath}`)
+    const folderPath = assetPath.slice(0, assetPath.lastIndexOf(sep))
     if (!existsSync(folderPath)) {
+      debug(`${folderPath} did not exist. Creating..`)
       mkdirSync(folderPath)
     }
 
     return writeFileP(assetPath, JSON.stringify(assets))
   })
 
+  beforeAll(async () => {
+    const product = products[1]
+    const productPath = getEntriesPath(product.locale, product._content_type_uid) + '.json'
+    debug(`Product path ${productPath}`)
+    const productFolderPath = productPath.slice(0, productPath.lastIndexOf(sep))
+    if (!existsSync(productFolderPath)) {
+      debug(`${productFolderPath} did not exist. Creating..`)
+      mkdirSync(productFolderPath)
+    }
+    debug(`Product path for es-es: ${productFolderPath}`)
+
+    await writeFileP(productPath, JSON.stringify(products))
+  })
+
   // Populate content type data for this test suite
   beforeAll(() => {
     const contentType = content_types[0]
     const contentTypePath = getContentTypesPath(contentType.locale) + '.json'
-    const contentTypeFolderPathKeys = contentTypePath.split(sep)
-    contentTypeFolderPathKeys.splice(contentTypeFolderPathKeys.length - 1)
-    const folderPath = join.apply(this, contentTypeFolderPathKeys)
+    const folderPath = contentTypePath.slice(0, contentTypePath.lastIndexOf(sep))
     if (!existsSync(folderPath)) {
       mkdirSync(folderPath)
     }
@@ -84,47 +105,39 @@ describe('# Expressional Operators', () => {
   beforeAll(async () => {
     const author = authors[0]
     const authorPath = getEntriesPath(author.locale, author._content_type_uid) + '.json'
-    const authorFolderPathKeys = authorPath.split(sep)
-    authorFolderPathKeys.splice(authorFolderPathKeys.length - 1)
-    const assetFolderPath = join.apply(this, authorFolderPathKeys)
-    if (!existsSync(assetFolderPath)) {
-      mkdirSync(assetFolderPath)
+    const authorFolderPath = authorPath.slice(0, authorPath.lastIndexOf(sep))
+    if (!existsSync(authorFolderPath)) {
+      mkdirSync(authorFolderPath)
     }
 
     await writeFileP(authorPath, JSON.stringify(authors))
 
     const blog = blogs[0]
     const blogPath = getEntriesPath(blog.locale, blog._content_type_uid) + '.json'
-    const blogFolderPathKeys = blogPath.split(sep)
-    blogFolderPathKeys.splice(blogFolderPathKeys.length - 1)
-    const blogFolderPath = join.apply(this, blogFolderPathKeys)
+    const blogFolderPath = blogPath.slice(0, blogPath.lastIndexOf(sep))
     if (!existsSync(blogFolderPath)) {
       mkdirSync(blogFolderPath)
     }
 
-    await writeFileP(blogPath, JSON.stringify(blog))
+    await writeFileP(blogPath, JSON.stringify(blogs))
 
     const category = categories[0]
     const categoryPath = getEntriesPath(category.locale, category._content_type_uid) + '.json'
-    const categoryFolderPathKeys = categoryPath.split(sep)
-    categoryFolderPathKeys.splice(categoryFolderPathKeys.length - 1)
-    const categoryFolderPath = join.apply(this, categoryFolderPathKeys)
+    const categoryFolderPath = categoryPath.slice(0, categoryPath.lastIndexOf(sep))
     if (!existsSync(categoryFolderPath)) {
       mkdirSync(categoryFolderPath)
     }
 
-    await writeFileP(categoryPath, JSON.stringify(category))
+    await writeFileP(categoryPath, JSON.stringify(categories))
 
     const product = products[0]
     const productPath = getEntriesPath(product.locale, product._content_type_uid) + '.json'
-    const productFolderPathKeys = productPath.split(sep)
-    productFolderPathKeys.splice(productFolderPathKeys.length - 1)
-    const productFolderPath = join.apply(this, productFolderPathKeys)
+    const productFolderPath = productPath.slice(0, productPath.lastIndexOf(sep))
     if (!existsSync(productFolderPath)) {
       mkdirSync(productFolderPath)
     }
 
-    await writeFileP(productPath, JSON.stringify(product))
+    await writeFileP(productPath, JSON.stringify(products))
   })
 
   // Destroy the data
