@@ -97,6 +97,7 @@ class Stack {
         // app config
         this.config = config;
         this.contentStore = config.contentStore;
+        this.projections = Object.keys(this.contentStore.projections);
         this.types = config.contentStore.internal.types;
         this.q = this.q || {};
         this.q.query = this.q.query || {};
@@ -357,14 +358,14 @@ class Stack {
      */
     connect(overrides = {}) {
         this.config = lodash_1.merge(this.config, overrides);
-        return new Promise((resolve, reject) => {
-            try {
-                return resolve(this.config);
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
+        return Promise.resolve(this.config);
+        // return new Promise((resolve, reject) => {
+        //   try {
+        //     return resolve(this.config)
+        //   } catch (error) {
+        //     reject(error)
+        //   }
+        // })
     }
     /**
      * @public
@@ -446,6 +447,7 @@ class Stack {
     asset(uid) {
         const stack = new Stack(this.config);
         stack.q.isSingle = true;
+        stack.q.content_type_uid = stack.types.assets;
         if (uid && typeof uid === 'string') {
             stack.q.query[uid] = uid;
         }
@@ -463,6 +465,42 @@ class Stack {
     assets() {
         const stack = new Stack(this.config);
         stack.q.content_type_uid = stack.types.assets;
+        return stack;
+    }
+    /**
+     * @public
+     * @method schemas
+     * @summary
+     *  Query content type schemas
+     * @example
+     * Stack.schemas()
+     *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    schemas() {
+        const stack = new Stack(this.config);
+        stack.q.content_type_uid = stack.types.content_types;
+        return stack;
+    }
+    /**
+     * @public
+     * @method schema
+     * @summary
+     *  Query a single content type's schema
+     * @example
+     * Stack.schema(uid?: string)
+     *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    schema(uid) {
+        const stack = new Stack(this.config);
+        stack.q.isSingle = true;
+        stack.q.content_type_uid = stack.types.content_types;
+        if (uid && typeof uid === 'string') {
+            stack.q.query[uid] = uid;
+        }
         return stack;
     }
     /**
@@ -808,41 +846,7 @@ class Stack {
         if (!query || typeof query !== 'object') {
             throw new Error('Kindly valid parameters for \'.queryReferences()\'!');
         }
-        this.q.queryReferences = query;
-        return this;
-    }
-    /**
-     * @public
-     * @method schemas
-     * @summary
-     *  Query content type schemas
-     * @example
-     * Stack.schemas()
-     *  .find()
-     *
-     * @returns {this} - Returns `stack's` instance
-     */
-    schemas() {
-        this.q.content_type_uid = this.types.content_types;
-        return this;
-    }
-    /**
-     * @public
-     * @method schema
-     * @summary
-     *  Query a single content type's schema
-     * @example
-     * Stack.schema(uid?: string)
-     *  .find()
-     *
-     * @returns {this} - Returns `stack's` instance
-     */
-    schema(uid) {
-        if (typeof uid === 'string') {
-            this.q.query.uid = uid;
-            this.q.isSingle = true;
-        }
-        this.q.content_type_uid = this.types.content_types;
+        this.q.queryOnReferences = query;
         return this;
     }
     /**
@@ -895,18 +899,14 @@ class Stack {
                 const { filePath, key, locale, } = this.preProcess();
                 let data = yield fs_1.readFile(filePath);
                 data = data.filter(sift_1.default(this.q.query));
-                if (data.length === 0 || utils_1.doNothingClause.bind(this)) {
+                if (data.length === 0 || this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
+                    this.types.assets || this.q.countOnly || this.q.excludeAllReferences) {
                     // do nothing
                 }
                 else if (this.q.includeSpecificReferences) {
                     yield this
                         .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
                         .includeSpecificReferences);
-                }
-                else if (this.q.queryOnReferences) {
-                    yield this.bindReferences(data, this.q.content_type_uid, locale);
-                    // need re-writes
-                    data = data.filter(sift_1.default(this.q.queryOnReferences));
                 }
                 else if (this.q.includeAllReferences) {
                     // need re-writes
@@ -915,6 +915,10 @@ class Stack {
                 else {
                     yield this.includeAssetsOnly(data, locale, this.q.content_type_uid);
                 }
+                if (this.q.queryOnReferences) {
+                    data = data.filter(sift_1.default(this.q.queryOnReferences));
+                }
+                // console.error('@before post process', JSON.stringify(data))
                 const { output } = yield this.postProcess(data, key, locale);
                 return resolve(output);
             }
@@ -995,8 +999,11 @@ class Stack {
      */
     postProcess(data, key, locale) {
         return __awaiter(this, void 0, void 0, function* () {
+            // tslint:disable-next-line: variable-name
+            const content_type_uid = (this.q.content_type_uid === this.types.assets) ? 'assets' : (this.q.content_type_uid ===
+                this.types.content_types ? 'content_types' : this.q.content_type_uid);
             const output = {
-                content_type_uid: this.q.content_type_uid,
+                content_type_uid,
                 locale,
             };
             if (this.q.countOnly) {
@@ -1014,8 +1021,18 @@ class Stack {
                 }
             }
             if (this.q.isSingle) {
-                output[key] = (data.length) ? data[0] : null;
-                return output;
+                data = (data.length) ? data[0] : null;
+                if (this.q.only) {
+                    const only = this.q.only.toString().replace(/\./g, '/');
+                    data = json_mask_1.default(data, only);
+                }
+                else if (this.q.except) {
+                    const bukcet = this.q.except.toString().replace(/\./g, '/');
+                    const except = json_mask_1.default(data, bukcet);
+                    data = utils_1.difference(data, except);
+                }
+                output[key] = /* (data.length) ? data[0] : null */ data;
+                return { output };
             }
             // TODO: sorting logic
             if (this.q.skip) {
@@ -1040,7 +1057,7 @@ class Stack {
     includeSpecificReferences(entries, contentTypeUid, locale, include) {
         return __awaiter(this, void 0, void 0, function* () {
             const ctQuery = {
-                _content_type_uid: '_content_types',
+                _content_type_uid: this.types.content_types,
                 uid: contentTypeUid,
             };
             const { paths, // ref. fields in the current content types
@@ -1187,6 +1204,7 @@ class Stack {
             };
         });
     }
+    // tslint:disable-next-line: max-line-length
     fetchPathDetails(data, locale, pathArr, queryBucket, shelf, assetsOnly = false, parent, pos, counter = 0) {
         if (counter === (pathArr.length)) {
             if (data && typeof data === 'object') {
@@ -1268,16 +1286,24 @@ class Stack {
         // since we've reached last of the paths, return!
         return;
     }
+    // tslint:disable-next-line: max-line-length
     fetchDocuments(query, locale, contentTypeUid, paths, include, queries, result, bookRack, includeAll = false) {
         return __awaiter(this, void 0, void 0, function* () {
             let contents;
-            if (contentTypeUid === '_assets') {
+            if (contentTypeUid === this.types.assets) {
                 contents = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
             }
             else {
                 contents = yield fs_1.readFile(utils_1.getEntriesPath(locale, contentTypeUid) + '.json');
             }
             result.docs = result.docs.concat(contents.filter(sift_1.default(query)));
+            result.docs.forEach((doc) => {
+                this.projections.forEach((key) => {
+                    if (doc.hasOwnProperty(key)) {
+                        delete doc[key];
+                    }
+                });
+            });
             if (result.length === 0) {
                 return;
             }
@@ -1365,6 +1391,7 @@ class Stack {
             return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList);
         });
     }
+    // tslint:disable-next-line: max-line-length
     includeAllReferencesIteration(oldEntryQueries, oldCtQueries, locale, oldObjectPointerList, depth = 0) {
         return __awaiter(this, void 0, void 0, function* () {
             if (depth > this.q.referenceDepth || oldObjectPointerList.length === 0 || oldCtQueries.$or.length === 0) {

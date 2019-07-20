@@ -2,7 +2,6 @@
  * @description Test contentstack-mongodb-sdk basic methods
  */
 
-import { cloneDeep } from 'lodash'
 import { Contentstack } from '../src'
 import { config } from './config'
 import { assets } from './data/assets'
@@ -10,27 +9,18 @@ import { entries as authors } from './data/author'
 import { entries as blogs } from './data/blog'
 import { entries as categories } from './data/category'
 import { content_types } from './data/content_types'
+import { entries as products } from './data/products'
+import { destroy, init, populateAssets, populateContentTypes, pupulateEntries } from './utils'
 
-const scriptConfig = cloneDeep(config)
-const collNameConfig: any = scriptConfig.contentStore.collection
-collNameConfig.asset = 'contents.sorting'
-collNameConfig.entry = 'contents.sorting'
-collNameConfig.schema = 'content_types.sorting'
+let Stack
+let debug
+let scriptConfig
 
-const Stack = Contentstack.Stack(scriptConfig)
-const collection = cloneDeep(collNameConfig)
-
-collection.asset = `en-us.${collNameConfig.asset}`
-collection.entry = `en-us.${collNameConfig.entry}`
-collection.schema = `en-us.${collNameConfig.schema}`
-
-let db
-
-const checkEntries = (result: any) => {
+const checkEntries = (result: any, locale: string = 'en-us') => {
   expect(result).toHaveProperty('entries')
   expect(result).toHaveProperty('locale')
   expect(result).toHaveProperty('content_type_uid')
-  expect(result.locale).toEqual('en-us')
+  expect(result.locale).toEqual(locale)
   expect(result.entries instanceof Array).toBeTruthy()
   result.entries.forEach((item) => {
     expect(item).not.toHaveProperty('_version')
@@ -41,38 +31,39 @@ const checkEntries = (result: any) => {
 }
 
 describe('# Sorting', () => {
-
+  // Connect to DB
   beforeAll(() => {
-    return Stack.connect().then((dbInstance) => {
-      db = dbInstance
-    })
+    const output = init(Contentstack, config, 'sorting')
+    debug = output.debug
+    Stack = output.Stack
+    scriptConfig = output.scriptConfig
   })
 
-
-  beforeAll(() => {
-    return Stack.connect().then((dbInstance) => {
-      db = dbInstance
-
-      return
-    })
-  })
-
+  // Populate assets data for this test suite
   beforeAll(async () => {
-    await db.collection(collection.entry).insertMany(authors)
-    await db.collection(collection.entry).insertMany(blogs)
-    await db.collection(collection.entry).insertMany(categories)
-    await db.collection(collection.asset).insertMany(assets)
-    await db.collection(collection.schema).insertMany(content_types)
-
-    return
+    return await populateAssets(scriptConfig, debug, assets)
   })
 
-  afterAll(async () => {
-    await db.collection(collection.entry).drop()
-    // await db.collection(collection.asset).drop()
-    await db.collection(collection.schema).drop()
+  // Populate content type data for this test suite
+  beforeAll(async () => {
+    return await populateContentTypes(scriptConfig, debug, content_types)
+  })
 
-    return Stack.close()
+  // Populate entries data for this test suite
+  beforeAll(async () => {
+    // Authors
+    await pupulateEntries(scriptConfig, debug, authors)
+    // Blogs
+    await pupulateEntries(scriptConfig, debug, blogs)
+    // Categories
+    await pupulateEntries(scriptConfig, debug, categories)
+    // Products
+    await pupulateEntries(scriptConfig, debug, products)
+  })
+
+  // Destroy populated data
+  afterAll(() => {
+    destroy(scriptConfig)
   })
 
   expect.extend({

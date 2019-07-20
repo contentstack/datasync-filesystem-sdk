@@ -29,6 +29,6 @@ exports.defaultConfig = {
             created_at: 0,
             updated_at: 0,
         },
-        referenceDepth: 4,
+        referenceDepth: 2,
     },
 };
