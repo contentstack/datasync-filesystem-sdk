@@ -25,7 +25,7 @@ const utils_1 = require("./utils");
 const extend = {
     compare(type) {
         return function (key, value) {
-            if (key && value && typeof key === 'string' && typeof value !== 'undefined') {
+            if (typeof key === 'string' && typeof value !== 'undefined') {
                 this.q.query = this.q.query || {};
                 this.q.query[key] = this.q.query[key] || {};
                 this.q.query[key][type] = value;
@@ -37,7 +37,7 @@ const extend = {
     contained(bool) {
         const type = (bool) ? '$in' : '$nin';
         return function (key, value) {
-            if (key && value && typeof key === 'string' && Array.isArray(value)) {
+            if (typeof key === 'string' && typeof value === 'object' && Array.isArray(value)) {
                 this.q.query = this.q.query || {};
                 this.q.query[key] = this.q.query[key] || {};
                 this.q.query[key][type] = this.q.query[key][type] || [];
@@ -60,11 +60,9 @@ const extend = {
     },
     // TODO
     logical(type) {
-        return function () {
-            this.q.logical = this.q.logical || {};
-            this.q.logical[type] = this.q.logical[type] || {};
-            this.q.logical[type] = this.q.query;
-            delete this.q.query;
+        return function (query) {
+            this.q.query = this.q.query || {};
+            this.q.query[type] = query;
             return this;
         };
     },
@@ -611,7 +609,9 @@ class Stack {
      */
     tags(values) {
         if (values && typeof values === 'object' && values instanceof Array) {
-            this.q.query.$tags = values;
+            this.q.query.tags = {
+                $in: values
+            };
             return this;
         }
         throw new Error('Kindly provide valid parameters for \'.tags()\'');
@@ -628,7 +628,7 @@ class Stack {
      * @returns {this} - Returns `stack's` instance
      */
     includeCount() {
-        this.q.include_count = true;
+        this.q.includeCount = true;
         return this;
     }
     /**
@@ -821,7 +821,7 @@ class Stack {
         if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
             this.q.except = [];
             const keys = Object.keys(this.contentStore.projections);
-            this.q.except = lodash_1.merge(keys, this.q.except);
+            this.q.except = keys.concat(fields);
             return this;
         }
         throw new Error('Kindly provide valid parameters for .except()!');
@@ -1019,6 +1019,9 @@ class Stack {
                         break;
                     }
                 }
+            }
+            if (this.q.includeCount) {
+                output.count = data.length;
             }
             if (this.q.isSingle) {
                 data = (data.length) ? data[0] : null;
