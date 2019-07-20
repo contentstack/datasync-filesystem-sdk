@@ -1,13 +1,6 @@
-/*!
- * Contentstack DataSync Filesystem SDK.
- * Enables querying on contents saved via @contentstack/datasync-content-store-filesystem
- * Copyright (c) Contentstack LLC
- * MIT Licensed
- */
-
-export const defaultConfig = {
+export const config = {
   contentStore: {
-    baseDir: './_contents',
+    baseDir: './_testing_',
     internal: {
       locale: '/locales.json',
       types: {
@@ -30,4 +23,14 @@ export const defaultConfig = {
     },
     referenceDepth: 4,
   },
+  locales: [
+    {
+      code: 'en-us',
+      relative_url_prefix: '/',
+    },
+    {
+      code: 'es-es',
+      relative_url_prefix: '/es/',
+    },
+  ],
 }

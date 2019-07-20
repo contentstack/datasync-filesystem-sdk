@@ -20,15 +20,11 @@ export declare const defaultConfig: {
             entries: string;
         };
         projections: {
-            assets: {
-                _content_type_uid: number;
-            };
-            content_types: {
-                _content_type_uid: number;
-            };
-            entries: {
-                _content_type_uid: number;
-            };
+            _content_type_uid: number;
+            _version: number;
+            created_at: number;
+            updated_at: number;
         };
+        referenceDepth: number;
     };
 };
