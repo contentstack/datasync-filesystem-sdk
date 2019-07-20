@@ -38,4 +38,5 @@ export declare const segregateQueries: (queries: any) => {
     aggQueries: IContentTypes;
     contentTypes: any[];
 };
+export declare const doNothingClause: () => boolean;
 export {};

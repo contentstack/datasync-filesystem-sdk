@@ -19,7 +19,6 @@
         "src/types/*"
       ]
     },
-
     "typeRoots": [
       "node_modules/@types"
     ],
@@ -32,5 +31,5 @@
     "skipLibCheck": true,
     "lib": ["es2015"],
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
 }
