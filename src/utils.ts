@@ -197,6 +197,7 @@ export const segregateQueries = (queries) => {
 export const doNothingClause = () => {
   if (this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
           this.types.assets || this.q.countOnly || this.q.excludeAllReferences ) {
+
             return true
           }
 
