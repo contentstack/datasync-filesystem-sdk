@@ -21,7 +21,7 @@ export const config = {
       created_at: 0,
       updated_at: 0,
     },
-    referenceDepth: 4,
+    referenceDepth: 1,
   },
   locales: [
     {

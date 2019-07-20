@@ -16,7 +16,7 @@ import {
 } from './fs'
 import {
   difference,
-  doNothingClause,
+  // doNothingClause,
   getAssetsPath,
   getContentTypesPath,
   getEntriesPath,
@@ -25,8 +25,8 @@ import {
 
 interface IShelf {
   path: string,
-    position: string,
-    uid: string,
+  position: string,
+  uid: string,
 }
 
 interface IQuery {
@@ -52,7 +52,6 @@ const extend = {
         return this
       }
       throw new Error(`Kindly provide valid parameters for ${type}`)
-
     }
   },
   contained(bool) {
@@ -115,6 +114,7 @@ const extend = {
     }
   },
 }
+
 /**
  * @summary
  *  Expose SDK query methods on Stack
@@ -125,29 +125,31 @@ export class Stack {
   public config: any
   public readonly contentStore: any
   public readonly types: any
-  public q: any
-  public lessThan: (key: string, value: any) => Stack
-  public lessThanOrEqualTo: (key: string, value: any) => Stack
-  public greaterThan: (key: string, value: any) => any
-  public greaterThanOrEqualTo: (key: string, value: any) => any
-  public notEqualTo: (key: string, value: any) => any
-  public containedIn: (key: string, value: any) => any
-  public notContainedIn: (key: string, value: any) => any
-  public exists: (key: string) => any
-  public notExists: (key: string) => any
-  public ascending: (key: string) => any
-  public descending: (key: string) => any
-  public skip: (value: any) => any
-  public limit: (value: any) => any
-  public or: (query: any) => Stack
-  public nor: (query: any) => Stack
-  public not: (query: any) => Stack
-  public and: (query: any) => Stack
+  public readonly projections: string[]
+  public readonly q: any
+  public readonly lessThan: (key: string, value: any) => Stack
+  public readonly lessThanOrEqualTo: (key: string, value: any) => Stack
+  public readonly greaterThan: (key: string, value: any) => Stack
+  public readonly greaterThanOrEqualTo: (key: string, value: any) => Stack
+  public readonly notEqualTo: (key: string, value: any) => Stack
+  public readonly containedIn: (key: string, value: any) => Stack
+  public readonly notContainedIn: (key: string, value: any) => Stack
+  public readonly exists: (key: string) => Stack
+  public readonly notExists: (key: string) => Stack
+  public readonly ascending: (key: string) => Stack
+  public readonly descending: (key: string) => Stack
+  public readonly skip: (value: any) => Stack
+  public readonly limit: (value: any) => Stack
+  public readonly or: (query: any) => Stack
+  public readonly nor: (query: any) => Stack
+  public readonly not: (query: any) => Stack
+  public readonly and: (query: any) => Stack
 
   constructor(config) {
     // app config
     this.config = config
     this.contentStore = config.contentStore
+    this.projections = Object.keys(this.contentStore.projections)
     this.types = config.contentStore.internal.types
     this.q = this.q || {}
     this.q.query = this.q.query || {}
@@ -525,6 +527,7 @@ export class Stack {
   public asset(uid ? ) {
     const stack = new Stack(this.config)
     stack.q.isSingle = true
+    stack.q.content_type_uid = stack.types.assets
     if (uid && typeof uid === 'string') {
       stack.q.query[uid] = uid
     }
@@ -547,6 +550,48 @@ export class Stack {
 
     return stack
   }
+
+
+  /**
+   * @public
+   * @method schemas
+   * @summary
+   *  Query content type schemas
+   * @example
+   * Stack.schemas()
+   *  .find()
+   *
+   * @returns {this} - Returns `stack's` instance
+   */
+  public schemas() {
+    const stack = new Stack(this.config)
+    stack.q.content_type_uid = stack.types.content_types
+
+    return stack
+  }
+
+  /**
+   * @public
+   * @method schema
+   * @summary
+   *  Query a single content type's schema
+   * @example
+   * Stack.schema(uid?: string)
+   *  .find()
+   *
+   * @returns {this} - Returns `stack's` instance
+   */
+  public schema(uid?: string) {
+    const stack = new Stack(this.config)
+    stack.q.isSingle = true
+    stack.q.content_type_uid = stack.types.content_types
+    if (uid && typeof uid === 'string') {
+      stack.q.query[uid] = uid
+    }
+
+    return stack
+  }
+
 
   /**
    * @public
@@ -921,45 +966,7 @@ export class Stack {
     if (!query || typeof query !== 'object') {
       throw new Error('Kindly valid parameters for \'.queryReferences()\'!')
     }
-    this.q.queryReferences = query
-
-    return this
-  }
-
-  /**
-   * @public
-   * @method schemas
-   * @summary
-   *  Query content type schemas
-   * @example
-   * Stack.schemas()
-   *  .find()
-   *
-   * @returns {this} - Returns `stack's` instance
-   */
-  public schemas() {
-    this.q.content_type_uid = this.types.content_types
-
-    return this
-  }
-
-  /**
-   * @public
-   * @method schema
-   * @summary
-   *  Query a single content type's schema
-   * @example
-   * Stack.schema(uid?: string)
-   *  .find()
-   *
-   * @returns {this} - Returns `stack's` instance
-   */
-  public schema(uid?: string) {
-    if (typeof uid === 'string') {
-      this.q.query.uid = uid
-      this.q.isSingle = true
-    }
-    this.q.content_type_uid = this.types.content_types
+    this.q.queryOnReferences = query
 
     return this
   }
@@ -1021,23 +1028,26 @@ export class Stack {
         let data: any[] = await readFile(filePath)
         data = data.filter(sift(this.q.query))
 
-        if (data.length === 0 || doNothingClause.bind(this)) {
+        if (data.length === 0 || this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
+          this.types.assets || this.q.countOnly || this.q.excludeAllReferences) {
           // do nothing
         } else if (this.q.includeSpecificReferences) {
           await this
             .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
               .includeSpecificReferences)
-        } else if (this.q.queryOnReferences) {
-          await this.bindReferences(data, this.q.content_type_uid, locale)
-          // need re-writes
-          data = data.filter(sift(this.q.queryOnReferences))
         } else if (this.q.includeAllReferences) {
           // need re-writes
           await this.bindReferences(data, this.q.content_type_uid, locale)
         } else {
+
           await this.includeAssetsOnly(data, locale, this.q.content_type_uid)
         }
 
+        if (this.q.queryOnReferences) {
+          data = data.filter(sift(this.q.queryOnReferences))
+        }
+
+        // console.error('@before post process', JSON.stringify(data))
         const { output } = await this.postProcess(data, key, locale)
 
         return resolve(output)
@@ -1045,7 +1055,6 @@ export class Stack {
         return reject(error)
       }
     })
-
   }
 
   /**
@@ -1097,7 +1106,6 @@ export class Stack {
     }
 
     if (!existsSync(filePath)) {
-
       throw new Error(`Queried content type ${this.q.content_type_uid} was not found at ${filePath}!`)
     }
 
@@ -1127,8 +1135,11 @@ export class Stack {
    * @returns {object} - Returns the formatted input
    */
   private async postProcess(data, key, locale) {
+    // tslint:disable-next-line: variable-name
+    const content_type_uid = (this.q.content_type_uid === this.types.assets) ? 'assets' : (this.q.content_type_uid ===
+      this.types.content_types ? 'content_types' : this.q.content_type_uid)
     const output: any = {
-      content_type_uid: this.q.content_type_uid,
+      content_type_uid,
       locale,
     }
     if (this.q.countOnly) {
@@ -1149,9 +1160,18 @@ export class Stack {
     }
 
     if (this.q.isSingle) {
-      output[key] = (data.length) ? data[0] : null
+      data = (data.length) ? data[0] : null
+      if (this.q.only) {
+        const only = this.q.only.toString().replace(/\./g, '/')
+        data = mask(data, only)
+      } else if (this.q.except) {
+        const bukcet = this.q.except.toString().replace(/\./g, '/')
+        const except = mask(data, bukcet)
+        data = difference(data, except)
+      }
+      output[key] = /* (data.length) ? data[0] : null */ data
 
-      return output
+      return { output }
     }
 
     // TODO: sorting logic
@@ -1180,7 +1200,7 @@ export class Stack {
 
   private async includeSpecificReferences(entries: any[], contentTypeUid: string, locale: string, include: string[]) {
     const ctQuery = {
-      _content_type_uid: '_content_types',
+      _content_type_uid: this.types.content_types,
       uid: contentTypeUid,
     }
 
@@ -1303,9 +1323,9 @@ export class Stack {
     let entryReferences = {}
 
     schemas.forEach((schema) => {
-   // Entry references
+      // Entry references
       entryReferences = merge(entryReferences, schema._references)
-   // tslint:disable-next-line: forin
+      // tslint:disable-next-line: forin
       for (const path in schema._assets) {
         paths.push(path)
       }
@@ -1314,12 +1334,12 @@ export class Stack {
     for (let i = 0, j = currentInclude.length; i < j; i++) {
       const includePath = currentInclude[i]
 
-   // tslint:disable-next-line: forin
+      // tslint:disable-next-line: forin
       for (const path in entryReferences) {
         const idx = includePath.indexOf(path)
         if (~idx) {
           let subPath
-       // Its the complete path!! Hurrah!
+          // Its the complete path!! Hurrah!
           if (path.length !== includePath.length) {
             subPath = includePath.slice(0, path.length)
             pendingPath.push(includePath.slice(path.length + 1))
@@ -1351,17 +1371,17 @@ export class Stack {
     schemaList.$or = schemasReferred
 
     return {
-   // path, that's possible in the current schema
+      // path, that's possible in the current schema
       paths,
-   // paths, that's yet to be traversed
+      // paths, that's yet to be traversed
       pendingPath,
-   // schemas, to be loaded!
+      // schemas, to be loaded!
       schemaList,
     }
   }
 
-  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQuery, shelf,
-                           assetsOnly = false, parent, pos, counter = 0) {
+  // tslint:disable-next-line: max-line-length
+  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQuery, shelf, assetsOnly = false, parent, pos, counter = 0) {
     if (counter === (pathArr.length)) {
       if (data && typeof data === 'object') {
         if (data instanceof Array && data.length) {
@@ -1445,16 +1465,25 @@ export class Stack {
     return
   }
 
-  private async fetchDocuments(query: any, locale: string, contentTypeUid: string, paths: string[], include: string[],
-      queries: IQuery, result: any, bookRack: IShelf, includeAll: boolean = false) {
+  // tslint:disable-next-line: max-line-length
+  private async fetchDocuments(query: any, locale: string, contentTypeUid: string, paths: string[], include: string[], queries: IQuery, result: any, bookRack: IShelf, includeAll: boolean = false) {
     let contents: any[]
-    if (contentTypeUid === '_assets') {
+    if (contentTypeUid === this.types.assets) {
       contents = await readFile(getAssetsPath(locale) + '.json')
     } else {
       contents = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
     }
 
     result.docs = result.docs.concat(contents.filter(sift(query)))
+
+    result.docs.forEach((doc) => {
+      this.projections.forEach((key) => {
+        if (doc.hasOwnProperty(key)) {
+          delete doc[key]
+        }
+      })
+    })
+
     if (result.length === 0) {
       return
     }
@@ -1464,7 +1493,7 @@ export class Stack {
         this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, false, result, 0)
       })
     } else {
-   // if there are no includes, only fetch assets
+      // if there are no includes, only fetch assets
       paths.forEach((path) => {
         this.fetchPathDetails(result.docs, locale, path.split('.'), queries, bookRack, true, result, 0)
       })
@@ -1555,8 +1584,8 @@ export class Stack {
     return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList)
   }
 
-  private async includeAllReferencesIteration(oldEntryQueries: IQuery, oldCtQueries: IQuery, locale:
-    string, oldObjectPointerList: IShelf[], depth = 0) {
+  // tslint:disable-next-line: max-line-length
+  private async includeAllReferencesIteration(oldEntryQueries: IQuery, oldCtQueries: IQuery, locale: string, oldObjectPointerList: IShelf[], depth = 0) {
     if (depth > this.q.referenceDepth || oldObjectPointerList.length === 0 || oldCtQueries.$or.length === 0) {
       return
     }
