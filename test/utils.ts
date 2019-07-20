@@ -54,8 +54,8 @@ export const populateContentTypes = async (_scriptConfig, debug, content_types) 
 }
 
 // tslint:disable-next-line: variable-name
-export const pupulateEntries = async (_scriptConfig, debug, entries) => {
-  const entry = entries[0]
+export const pupulateEntries = async (_scriptConfig, debug, entries, sample?) => {
+  const entry = sample || entries[0]
   const entryPath = getEntriesPath(entry.locale, entry._content_type_uid) + '.json'
   debug(`${entry._content_type_uid.toUpperCase()}: entry path is ${entryPath}`)
   const entryFolderPath = entryPath.slice(0, entryPath.lastIndexOf(sep))
