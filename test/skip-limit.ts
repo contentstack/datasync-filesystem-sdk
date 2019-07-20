@@ -1,5 +1,5 @@
 /**
- * @description Test contentstack-mongodb-sdk basic methods
+ * @description Test contentstack-filesystem-sdk basic methods
  */
 
 import { Contentstack } from '../src'
@@ -32,7 +32,7 @@ const checkEntries = (result: any, locale: string = 'en-us') => {
 
 let tempVariable
 
-describe('# Conditional Operators', () => {
+describe('# Skip And Limits', () => {
   // Connect to DB
   beforeAll(() => {
     const output = init(Contentstack, config, 'skip-limit')

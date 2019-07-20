@@ -1,5 +1,5 @@
 /**
- * @description Test contentstack-mongodb-sdk basic methods
+ * @description Test contentstack-filesystem-sdk basic methods
  */
 
 import { Contentstack } from '../src'
@@ -10,7 +10,7 @@ import { entries as blogs } from './data/blog'
 import { entries as categories } from './data/category'
 import { content_types } from './data/content_types'
 import { entries as products } from './data/products'
-import { /* destroy, */ init, populateAssets, populateContentTypes, pupulateEntries } from './utils'
+import { destroy, init, populateAssets, populateContentTypes, pupulateEntries } from './utils'
 
 let Stack
 let debug
@@ -63,7 +63,7 @@ describe('# References', () => {
 
   // Destroy populated data
   afterAll(() => {
-    // destroy(scriptConfig)
+    destroy(scriptConfig)
   })
 
   describe('# references-basic', () => {
