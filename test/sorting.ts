@@ -1,5 +1,5 @@
 /**
- * @description Test contentstack-mongodb-sdk basic methods
+ * @description Test contentstack-filesystem-sdk basic methods
  */
 
 import { Contentstack } from '../src'
