@@ -15,10 +15,28 @@ Contentstack is a headless CMS with an API-first approach. It is a CMS that deve
 
 |Property|Type|Defaults|Description|
 |--|--|--|--|
-|contentStore.baseDir|string|./_contents|**Optional** Base directory of the folder where data is stored.|
-|contentStore.locale|string|'en-us'|**Optional** Default locale that'd be considered, if the .language() isn't specified in queries|
-|contentStore.referenceDepth|number|2|**Optional** The default nested-reference-field depth that'd be considered when calling .includeReferences(). This can be overridden by passing a numerical argument to .includeReferences(4)|
-|contentStore.projections|object|{_content_type_uid: 0}|**Optional** Keys that by default would be removed from results. Pass `key: 0` to remove, `key: 1` to override the existing..|
+|baseDir|string|./_contents|**Optional** Base directory of the folder where data is stored.|
+|locale|string|'en-us'|**Optional** Default locale that'd be considered, if the .language() isn't specified in queries|
+|referenceDepth|number|2|**Optional** The default nested-reference-field depth that'd be considered when calling .includeReferences(). This can be overridden by passing a numerical argument to .includeReferences(4)|
+|projections|object|{_content_type_uid: 0}|**Optional** Keys that by default would be removed from results. Pass `key: 0` to remove, `key: 1` to override the existing..|
+
+### Config Overview
+
+Here's an overview of the SDK's configurable properties
+
+```ts
+{
+  contentStore: {
+    baseDir: './_contents',
+    defaultSortingField: 'updated_at',
+    locale: 'en-us',
+    projections: {
+      _content_type_uid: 0,
+    },
+    referenceDepth: 2,
+  },
+}
+```
 
 ### Sample SDK Query
 
