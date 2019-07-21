@@ -23,10 +23,7 @@ const checkEntries = (result: any, locale: string = 'en-us') => {
   expect(result.locale).toEqual(locale)
   expect(result.entries instanceof Array).toBeTruthy()
   result.entries.forEach((item) => {
-    expect(item).not.toHaveProperty('_version')
     expect(item).not.toHaveProperty('_content_type_uid')
-    expect(item).not.toHaveProperty('created_at')
-    expect(item).not.toHaveProperty('updated_at')
   })
 }
 
@@ -149,30 +146,9 @@ describe('# Sorting', () => {
   })
 
   describe('without field', () => {
-    test('ascending', () => {
-      return Stack.contentType('blog')
-        .entries()
-        .ascending()
-        .find()
-        .then((result: any) => {
-          checkEntries(result)
-          expect(result.content_type_uid).toEqual('blog')
-          expect(result.entries).toHaveLength(5)
-          result.entries.forEach((entry, index) => {
-            if (index === (result.entries.length - 1)) {
-              index -= 1
-            }
-            (expect(entry.published_at) as any).compareValue(result.entries[index + 1].published_at, false)
-          })
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-
     test('descending', () => {
       return Stack.contentType('blog')
         .entries()
-        .descending()
         .find()
         .then((result: any) => {
           checkEntries(result)
@@ -182,95 +158,8 @@ describe('# Sorting', () => {
             if (index === (result.entries.length - 1)) {
               index -= 1
             }
-            (expect(entry.published_at) as any).compareValue(result.entries[index + 1].published_at, true)
-          })
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-  })
 
-  describe('combination - without fields', () => {
-    test('.ascending() + .descending()', () => {
-      return Stack.contentType('blog')
-        .entries()
-        .ascending()
-        .descending()
-        .find()
-        .then((result: any) => {
-          checkEntries(result)
-          expect(result.content_type_uid).toEqual('blog')
-          expect(result.entries).toHaveLength(5)
-          result.entries.forEach((entry, index) => {
-            if (index === (result.entries.length - 1)) {
-              index -= 1
-            }
-            (expect(entry.published_at) as any).compareValue(result.entries[index + 1].published_at, true)
-          })
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-
-    test('.descending() + .ascending()', () => {
-      return Stack.contentType('blog')
-        .entries()
-        .descending()
-        .ascending()
-        .find()
-        .then((result: any) => {
-          checkEntries(result)
-          expect(result.content_type_uid).toEqual('blog')
-          expect(result.entries).toHaveLength(5)
-          result.entries.forEach((entry, index) => {
-            if (index === (result.entries.length - 1)) {
-              index -= 1
-            }
-            (expect(entry.published_at) as any).compareValue(result.entries[index + 1].published_at, false)
-          })
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-  })
-
-  describe('combination - with fields', () => {
-    test('.ascending() + .descending()', () => {
-      return Stack.contentType('blog')
-        .entries()
-        .ascending('no')
-        .descending('no')
-        .find()
-        .then((result: any) => {
-          checkEntries(result)
-          expect(result.content_type_uid).toEqual('blog')
-          expect(result.entries).toHaveLength(5)
-          result.entries.forEach((entry, index) => {
-            if (index === (result.entries.length - 1)) {
-              index -= 1
-            }
-            (expect(entry.no) as any).compareValue(result.entries[index + 1].no, true)
-          })
-        }).catch((error) => {
-          expect(error).toBeNull()
-        })
-    })
-
-    test('.descending() + .ascending()', () => {
-      return Stack.contentType('blog')
-        .entries()
-        .descending('no')
-        .ascending('no')
-        .find()
-        .then((result: any) => {
-          checkEntries(result)
-          expect(result.content_type_uid).toEqual('blog')
-          expect(result.entries).toHaveLength(5)
-          result.entries.forEach((entry, index) => {
-            if (index === (result.entries.length - 1)) {
-              index -= 1
-            }
-            (expect(entry.no) as any).compareValue(result.entries[index + 1].no, false)
+            (expect(entry.updated_at) as any).compareValue(result.entries[index + 1].updated_at, true)
           })
         }).catch((error) => {
           expect(error).toBeNull()

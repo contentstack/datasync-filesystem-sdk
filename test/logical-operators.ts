@@ -23,10 +23,7 @@ const checkEntries = (result: any, locale: string = 'en-us') => {
   expect(result.locale).toEqual(locale)
   expect(result.entries instanceof Array).toBeTruthy()
   result.entries.forEach((item) => {
-    expect(item).not.toHaveProperty('_version')
     expect(item).not.toHaveProperty('_content_type_uid')
-    expect(item).not.toHaveProperty('created_at')
-    expect(item).not.toHaveProperty('updated_at')
   })
 }
 
