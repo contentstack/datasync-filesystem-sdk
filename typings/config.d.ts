@@ -7,6 +7,7 @@
 export declare const defaultConfig: {
     contentStore: {
         baseDir: string;
+        defaultSortingField: string;
         internal: {
             locale: string;
             types: {
@@ -14,6 +15,7 @@ export declare const defaultConfig: {
                 content_types: string;
             };
         };
+        locale: string;
         patterns: {
             assets: string;
             content_types: string;
@@ -21,9 +23,6 @@ export declare const defaultConfig: {
         };
         projections: {
             _content_type_uid: number;
-            _version: number;
-            created_at: number;
-            updated_at: number;
         };
         referenceDepth: number;
     };
