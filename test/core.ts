@@ -23,10 +23,7 @@ const checkEntries = (result: any, locale: string = 'en-us') => {
   expect(result.locale).toEqual(locale)
   expect(result.entries instanceof Array).toBeTruthy()
   result.entries.forEach((item) => {
-    expect(item).not.toHaveProperty('_version')
     expect(item).not.toHaveProperty('_content_type_uid')
-    expect(item).not.toHaveProperty('created_at')
-    expect(item).not.toHaveProperty('updated_at')
   })
 }
 
@@ -38,10 +35,7 @@ const checkAssets = (result: any, locale: string = 'en-us') => {
   expect(result.locale).toEqual(locale)
   expect(result.assets instanceof Array).toBeTruthy()
   result.assets.forEach((item) => {
-    expect(item).not.toHaveProperty('_version')
     expect(item).not.toHaveProperty('_content_type_uid')
-    expect(item).not.toHaveProperty('created_at')
-    expect(item).not.toHaveProperty('updated_at')
   })
 }
 
@@ -118,10 +112,7 @@ describe('# Core', () => {
           expect(result.entries).toHaveLength(2)
           expect(result.entries instanceof Array).toBeTruthy()
           result.entries.forEach((item) => {
-            expect(item).not.toHaveProperty('_version')
             expect(item).not.toHaveProperty('_content_type_uid')
-            expect(item).not.toHaveProperty('created_at')
-            expect(item).not.toHaveProperty('updated_at')
           })
         }).catch((error) => {
           expect(error).toBeNull()
@@ -140,10 +131,7 @@ describe('# Core', () => {
           expect(result.content_type_uid).toEqual('blog')
           expect(result.locale).toEqual('en-us')
           expect(result.entry).toHaveProperty('title')
-          expect(result.entry).not.toHaveProperty('_version')
           expect(result.entry).not.toHaveProperty('content_type_uid')
-          expect(result.entry).not.toHaveProperty('created_at')
-          expect(result.entry).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })
@@ -192,10 +180,7 @@ describe('# Core', () => {
           expect(result.content_type_uid).toEqual('assets')
           expect(result.locale).toEqual('en-us')
           expect(result.asset).toHaveProperty('title')
-          expect(result.asset).not.toHaveProperty('_version')
           expect(result.asset).not.toHaveProperty('_content_type_uid')
-          expect(result.asset).not.toHaveProperty('created_at')
-          expect(result.asset).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })
@@ -284,10 +269,7 @@ describe('# Core', () => {
           expect(result.content_type_uid).toEqual('blog')
           expect(result.locale).toEqual('en-us')
           expect(result.entry).toHaveProperty('title')
-          expect(result.entry).not.toHaveProperty('_version')
           expect(result.entry).not.toHaveProperty('content_type_uid')
-          expect(result.entry).not.toHaveProperty('created_at')
-          expect(result.entry).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })
@@ -306,10 +288,7 @@ describe('# Core', () => {
           expect(result.content_type_uid).toEqual('assets')
           expect(result.locale).toEqual('en-us')
           expect(result.asset).toHaveProperty('title')
-          expect(result.asset).not.toHaveProperty('_version')
           expect(result.asset).not.toHaveProperty('content_type_uid')
-          expect(result.asset).not.toHaveProperty('created_at')
-          expect(result.asset).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })
@@ -328,10 +307,7 @@ describe('# Core', () => {
           expect(result.locale).toEqual('en-us')
           expect(result.content_type_uid).toEqual('content_types')
           expect(result.content_type).toHaveProperty('title')
-          expect(result.content_type).not.toHaveProperty('_version')
           expect(result.content_type).not.toHaveProperty('content_type_uid')
-          expect(result.content_type).not.toHaveProperty('created_at')
-          expect(result.content_type).not.toHaveProperty('updated_at')
         }).catch((error) => {
           expect(error).toBeNull()
         })

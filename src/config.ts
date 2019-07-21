@@ -8,6 +8,7 @@
 export const defaultConfig = {
   contentStore: {
     baseDir: './_contents',
+    defaultSortingField: 'updated_at',
     internal: {
       locale: '/locales.json',
       types: {
@@ -15,6 +16,7 @@ export const defaultConfig = {
         content_types: '_content_types',
       },
     },
+    locale: 'en-us',
     patterns: {
       assets: '/:locale/data/assets',
       content_types: '/:locale/data/content_types',
@@ -24,9 +26,9 @@ export const defaultConfig = {
     // Eval if this is slowing down the response
     projections: {
       _content_type_uid: 0,
-      _version: 0,
-      created_at: 0,
-      updated_at: 0,
+      // _version: 0,
+      // created_at: 0,
+      // updated_at: 0,
     },
     referenceDepth: 2,
   },

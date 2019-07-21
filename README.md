@@ -1,141 +1,134 @@
-
 [![Contentstack](https://www.contentstack.com/docs/static/images/contentstack.png)](https://www.contentstack.com/)
 
-  Contentstack is a headless CMS with an API-first approach. It is a CMS that developers can use to build powerful cross-platform applications in their favorite languages. Build your application frontend, and Contentstack will take care of the rest. [Read More](https://www.contentstack.com/).
+Contentstack is a headless CMS with an API-first approach. It is a CMS that developers can use to build powerful cross-platform applications in their favorite languages. Build your application frontend, and Contentstack will take care of the rest. [Read More](https://www.contentstack.com/).
 
-
-## Contentstack DataSync Javascript Filesystem SDK
+## Contentstack DataSync Filesystem SDK
 
 [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) provides Filesystem SDK to query applications that have locally stored contents in filesystem. Given below is the detailed guide and helpful resources to get started with Filesystem SDK.
 
+### Prerequisite
 
-## Prerequisite
+- nodejs, v8 or higher
+- You should have the data synced through [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
 
-- nodejs, v6 or higher
-- You should have the data synced through [Contentstack
-   DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
+### Configuration
 
-
-## Configuration
-
-|Property|DataType|Default|Description|
+|Property|Type|Defaults|Description|
 |--|--|--|--|
-|baseDir|string|./_contents|**Required.**  file location of stored data|
-|locales|object| |**Required.**  locales to be supported by the SDK. ex: [ { code: 'en-us', ‘relative_url_prefix’:’/’ } ]|
+|contentStore.baseDir|string|./_contents|**Optional** Base directory of the folder where data is stored.|
+|contentStore.locale|string|'en-us'|**Optional** Default locale that'd be considered, if the .language() isn't specified in queries|
+|contentStore.referenceDepth|number|2|**Optional** The default nested-reference-field depth that'd be considered when calling .includeReferences(). This can be overridden by passing a numerical argument to .includeReferences(4)|
+|contentStore.projections|object|{_content_type_uid: 0}|**Optional** Keys that by default would be removed from results. Pass `key: 0` to remove, `key: 1` to override the existing..|
 
+### Sample SDK Query
 
-## Setup and Installation
+Here's a sample SDK query to get started. Learn more on how to query using datasync-filesystem-sdk [here](https://contentstack.github.io/datasync-filesystem-sdk/).
 
-To import the SDK in your project, use the following command:
-```js
-const  Contentstack  =  require('@contentstack/datasync-filesystem-sdk').Contentstack
+```ts
+import { Contentstack } from 'datasync-filesystem-sdk'
+const Stack = Contentstack.Stack(config)
+
+Stack.connect()
+  .then(() => {
+    return Stack.contentType('blog')
+      .entries()
+      .language('en-gb') // Optional. If not provided, defaults to en-us
+      .include(['authors'])
+      .includeCount()
+      .includeContentType()
+      .queryReferences({'authors.firstName': 'R.R. Martin'})
+      .then((result) => {
+        // Your result would be
+        // {
+        //   entries: [...], // All entries, who's first name is R.R. Martin
+        //   content_type_uid: 'blog',
+        //   locale: 'es-es',
+        //   content_type: {...}, // Blog content type's schema
+        //   count: 3, // Total count of blog content type
+        // }
+      })
+  })
+  .catch((error) => {
+    // handle errors..
+  })
 ```
-To initialize the SDK, you'd need to perform the following steps
+> Important: You need to call .connect(), to initiate SDK queries!
 
-1.  Initialize stack instance.
-    
-```js
-const  Stack  = contentstack.Stack(config)
-```  
-
-2.  Call the connect method. The connect method connects the SDK to the database. Call this, before running SDK queries
-    
-```js
-  Stack.connect(config)
-    .then(fnResolve)
-    .catch(fnReject)
-```
-> Important: You need to call this, before running SDK queries!
-
-  
 Once you have initialized the SDK, you can start querying on the filesystem
 
-
-## Querying
+### Querying
 - Notes
   - By default, 'content_type_uid' and 'locale' keys as part of the response.
-  - If `.language()` is not provided, then the 1st language, provided in `config.locales` would be considered.
+  - If `.language()` is not provided, then the 1st language, provided in `config.defaultLocale` would be considered.
   - If querying for a single entry/asset (using `.entry()` OR `.findOne()`), the result will be an object i.e. `{ entry: {} }`, if the entry or asset is not found, `{ entry: null }` will be returned.
   - Querying multiple entries, would return `{ entries: [ {...} ] }`.
+  - By default, all entry responses would include their referred assets. If `.excludeReferences()` is called, no references (including assets) would **not** be returned in the response.
 
+- Query a single entry
+```ts
+// Sample 1. Returns the 1st entry that matches query filters
+Stack.contentType('blog')
+  .entry() // OR .asset()
+  .find()
+  .then((result) => {
+    // Response
+    // result = {
+    //   entry: any | null,
+    //   content_type_uid: string,
+    //   locale: string,
+    // }
+  })
+  .catch(reject)
 
-1. Query a single entry
-
-```js
-  // Sample 1. Returns the 1st entry that matches query filters
-  Stack.contentType('blogs')
-    .entry() // OR .asset()
-    .language('en-us')
-    .find()
-    .then((result) => {
-      // Response
-      // result = {
-      //   entry: {
-      //     title: '' || null
-      //   },
-      //   content_type_uid: '',
-      //   locale: ''
-      // }
-    })
-    .catch(reject)
-
-  // Sample 2. Returns the 1st entry that matches query filters
-  Stack.contentType('blogs')
-    .entries() // for .assets() 
-    .language('en-us')
-    .findOne()
-    .then((result) => {
-      // Response
-      // result = {
-      //   entry: {
-      //     title: '' || null
-      //   },
-      //   content_type_uid: '',
-      //   locale: ''
-      // }
-    })
-    .catch(reject)
+// Sample 2. Returns the 1st entry that matches query filters
+Stack.contentType('blogs')
+  .entries() // for .assets() 
+  .findOne()
+  .then((result) => {
+    // Response
+    // result = {
+    //   entry: any | null,
+    //   content_type_uid: string,
+    //   locale: string,
+    // }
+  })
+  .catch(reject)
 ```
 
-2. Querying a set of entries, assets or content types
-```js
-  Stack.contentType('blogs')
-    .entries() // for .assets() 
-    .includeCount()
-    .find()
-    .then((result) => {
-      // Response
-      // result = {
-      //   entries: [
-      //     {
-      //       title: ''
-      //     }
-      //   ],
-      //   content_type_uid: 'blogs',
-      //   locale: '',
-      //   count: 1
-      // }
-    })
-    .catch(reject)
+- Querying a set of entries, assets or content types
+```ts
+Stack.contentType('blog')
+  .entries() // for .assets() 
+  .includeCount()
+  .find()
+  .then((result) => {
+    // Response
+    // result = {
+    //   entry: any | null,
+    //   content_type_uid: string,
+    //   count: number,
+    //   locale: string,
+    // }
+  })
+  .catch(reject)
 ```
 
 ## Advanced Queries
 
 In order to learn more about advance queries please refer the API documentation, [here](https://contentstack.github.io/datasync-filesystem-sdk/).
-
   
 ## Further Reading
-
--   [Getting started with Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
--   [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/configuration-files-for-contentstack-datasync) doc lists the configuration for different modules
-    
+- [Getting started with Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
+- [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/configuration-files-for-contentstack-datasync) doc lists the configuration for different modules
 
 ## Support and Feature requests
 
-If you have any issues working with the library, please file an issue [here](https://github.com/contentstack/datasync-asset-store-filesystem/issues) at Github.
+If you have any issues working with the library, please file an issue [here](https://github.com/contentstack/datasync-filesystem-sdk/issues) at Github.
 
-You can send us an e-mail at [support@contentstack.com](mailto:support@contentstack.com) if you have any support or feature requests. Our support team is available 24/7 on the intercom. You can always get in touch and give us an opportunity to serve you better!
+You can send us an e-mail at [support@contentstack.com](mailto:support@contentstack.com) if you have any support or feature requests.
+
+Our support team is available 24/7 on the intercom. You can always get in touch and give us an opportunity to serve you better!
 
 ## License
 
-This repository is published under the [MIT license](LICENSE).
+This repository is published under the [MIT license](./LICENSE).
