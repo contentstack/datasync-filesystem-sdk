@@ -23,10 +23,7 @@ const checkEntries = (result: any, locale: string = 'en-us') => {
   expect(result.locale).toEqual(locale)
   expect(result.entries instanceof Array).toBeTruthy()
   result.entries.forEach((item) => {
-    expect(item).not.toHaveProperty('_version')
     expect(item).not.toHaveProperty('_content_type_uid')
-    expect(item).not.toHaveProperty('created_at')
-    expect(item).not.toHaveProperty('updated_at')
   })
 }
 
@@ -143,12 +140,12 @@ describe('# References', () => {
                 entry.authors.forEach((ref) => {
                   expect(ref).toHaveProperty('title')
                   expect(ref).toHaveProperty('uid')
-                  expect(ref).not.toHaveProperty('_version')
+                  expect(ref).toHaveProperty('_version')
                 })
               } else {
                 expect(entry.authors).toHaveProperty('title')
                 expect(entry.authors).toHaveProperty('uid')
-                expect(entry.authors).not.toHaveProperty('_version')
+                expect(entry.authors).toHaveProperty('_version')
               }
             }
           })

@@ -112,21 +112,19 @@ export declare class Stack {
     /**
      * @public
      * @method assets
-     * @summary
-     * To get assets
+     * @summary Get assets details
      * @example
      * Stack.assets().find()
+     *
      * @returns {this} - Returns `stack's` instance
      */
     assets(): Stack;
     /**
      * @public
      * @method schemas
-     * @summary
-     *  Query content type schemas
+     * @summary Get content type schemas
      * @example
-     * Stack.schemas()
-     *  .find()
+     * Stack.schemas().find()
      *
      * @returns {this} - Returns `stack's` instance
      */
@@ -134,11 +132,10 @@ export declare class Stack {
     /**
      * @public
      * @method schema
-     * @summary
-     *  Query a single content type's schema
+     * @summary Get a single content type's schema
+     * @param {String} uid - Optional 'uid' of the content type, who's schema is to be fetched
      * @example
-     * Stack.schema(uid?: string)
-     *  .find()
+     * Stack.schema(uid?: string).find()
      *
      * @returns {this} - Returns `stack's` instance
      */
@@ -148,9 +145,9 @@ export declare class Stack {
      * @method equalTo
      * @description Retrieve entries in which a specific field satisfies the value provided
      * @param {String} key - uid of the field
-     * @param {*} value - value used to match or compare
+     * @param {Any} value - value used to match or compare
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
+     * let blogQuery = Stack.contentType('example').entries()
      * let data = blogQuery.equalTo('title','Demo').find()
      * data.then((result) => {
      *   // ‘result’ contains the list of entries where value of
@@ -158,28 +155,28 @@ export declare class Stack {
      * }).catch((error) => {
      *   // error trace
      * })
+     *
      * @returns {this} - Returns `stack's` instance
      */
     equalTo(key: any, value: any): this;
     /**
      * @public
      * @method where
-     * @summary
-     * Pass JS expression or a full function to the query system
-     * @description
-     * Evaluate js expressions
+     * @summary Pass JS expression or a full function to the query system
+     * @description Evaluate js expressions
      * @param field
      * @param value
-     * @returns {this} - Returns `stack's` instance
+     *
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.where("this.title === 'Amazon_Echo_Black'").find()
-     * data.then((result) => {
+     * const query = Stack.contentType('example').entries().where("this.title === 'Amazon_Echo_Black'").find()
+     * query.then((result) => {
      *   // ‘result’ contains the list of entries where value of
      *   //‘title’ is equal to ‘Demo’.
      * }).catch(error) => {
      *   // error trace
      * })
+     *
+     * @returns {this} - Returns `stack's` instance
      */
     where(expr: any): this;
     /**
@@ -187,9 +184,8 @@ export declare class Stack {
      * @method count
      * @description Returns the total number of entries
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.count().find()
-     * data.then((result) => {
+     * const query = Stack.contentType('example').entries().count().find()
+     * query.then((result) => {
      *   // returns 'example' content type's entries
      * }).catch(error) => {
      *   // error trace
@@ -205,23 +201,22 @@ export declare class Stack {
      * @returns {this} - Returns `stack's` instance
      * @example
      * Stack.contentType('example').entries().query({"authors.name": "John Doe"}).find()
-     * .then((result) => {
+     *  .then((result) => {
      *    // returns entries, who's reference author's name equals "John Doe"
-     * })
-     * .catch((error) => {
+     *  })
+     *  .catch((error) => {
      *    // handle query errors
-     * })
+     *  })
      */
     query(userQuery: any): this;
     /**
      * @public
      * @method tags
      * @description Retrieves entries based on the provided tags
-     * @param {Array} values - tags
+     * @param {Array} values - Entries/Assets that have the specified tags
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.tags(['technology', 'business']).find()
-     * data.then((result) => {
+     * const query = Stack.contentType('example').entries().tags(['technology', 'business']).find()
+     * query.then((result) => {
      *   // ‘result’ contains list of entries which have tags "’technology’" and ‘"business’".
      * }).catch((error) => {
      *   // error trace
@@ -245,11 +240,13 @@ export declare class Stack {
      * @public
      * @method language
      * @description to retrive the result bsed on the specific locale.
+     * @param {String} languageCode - Language to query on
      * @example
      * Stack.contentType('example')
      *  .entries()
      *  .language('fr-fr')
      *  .find()
+     *
      * @returns {this} - Returns `stack's` instance
      */
     language(languageCode: any): this;
@@ -259,12 +256,14 @@ export declare class Stack {
      * @summary
      * Includes references of provided fields of the entries being scanned
      * @param {*} key - uid/uid's of the field
-     * @returns {this} - Returns `stack's` instance
+     *
      * @example
      * Stack.contentType('example')
      *  .entries()
      *  .include(['authors','categories'])
      *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
      */
     include(fields: any): this;
     /**
@@ -273,12 +272,14 @@ export declare class Stack {
      * @summary
      *  Includes all references of the entries being scanned
      * @param {number} depth - Optional parameter. Use this to override the default reference depth/level i.e. 4
-     * @returns {this} - Returns `stack's` instance
+     *
      * @example
      * Stack.contentType('example')
      *  .entries()
      *  .includeReferences()
      *  .find()
+     *
+     * @returns {this} - Returns `stack's` instance
      */
     includeReferences(depth?: number): this;
     /**
@@ -286,7 +287,7 @@ export declare class Stack {
      * @method excludeReferences
      * @summary
      *  Excludes all references of the entries being scanned
-     * @returns {this} - Returns `stack's` instance
+     *
      * @example
      * Stack.contentType('example').entries().excludeReferences().find()
      * .then((result) => {
@@ -294,6 +295,8 @@ export declare class Stack {
      *  }).catch((error) => {
      *    // error trace
      *  })
+     *
+     * @returns {this} - Returns `stack's` instance
      */
     excludeReferences(): this;
     /**
@@ -301,13 +304,13 @@ export declare class Stack {
      * @method includeContentType
      * @description Includes the total number of entries returned in the response.
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.includeContentType().find()
-     * data.then((result) => {
+     * const query = Stack.contentType('example').entries().includeContentType().find()
+     * query.then((result) => {
      *   // ‘result’ contains a list of entries along contentType
      * }).catch((error) => {
      *   // error trace
      * })
+     *
      * @returns {this} - Returns `stack's` instance
      */
     includeContentType(): this;
@@ -316,7 +319,11 @@ export declare class Stack {
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
      * @example
-     * Stack.contentType('content_type_uid').eqaulTo('title','Demo').getQuery().find()
+     * Stack.contentType('content_type_uid')
+     *  .eqaulTo('title','Demo')
+     *  .getQuery()
+     *  .find()
+     *
      * @returns {this} - Returns `stack's` instance
      */
     getQuery(): any;
@@ -328,7 +335,7 @@ export declare class Stack {
      * @param {*} value - value used to match or compare
      * @param {String} [options] - match or compare value in entry
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
+     * let blogQuery = Stack.contentType('example').entries()
      * blogQuery.regex('title','^Demo').find() //regex without options
      * //or
      * blogQuery.regex('title','^Demo', 'i').find() //regex without options
@@ -338,28 +345,36 @@ export declare class Stack {
     /**
      * @public
      * @method only
+     * @description
+     *  Similar to MongoDB projections. Accepts an array.
+     *  Only fields mentioned in the array would be returned in the result.
+     * @param {Array} result - Array of field properties
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.only(['title','uid']).find()
-     * data.then((result) => {
+     * const query = Stack.contentType('example').entries().only(['title','uid']).find()
+     * query.then((result) => {
      *   // ‘result’ contains a list of entries with field title and uid only
      * }).catch((error) => {
      *   // error trace
      * })
+     *
      * @returns {this} - Returns `stack's` instance
      */
     only(fields: any): this;
     /**
      * @public
      * @method except
+     * @description
+     *  Similar to MongoDB projections. Accepts an array.
+     *  Only fields mentioned in the array would be removed from the result.
+     * @param {Array} result - Array of field properties
      * @example
-     * let blogQuery = Stack.contentType('example').entries();
-     * let data = blogQuery.except(['title','uid']).find()
-     * data.then((result) => {
-     *   // ‘result’ contains a list of entries without fields title and uid only
+     * const query = Stack.contentType('example').entries().except(['title','uid']).find()
+     * query.then((result) => {
+     *   // ‘result’ contains a list of entries with field title and uid only
      * }).catch((error) => {
      *   // error trace
      * })
+     *
      * @returns {this} - Returns `stack's` instance
      */
     except(fields: any): this;
@@ -371,9 +386,11 @@ export declare class Stack {
      * @note
      *  This is a slow method, since it scans all documents and fires the `reference` query on them
      *  Use `.query()` filters to reduce the total no of documents being scanned
+     * @param {Any} query - Query filter, to be applied on referenced result
      * @example
      * Stack.contentType('blog')
      *  .entries()
+     *  .includeRferences() // This would include all references of the content type
      *  .queryReferences({"authors.name": "John Doe"})
      *  .find()
      *
@@ -385,7 +402,7 @@ export declare class Stack {
      * @method referenceDepth
      * @summary
      * Use it along with .includeReferences()
-     * Overrides the default reference depths defined for references - 4
+     * Overrides the default reference depths defined for references - 2
      * i.e. If A -> B -> C -> D -> E, so calling .includeReferences() on content type A,
      * would result in all references being resolved until its nested child reference E
      * @param {number} depth - Level of nested references to be fetched
@@ -393,7 +410,7 @@ export declare class Stack {
      * Stack.contentType('blog')
      *  .entries()
      *  .includeReferences()
-     *  .
+     *  .referenceDepth(4)
      *  .find()
      *
      * @returns {this} - Returns the `stack's` instance
