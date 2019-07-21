@@ -26,9 +26,6 @@ export const defaultConfig = {
     // Eval if this is slowing down the response
     projections: {
       _content_type_uid: 0,
-      // _version: 0,
-      // created_at: 0,
-      // updated_at: 0,
     },
     referenceDepth: 2,
   },
