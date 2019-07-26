@@ -36,7 +36,7 @@
     "@types/node": "10.12.18",
     "@types/rimraf": "2.0.2",
     "jest": "24.8.0",
-    "jsdoc": "3.6.2",
+    "jsdoc": "^3.6.2",
     "mkdirp": "0.5.1",
     "rimraf": "2.6.3",
     "ts-jest": "24.0.2",
