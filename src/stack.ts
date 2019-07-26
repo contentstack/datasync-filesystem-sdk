@@ -885,25 +885,9 @@ export class Stack {
    */
   public regex(key, value, options = 'g') {
     if (key && value && typeof key === 'string' && typeof value === 'string') {
-      if (this.q.query.hasOwnProperty(key)) {
-        if (this.q.query.hasOwnProperty('$or')) {
-          this.q.query.$or.push({
-            [key]: {
-              $options: options,
-              $regex: value,
-            },
-          })
-        } else {
-          this.q.query.$or = [{
-            $options: options,
-            $regex: value,
-          }]
-        }
-      } else {
-        this.q.query[key] = {
-          $options: options,
-          $regex: value,
-        }
+      this.q.query[key] = {
+        $options: options,
+        $regex: value,
       }
 
       return this
@@ -1119,11 +1103,11 @@ export class Stack {
     let key: string
     let filePath: string
     switch (this.q.content_type_uid) {
-      case '_assets':
+      case this.types.assets:
         filePath = getAssetsPath(locale) + '.json'
         key = (this.q.isSingle) ? 'asset' : 'assets'
         break
-      case '_content_types':
+      case this.types.content_types:
         filePath = getContentTypesPath(locale) + '.json'
         key = (this.q.isSingle) ? 'content_type' : 'content_types'
         break
@@ -1393,14 +1377,14 @@ export class Stack {
 
           if (typeof entryReferences[path] === 'string') {
             schemasReferred.push({
-              _content_type_uid: '_content_types',
+              _content_type_uid: this.types.content_types,
               uid: entryReferences[path],
             })
           } else {
 
             entryReferences[path].forEach((contentTypeUid) => {
               schemasReferred.push({
-                _content_type_uid: '_content_types',
+                _content_type_uid: this.types.content_types,
                 uid: contentTypeUid,
               })
             })
@@ -1432,7 +1416,7 @@ export class Stack {
           data.forEach((elem, idx) => {
             if (typeof elem === 'string') {
               queryBucket.$or.push({
-                _content_type_uid: '_assets',
+                _content_type_uid: this.types.assets,
                 _version: { $exists: true },
                 locale,
                 uid: elem,
@@ -1474,7 +1458,7 @@ export class Stack {
         }
       } else if (typeof data === 'string') {
         queryBucket.$or.push({
-          _content_type_uid: '_assets',
+          _content_type_uid: this.types.assets,
           _version: { $exists: true },
           locale,
           uid: data,
@@ -1596,7 +1580,7 @@ export class Stack {
   private async bindReferences(entries: any[], contentTypeUid: string, locale: string) {
     const ctQuery: IQuery = {
       $or: [{
-        _content_type_uid: '_content_types',
+        _content_type_uid: this.types.content_types,
         uid: contentTypeUid,
       }],
     }
