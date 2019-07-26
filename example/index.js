@@ -1,8 +1,9 @@
+const path = require('path')
 const Contentstack = require('../dist').Contentstack
 
 const Stack = Contentstack.Stack({
   contentStore: {
-    baseDir: '/home/ramanathan/Documents/contentstack/datasync/boilerplate/_contents'
+    baseDir: path.join(__dirname, '..', '..', 'boilerplate', '_development_contents'),
   }
 })
 
@@ -10,11 +11,12 @@ function connect () {
   return Stack.connect()
 }
 
-function find (contentType = 'blog') {
+function find (contentType = 'example') {
   return Stack.contentType(contentType)
     .entries()
     .include([
-      'modular_blocks.block_1.reference'
+      'reference_single',
+      'reference_multiple'
     ])
     .find()
 }
