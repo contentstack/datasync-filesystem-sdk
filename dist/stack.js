@@ -992,7 +992,8 @@ class Stack {
             const keys = Object.keys(this.contentStore.projections);
             this.q.except = keys;
         }
-        this.q.referenceDepth = this.q.referenceDepth || this.contentStore.referenceDepth;
+        this.q.referenceDepth = (typeof this.q.referenceDepth === 'number') ? this.q.referenceDepth : this.contentStore
+            .referenceDepth;
         return {
             filePath,
             key,
@@ -1126,10 +1127,21 @@ class Stack {
             eQuery = null;
             for (let i = 0, j = oldShelf.length; i < j; i++) {
                 const element = oldShelf[i];
+                let flag = true;
                 for (let k = 0, l = result.docs.length; k < l; k++) {
                     if (result.docs[k].uid === element.uid) {
                         element.path[element.position] = result.docs[k];
+                        flag = false;
                         break;
+                    }
+                }
+                if (flag) {
+                    for (let e = 0, f = oldShelf[i].path.length; e < f; e++) {
+                        // tslint:disable-next-line: max-line-length
+                        if (oldShelf[i].path[e].hasOwnProperty('_content_type_uid') && Object.keys(oldShelf[i].path[e]).length === 2) {
+                            oldShelf[i].path.splice(e, 1);
+                            break;
+                        }
                     }
                 }
             }
@@ -1187,12 +1199,12 @@ class Stack {
                 const includePath = currentInclude[i];
                 // tslint:disable-next-line: forin
                 for (const path in entryReferences) {
-                    const idx = includePath.indexOf(path);
-                    if (~idx) {
+                    const subStr = includePath.slice(0, path.length);
+                    if (subStr === path) {
                         let subPath;
                         // Its the complete path!! Hurrah!
                         if (path.length !== includePath.length) {
-                            subPath = includePath.slice(0, path.length);
+                            subPath = subStr;
                             pendingPath.push(includePath.slice(path.length + 1));
                         }
                         else {
@@ -1204,7 +1216,7 @@ class Stack {
                                 uid: entryReferences[path],
                             });
                         }
-                        else {
+                        else if (entryReferences[path].length) {
                             entryReferences[path].forEach((contentTypeUid) => {
                                 schemasReferred.push({
                                     _content_type_uid: this.types.content_types,
@@ -1436,10 +1448,21 @@ class Stack {
             oldEntryQueries = null;
             for (let i = 0, j = oldObjectPointerList.length; i < j; i++) {
                 const element = oldObjectPointerList[i];
+                let flag = true;
                 for (let k = 0, l = result.docs.length; k < l; k++) {
                     if (result.docs[k].uid === element.uid) {
                         element.path[element.position] = result.docs[k];
+                        flag = false;
                         break;
+                    }
+                }
+                if (flag) {
+                    for (let e = 0, f = oldObjectPointerList[i].path.length; e < f; e++) {
+                        // tslint:disable-next-line: max-line-length
+                        if (oldObjectPointerList[i].path[e].hasOwnProperty('_content_type_uid') && Object.keys(oldObjectPointerList[i].path[e]).length === 2) {
+                            oldObjectPointerList[i].path.splice(e, 1);
+                            break;
+                        }
                     }
                 }
             }
