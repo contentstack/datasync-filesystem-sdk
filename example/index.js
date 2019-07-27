@@ -11,13 +11,9 @@ function connect () {
   return Stack.connect()
 }
 
-function find (contentType = 'example') {
+function find (contentType = 'blog') {
   return Stack.contentType(contentType)
     .entries()
-    .include([
-      'reference_single',
-      'reference_multiple'
-    ])
     .find()
 }
 
