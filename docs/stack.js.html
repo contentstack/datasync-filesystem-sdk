@@ -517,6 +517,20 @@ class Stack {
     }
     /**
      * @public
+     * @method contentTypes
+     * @summary Get content type schemas
+     * @example
+     * Stack.contentTypes().find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    contentTypes() {
+        const stack = new Stack(this.config);
+        stack.q.content_type_uid = stack.types.content_types;
+        return stack;
+    }
+    /**
+     * @public
      * @method schema
      * @summary Get a single content type's schema
      * @param {String} uid - Optional 'uid' of the content type, who's schema is to be fetched
@@ -739,8 +753,11 @@ class Stack {
      *  Excludes all references of the entries being scanned
      *
      * @example
-     * Stack.contentType('example').entries().excludeReferences().find()
-     * .then((result) => {
+     * Stack.contentType('example')
+     *  .entries()
+     *  .excludeReferences()
+     *  .find()
+     *  .then((result) => {
      *    // ‘result’ entries without references
      *  }).catch((error) => {
      *    // error trace
@@ -757,12 +774,27 @@ class Stack {
      * @method includeContentType
      * @description Includes the total number of entries returned in the response.
      * @example
-     * const query = Stack.contentType('example').entries().includeContentType().find()
-     * query.then((result) => {
-     *   // ‘result’ contains a list of entries along contentType
-     * }).catch((error) => {
-     *   // error trace
-     * })
+     * Stack.contentType('example')
+     *  .entries()
+     *  .includeContentType()
+     *  .find()
+     *  .then((result) => {
+     *    // Expected result
+     *    {
+     *      entries: [
+     *        {
+     *          ...,
+     *        },
+     *      ],
+     *      content_type_uid: 'example',
+     *      locale: 'en-us',
+     *      content_type: {
+     *        ..., // Content type example's schema
+     *      }
+     *    }
+     *  }).catch((error) => {
+     *    // error trace
+     *  })
      *
      * @returns {this} - Returns `stack's` instance
      */
@@ -775,7 +807,7 @@ class Stack {
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
      * @example
-     * Stack.contentType('content_type_uid')
+     * Stack.contentType('example')
      *  .eqaulTo('title','Demo')
      *  .getQuery()
      *  .find()
@@ -801,28 +833,10 @@ class Stack {
      */
     regex(key, value, options = 'g') {
         if (key &amp;&amp; value &amp;&amp; typeof key === 'string' &amp;&amp; typeof value === 'string') {
-            if (this.q.query.hasOwnProperty(key)) {
-                if (this.q.query.hasOwnProperty('$or')) {
-                    this.q.query.$or.push({
-                        [key]: {
-                            $options: options,
-                            $regex: value,
-                        },
-                    });
-                }
-                else {
-                    this.q.query.$or = [{
-                            $options: options,
-                            $regex: value,
-                        }];
-                }
-            }
-            else {
-                this.q.query[key] = {
-                    $options: options,
-                    $regex: value,
-                };
-            }
+            this.q.query[key] = {
+                $options: options,
+                $regex: value,
+            };
             return this;
         }
         throw new Error('Kindly provide valid parameters for .regex()!');
@@ -905,11 +919,12 @@ class Stack {
     /**
      * @public
      * @method referenceDepth
+     * @deprecated
      * @summary
      * Use it along with .includeReferences()
      * Overrides the default reference depths defined for references - 2
-     * i.e. If A -> B -> C -> D -> E, so calling .includeReferences() on content type A,
-     * would result in all references being resolved until its nested child reference E
+     * i.e. If A -> B -> C -> D, so calling .includeReferences() on content type A,
+     * would result in all references being resolved until its nested child reference D
      * @param {number} depth - Level of nested references to be fetched
      * @example
      * Stack.contentType('blog')
@@ -1015,11 +1030,11 @@ class Stack {
         let key;
         let filePath;
         switch (this.q.content_type_uid) {
-            case '_assets':
+            case this.types.assets:
                 filePath = utils_1.getAssetsPath(locale) + '.json';
                 key = (this.q.isSingle) ? 'asset' : 'assets';
                 break;
-            case '_content_types':
+            case this.types.content_types:
                 filePath = utils_1.getContentTypesPath(locale) + '.json';
                 key = (this.q.isSingle) ? 'content_type' : 'content_types';
                 break;
@@ -1038,7 +1053,8 @@ class Stack {
             const keys = Object.keys(this.contentStore.projections);
             this.q.except = keys;
         }
-        this.q.referenceDepth = this.q.referenceDepth || this.contentStore.referenceDepth;
+        this.q.referenceDepth = (typeof this.q.referenceDepth === 'number') ? this.q.referenceDepth : this.contentStore
+            .referenceDepth;
         return {
             filePath,
             key,
@@ -1172,10 +1188,21 @@ class Stack {
             eQuery = null;
             for (let i = 0, j = oldShelf.length; i &lt; j; i++) {
                 const element = oldShelf[i];
+                let flag = true;
                 for (let k = 0, l = result.docs.length; k &lt; l; k++) {
                     if (result.docs[k].uid === element.uid) {
                         element.path[element.position] = result.docs[k];
+                        flag = false;
                         break;
+                    }
+                }
+                if (flag) {
+                    for (let e = 0, f = oldShelf[i].path.length; e &lt; f; e++) {
+                        // tslint:disable-next-line: max-line-length
+                        if (oldShelf[i].path[e].hasOwnProperty('_content_type_uid') &amp;&amp; Object.keys(oldShelf[i].path[e]).length === 2) {
+                            oldShelf[i].path.splice(e, 1);
+                            break;
+                        }
                     }
                 }
             }
@@ -1223,9 +1250,9 @@ class Stack {
             let entryReferences = {};
             schemas.forEach((schema) => {
                 // Entry references
-                entryReferences = lodash_1.merge(entryReferences, schema._references);
+                entryReferences = lodash_1.merge(entryReferences, schema[this.types.references]);
                 // tslint:disable-next-line: forin
-                for (const path in schema._assets) {
+                for (const path in schema[this.types.assets]) {
                     paths.push(path);
                 }
             });
@@ -1233,12 +1260,12 @@ class Stack {
                 const includePath = currentInclude[i];
                 // tslint:disable-next-line: forin
                 for (const path in entryReferences) {
-                    const idx = includePath.indexOf(path);
-                    if (~idx) {
+                    const subStr = includePath.slice(0, path.length);
+                    if (subStr === path) {
                         let subPath;
                         // Its the complete path!! Hurrah!
                         if (path.length !== includePath.length) {
-                            subPath = includePath.slice(0, path.length);
+                            subPath = subStr;
                             pendingPath.push(includePath.slice(path.length + 1));
                         }
                         else {
@@ -1246,14 +1273,14 @@ class Stack {
                         }
                         if (typeof entryReferences[path] === 'string') {
                             schemasReferred.push({
-                                _content_type_uid: '_content_types',
+                                _content_type_uid: this.types.content_types,
                                 uid: entryReferences[path],
                             });
                         }
-                        else {
+                        else if (entryReferences[path].length) {
                             entryReferences[path].forEach((contentTypeUid) => {
                                 schemasReferred.push({
-                                    _content_type_uid: '_content_types',
+                                    _content_type_uid: this.types.content_types,
                                     uid: contentTypeUid,
                                 });
                             });
@@ -1282,7 +1309,7 @@ class Stack {
                     data.forEach((elem, idx) => {
                         if (typeof elem === 'string') {
                             queryBucket.$or.push({
-                                _content_type_uid: '_assets',
+                                _content_type_uid: this.types.assets,
                                 _version: { $exists: true },
                                 locale,
                                 uid: elem,
@@ -1324,7 +1351,7 @@ class Stack {
             }
             else if (typeof data === 'string') {
                 queryBucket.$or.push({
-                    _content_type_uid: '_assets',
+                    _content_type_uid: this.types.assets,
                     _version: { $exists: true },
                     locale,
                     uid: data,
@@ -1403,11 +1430,10 @@ class Stack {
             }
             // should not enter this section
             // if the schema doesn't exist, error should have occurred before
-            if (typeof schema === 'undefined') {
+            if (typeof schema === 'undefined' || typeof schema[this.types.assets] !== 'object') {
                 return;
             }
-            const assetPaths = schema._assets;
-            const paths = Object.keys(assetPaths);
+            const paths = Object.keys(schema[this.types.assets]);
             const shelf = [];
             const queryBucket = {
                 $or: [],
@@ -1436,7 +1462,7 @@ class Stack {
         return __awaiter(this, void 0, void 0, function* () {
             const ctQuery = {
                 $or: [{
-                        _content_type_uid: '_content_types',
+                        _content_type_uid: this.types.content_types,
                         uid: contentTypeUid,
                     }],
             };
@@ -1482,10 +1508,21 @@ class Stack {
             oldEntryQueries = null;
             for (let i = 0, j = oldObjectPointerList.length; i &lt; j; i++) {
                 const element = oldObjectPointerList[i];
+                let flag = true;
                 for (let k = 0, l = result.docs.length; k &lt; l; k++) {
                     if (result.docs[k].uid === element.uid) {
                         element.path[element.position] = result.docs[k];
+                        flag = false;
                         break;
+                    }
+                }
+                if (flag) {
+                    for (let e = 0, f = oldObjectPointerList[i].path.length; e &lt; f; e++) {
+                        // tslint:disable-next-line: max-line-length
+                        if (oldObjectPointerList[i].path[e].hasOwnProperty('_content_type_uid') &amp;&amp; Object.keys(oldObjectPointerList[i].path[e]).length === 2) {
+                            oldObjectPointerList[i].path.splice(e, 1);
+                            break;
+                        }
                     }
                 }
             }
@@ -1526,23 +1563,23 @@ class Stack {
                 let assetFieldPaths;
                 let entryReferencePaths;
                 if (filteredContents[i].hasOwnProperty(this.types.assets)) {
-                    assetFieldPaths = Object.keys(filteredContents[i]._assets);
+                    assetFieldPaths = Object.keys(filteredContents[i][this.types.assets]);
                     paths = paths.concat(assetFieldPaths);
                 }
                 if (filteredContents[i].hasOwnProperty('_references')) {
-                    entryReferencePaths = Object.keys(filteredContents[i]._references);
+                    entryReferencePaths = Object.keys(filteredContents[i][this.types.references]);
                     paths = paths.concat(entryReferencePaths);
                     for (let k = 0, l = entryReferencePaths.length; k &lt; l; k++) {
-                        if (typeof filteredContents[i]._references[entryReferencePaths[k]] === 'string') {
+                        if (typeof filteredContents[i][this.types.references][entryReferencePaths[k]] === 'string') {
                             ctQueries.$or.push({
                                 _content_type_uid: this.types.content_types,
                                 // this would probably make it slow in FS, avoid this?
                                 // locale,
-                                uid: filteredContents[i]._references[entryReferencePaths[k]],
+                                uid: filteredContents[i][this.types.references][entryReferencePaths[k]],
                             });
                         }
-                        else if (filteredContents[i]._references[entryReferencePaths[k]].length) {
-                            filteredContents[i]._references[entryReferencePaths[k]].forEach((uid) => {
+                        else if (filteredContents[i][this.types.references][entryReferencePaths[k]].length) {
+                            filteredContents[i][this.types.references][entryReferencePaths[k]].forEach((uid) => {
                                 ctQueries.$or.push({
                                     _content_type_uid: this.types.content_types,
                                     // Question: Adding extra key in query, slows querying down? Probably yes.
@@ -1572,13 +1609,13 @@ exports.Stack = Stack;
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Contentstack.html">Contentstack</a></li><li><a href="Stack.html">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#and">and</a></li><li><a href="global.html#ascending">ascending</a></li><li><a href="global.html#asset">asset</a></li><li><a href="global.html#assets">assets</a></li><li><a href="global.html#connect">connect</a></li><li><a href="global.html#containedIn">containedIn</a></li><li><a href="global.html#contentType">contentType</a></li><li><a href="global.html#count">count</a></li><li><a href="global.html#descending">descending</a></li><li><a href="global.html#entries">entries</a></li><li><a href="global.html#entry">entry</a></li><li><a href="global.html#equalTo">equalTo</a></li><li><a href="global.html#except">except</a></li><li><a href="global.html#excludeReferences">excludeReferences</a></li><li><a href="global.html#exists">exists</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#findOne">findOne</a></li><li><a href="global.html#getAssetsPath">getAssetsPath</a></li><li><a href="global.html#getContentTypesPath">getContentTypesPath</a></li><li><a href="global.html#getEntriesPath">getEntriesPath</a></li><li><a href="global.html#getQuery">getQuery</a></li><li><a href="global.html#greaterThan">greaterThan</a></li><li><a href="global.html#greaterThanOrEqualTo">greaterThanOrEqualTo</a></li><li><a href="global.html#include">include</a></li><li><a href="global.html#includeContentType">includeContentType</a></li><li><a href="global.html#includeCount">includeCount</a></li><li><a href="global.html#includeReferences">includeReferences</a></li><li><a href="global.html#language">language</a></li><li><a href="global.html#lessThan">lessThan</a></li><li><a href="global.html#lessThanOrEqualTo">lessThanOrEqualTo</a></li><li><a href="global.html#limit">limit</a></li><li><a href="global.html#notContainedIn">notContainedIn</a></li><li><a href="global.html#notEqualTo">notEqualTo</a></li><li><a href="global.html#notExists">notExists</a></li><li><a href="global.html#only">only</a></li><li><a href="global.html#or">or</a></li><li><a href="global.html#query">query</a></li><li><a href="global.html#queryReferences">queryReferences</a></li><li><a href="global.html#referenceDepth">referenceDepth</a></li><li><a href="global.html#regex">regex</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#schemas">schemas</a></li><li><a href="global.html#skip">skip</a></li><li><a href="global.html#tags">tags</a></li><li><a href="global.html#where">where</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="Contentstack.html">Contentstack</a></li><li><a href="Stack.html">Stack</a></li></ul><h3>Global</h3><ul><li><a href="global.html#and">and</a></li><li><a href="global.html#ascending">ascending</a></li><li><a href="global.html#asset">asset</a></li><li><a href="global.html#assets">assets</a></li><li><a href="global.html#connect">connect</a></li><li><a href="global.html#containedIn">containedIn</a></li><li><a href="global.html#contentType">contentType</a></li><li><a href="global.html#contentTypes">contentTypes</a></li><li><a href="global.html#count">count</a></li><li><a href="global.html#descending">descending</a></li><li><a href="global.html#entries">entries</a></li><li><a href="global.html#entry">entry</a></li><li><a href="global.html#equalTo">equalTo</a></li><li><a href="global.html#except">except</a></li><li><a href="global.html#excludeReferences">excludeReferences</a></li><li><a href="global.html#exists">exists</a></li><li><a href="global.html#find">find</a></li><li><a href="global.html#findOne">findOne</a></li><li><a href="global.html#getAssetsPath">getAssetsPath</a></li><li><a href="global.html#getContentTypesPath">getContentTypesPath</a></li><li><a href="global.html#getEntriesPath">getEntriesPath</a></li><li><a href="global.html#getQuery">getQuery</a></li><li><a href="global.html#greaterThan">greaterThan</a></li><li><a href="global.html#greaterThanOrEqualTo">greaterThanOrEqualTo</a></li><li><a href="global.html#include">include</a></li><li><a href="global.html#includeContentType">includeContentType</a></li><li><a href="global.html#includeCount">includeCount</a></li><li><a href="global.html#includeReferences">includeReferences</a></li><li><a href="global.html#language">language</a></li><li><a href="global.html#lessThan">lessThan</a></li><li><a href="global.html#lessThanOrEqualTo">lessThanOrEqualTo</a></li><li><a href="global.html#limit">limit</a></li><li><a href="global.html#notContainedIn">notContainedIn</a></li><li><a href="global.html#notEqualTo">notEqualTo</a></li><li><a href="global.html#notExists">notExists</a></li><li><a href="global.html#only">only</a></li><li><a href="global.html#or">or</a></li><li><a href="global.html#query">query</a></li><li><a href="global.html#queryReferences">queryReferences</a></li><li><a href="global.html#referenceDepth">referenceDepth</a></li><li><a href="global.html#regex">regex</a></li><li><a href="global.html#schema">schema</a></li><li><a href="global.html#schemas">schemas</a></li><li><a href="global.html#skip">skip</a></li><li><a href="global.html#tags">tags</a></li><li><a href="global.html#where">where</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.3</a> on Sun Jul 21 2019 23:36:15 GMT+0530 (India Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.2</a> on Sat Aug 03 2019 21:10:17 GMT+0530 (India Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
