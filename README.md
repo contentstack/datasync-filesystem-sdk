@@ -8,8 +8,8 @@ Contentstack is a headless CMS with an API-first approach. It is a CMS that deve
 
 ### Prerequisite
 
-- nodejs, v8 or higher
-- You should have the data synced through [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
+- Nodejs, v8 or higher
+- You should have the data synced through [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync)
 
 ### Configuration
 
