@@ -15,6 +15,7 @@ exports.defaultConfig = {
             types: {
                 assets: '_assets',
                 content_types: '_content_types',
+                references: '_references',
             },
         },
         locale: 'en-us',

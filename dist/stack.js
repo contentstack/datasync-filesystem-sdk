@@ -489,6 +489,20 @@ class Stack {
     }
     /**
      * @public
+     * @method contentTypes
+     * @summary Get content type schemas
+     * @example
+     * Stack.contentTypes().find()
+     *
+     * @returns {this} - Returns `stack's` instance
+     */
+    contentTypes() {
+        const stack = new Stack(this.config);
+        stack.q.content_type_uid = stack.types.content_types;
+        return stack;
+    }
+    /**
+     * @public
      * @method schema
      * @summary Get a single content type's schema
      * @param {String} uid - Optional 'uid' of the content type, who's schema is to be fetched
@@ -711,8 +725,11 @@ class Stack {
      *  Excludes all references of the entries being scanned
      *
      * @example
-     * Stack.contentType('example').entries().excludeReferences().find()
-     * .then((result) => {
+     * Stack.contentType('example')
+     *  .entries()
+     *  .excludeReferences()
+     *  .find()
+     *  .then((result) => {
      *    // ‘result’ entries without references
      *  }).catch((error) => {
      *    // error trace
@@ -729,12 +746,27 @@ class Stack {
      * @method includeContentType
      * @description Includes the total number of entries returned in the response.
      * @example
-     * const query = Stack.contentType('example').entries().includeContentType().find()
-     * query.then((result) => {
-     *   // ‘result’ contains a list of entries along contentType
-     * }).catch((error) => {
-     *   // error trace
-     * })
+     * Stack.contentType('example')
+     *  .entries()
+     *  .includeContentType()
+     *  .find()
+     *  .then((result) => {
+     *    // Expected result
+     *    {
+     *      entries: [
+     *        {
+     *          ...,
+     *        },
+     *      ],
+     *      content_type_uid: 'example',
+     *      locale: 'en-us',
+     *      content_type: {
+     *        ..., // Content type example's schema
+     *      }
+     *    }
+     *  }).catch((error) => {
+     *    // error trace
+     *  })
      *
      * @returns {this} - Returns `stack's` instance
      */
@@ -747,7 +779,7 @@ class Stack {
      * @method getQuery
      * @description Returns the raw (JSON) query based on the filters applied on Query object.
      * @example
-     * Stack.contentType('content_type_uid')
+     * Stack.contentType('example')
      *  .eqaulTo('title','Demo')
      *  .getQuery()
      *  .find()
@@ -859,11 +891,12 @@ class Stack {
     /**
      * @public
      * @method referenceDepth
+     * @deprecated
      * @summary
      * Use it along with .includeReferences()
      * Overrides the default reference depths defined for references - 2
-     * i.e. If A -> B -> C -> D -> E, so calling .includeReferences() on content type A,
-     * would result in all references being resolved until its nested child reference E
+     * i.e. If A -> B -> C -> D, so calling .includeReferences() on content type A,
+     * would result in all references being resolved until its nested child reference D
      * @param {number} depth - Level of nested references to be fetched
      * @example
      * Stack.contentType('blog')
@@ -940,6 +973,7 @@ class Stack {
     /**
      * @public
      * @method findOne
+     * @deprecated - Use .fetch() instead
      * @description
      * Queries the db using the query built/passed. Returns a single entry/asset/content type object
      * Does all the processing, filtering, referencing after querying the DB
@@ -953,6 +987,25 @@ class Stack {
      * @returns {object} - Returns an object, that has been processed, filtered and referenced
      */
     findOne() {
+        this.q.isSingle = true;
+        return this.find();
+    }
+    /**
+     * @public
+     * @method fetch
+     * @description
+     * Queries the db using the query built/passed. Returns a single entry/asset/content type object
+     * Does all the processing, filtering, referencing after querying the DB
+     * @param {object} query Optional query object, that overrides all the previously build queries
+     *
+     * @example
+     * Stack.contentType('blog')
+     *  .entries()
+     *  .fetch()
+     *
+     * @returns {object} - Returns an object, that has been processed, filtered and referenced
+     */
+    fetch() {
         this.q.isSingle = true;
         return this.find();
     }
@@ -1189,9 +1242,9 @@ class Stack {
             let entryReferences = {};
             schemas.forEach((schema) => {
                 // Entry references
-                entryReferences = lodash_1.merge(entryReferences, schema._references);
+                entryReferences = lodash_1.merge(entryReferences, schema[this.types.references]);
                 // tslint:disable-next-line: forin
-                for (const path in schema._assets) {
+                for (const path in schema[this.types.assets]) {
                     paths.push(path);
                 }
             });
@@ -1369,11 +1422,10 @@ class Stack {
             }
             // should not enter this section
             // if the schema doesn't exist, error should have occurred before
-            if (typeof schema === 'undefined') {
+            if (typeof schema === 'undefined' || typeof schema[this.types.assets] !== 'object') {
                 return;
             }
-            const assetPaths = schema._assets;
-            const paths = Object.keys(assetPaths);
+            const paths = Object.keys(schema[this.types.assets]);
             const shelf = [];
             const queryBucket = {
                 $or: [],
@@ -1503,23 +1555,23 @@ class Stack {
                 let assetFieldPaths;
                 let entryReferencePaths;
                 if (filteredContents[i].hasOwnProperty(this.types.assets)) {
-                    assetFieldPaths = Object.keys(filteredContents[i]._assets);
+                    assetFieldPaths = Object.keys(filteredContents[i][this.types.assets]);
                     paths = paths.concat(assetFieldPaths);
                 }
                 if (filteredContents[i].hasOwnProperty('_references')) {
-                    entryReferencePaths = Object.keys(filteredContents[i]._references);
+                    entryReferencePaths = Object.keys(filteredContents[i][this.types.references]);
                     paths = paths.concat(entryReferencePaths);
                     for (let k = 0, l = entryReferencePaths.length; k < l; k++) {
-                        if (typeof filteredContents[i]._references[entryReferencePaths[k]] === 'string') {
+                        if (typeof filteredContents[i][this.types.references][entryReferencePaths[k]] === 'string') {
                             ctQueries.$or.push({
                                 _content_type_uid: this.types.content_types,
                                 // this would probably make it slow in FS, avoid this?
                                 // locale,
-                                uid: filteredContents[i]._references[entryReferencePaths[k]],
+                                uid: filteredContents[i][this.types.references][entryReferencePaths[k]],
                             });
                         }
-                        else if (filteredContents[i]._references[entryReferencePaths[k]].length) {
-                            filteredContents[i]._references[entryReferencePaths[k]].forEach((uid) => {
+                        else if (filteredContents[i][this.types.references][entryReferencePaths[k]].length) {
+                            filteredContents[i][this.types.references][entryReferencePaths[k]].forEach((uid) => {
                                 ctQueries.$or.push({
                                     _content_type_uid: this.types.content_types,
                                     // Question: Adding extra key in query, slows querying down? Probably yes.
