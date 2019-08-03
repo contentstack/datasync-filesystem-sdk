@@ -13,6 +13,7 @@ export declare const defaultConfig: {
             types: {
                 assets: string;
                 content_types: string;
+                references: string;
             };
         };
         locale: string;
