@@ -14,6 +14,7 @@ function connect () {
 function find (contentType = 'blog') {
   return Stack.contentType(contentType)
     .entries()
+    .includeReferences()
     .find()
 }
 
