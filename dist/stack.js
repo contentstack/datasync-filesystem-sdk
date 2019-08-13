@@ -434,7 +434,7 @@ class Stack {
             throw new Error('Please call .contentType() before calling .entries()!');
         }
         if (uid && typeof uid === 'string') {
-            this.q.query[uid] = uid;
+            this.q.query.uid = uid;
         }
         return this;
     }
@@ -455,7 +455,7 @@ class Stack {
         stack.q.isSingle = true;
         stack.q.content_type_uid = stack.types.assets;
         if (uid && typeof uid === 'string') {
-            stack.q.query[uid] = uid;
+            stack.q.query.uid = uid;
         }
         return stack;
     }
@@ -516,7 +516,7 @@ class Stack {
         stack.q.isSingle = true;
         stack.q.content_type_uid = stack.types.content_types;
         if (uid && typeof uid === 'string') {
-            stack.q.query[uid] = uid;
+            stack.q.query.uid = uid;
         }
         return stack;
     }
@@ -626,9 +626,16 @@ class Stack {
      */
     tags(values) {
         if (values && typeof values === 'object' && values instanceof Array) {
-            this.q.query.tags = {
-                $in: values,
-            };
+            if (values.length === 0) {
+                this.q.query.tags = {
+                    $size: 0,
+                };
+            }
+            else {
+                this.q.query.tags = {
+                    $in: values,
+                };
+            }
             return this;
         }
         throw new Error('Kindly provide valid parameters for \'.tags()\'');
@@ -1164,7 +1171,11 @@ class Stack {
     }
     includeReferenceIteration(eQuery, ctQuery, locale, include, oldShelf) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (oldShelf.length === 0 || ctQuery.$or.length === 0) {
+            if (oldShelf.length === 0) {
+                return;
+            }
+            else if (ctQuery.$or.length === 0 && eQuery.$or.length > 0) {
+                yield this.bindLeftoverAssets(eQuery, locale, oldShelf);
                 return;
             }
             const { paths, pendingPath, schemaList, } = yield this.getReferencePath(ctQuery, locale, include);
@@ -1479,10 +1490,37 @@ class Stack {
             return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList);
         });
     }
+    bindLeftoverAssets(queries, locale, pointerList) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const contents = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
+            const filteredAssets = contents.filter(sift_1.default(queries));
+            filteredAssets.forEach((doc) => {
+                this.projections.forEach((key) => {
+                    if (doc.hasOwnProperty(key)) {
+                        delete doc[key];
+                    }
+                });
+            });
+            for (let l = 0, m = pointerList.length; l < m; l++) {
+                for (let n = 0, o = filteredAssets.length; n < o; n++) {
+                    if (pointerList[l].uid === filteredAssets[n].uid) {
+                        pointerList[l].path[pointerList[l].position] = filteredAssets[n];
+                        break;
+                    }
+                }
+            }
+            return;
+        });
+    }
     // tslint:disable-next-line: max-line-length
     includeAllReferencesIteration(oldEntryQueries, oldCtQueries, locale, oldObjectPointerList, depth = 0) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (depth > this.q.referenceDepth || oldObjectPointerList.length === 0 || oldCtQueries.$or.length === 0) {
+            if (depth > this.q.referenceDepth || oldObjectPointerList.length === 0) {
+                return;
+            }
+            else if (oldCtQueries.$or.length === 0 && oldObjectPointerList.length > 0 && oldEntryQueries.$or.length > 0) {
+                // its most likely only assets
+                yield this.bindLeftoverAssets(oldEntryQueries, locale, oldObjectPointerList);
                 return;
             }
             const { ctQueries, paths, } = yield this.getAllReferencePaths(oldCtQueries, locale);
