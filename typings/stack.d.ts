@@ -527,6 +527,7 @@ export declare class Stack {
     private fetchDocuments;
     private includeAssetsOnly;
     private bindReferences;
+    private bindLeftoverAssets;
     private includeAllReferencesIteration;
     private subIncludeAllReferencesIteration;
     private getAllReferencePaths;
