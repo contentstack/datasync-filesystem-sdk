@@ -1690,7 +1690,7 @@ export class Stack {
     return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList)
   }
 
-  private async bindLeftoverAssets(queries: IQuery, locale: string, pointerList: IShelf[]) {
+  private async bindLeftoverAssets(queries, locale: string, pointerList: IShelf[]) {
     const contents = await readFile(getAssetsPath(locale) + '.json')
     const filteredAssets = contents.filter(sift(queries))
 
@@ -1796,7 +1796,7 @@ export class Stack {
     }
   }
 
-  private async getAllReferencePaths(contentTypeQueries: IQuery, locale: string) {
+  private async getAllReferencePaths(contentTypeQueries, locale: string) {
     const contents: any[] = await readFile(getContentTypesPath(locale) + '.json')
     const filteredContents: any[] = contents.filter(sift(contentTypeQueries))
     const ctQueries: IQuery = {
