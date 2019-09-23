@@ -9,7 +9,7 @@ import mask from 'json-mask'
 import {
   merge,
   reverse,
-  sortBy
+  sortBy,
 } from 'lodash'
 import sift from 'sift'
 import {
@@ -1388,7 +1388,6 @@ export class Stack {
   }
 
   private async subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
-    
     const {
       contentTypes,
       aggQueries,
@@ -1404,7 +1403,6 @@ export class Stack {
     // wait for all promises to be resolved
     await Promise.all(promises)
 
-    //console.log(JSON.stringify(result,null,2),"result")
     return {
       queries,
       result,
@@ -1490,8 +1488,7 @@ export class Stack {
   }
 
   // tslint:disable-next-line: max-line-length
-  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket, shelf, assetsOnly = false, parent, pos, counter = 0) {
-    console.log(JSON.stringify(data, null,2), "datadatadatadatadatadatadata", pathArr,"patharray")
+  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQuery, shelf, assetsOnly = false, parent, pos, counter = 0) {
     if (counter === (pathArr.length)) {
       if (data && typeof data === 'object') {
         if (data instanceof Array && data.length) {
@@ -1502,7 +1499,6 @@ export class Stack {
                 _version: { $exists: true },
                 locale,
                 uid: elem,
-                pathArr
               })
 
               shelf.push({
@@ -1515,7 +1511,6 @@ export class Stack {
                 _content_type_uid: elem._content_type_uid,
                 locale,
                 uid: elem.uid,
-                pathArr
               })
 
               shelf.push({
@@ -1531,7 +1526,6 @@ export class Stack {
               _content_type_uid: data._content_type_uid,
               locale,
               uid: data.uid,
-              pathArr
             })
 
             shelf.push({
@@ -1547,7 +1541,6 @@ export class Stack {
           _version: { $exists: true },
           locale,
           uid: data,
-          pathArr
         })
 
         shelf.push({
@@ -1558,10 +1551,8 @@ export class Stack {
       }
     } else {
       const currentField = pathArr[counter]
-      //console.log(currentField, "currentzFieild", queryBucket)
       counter++
       if (data instanceof Array) {
-        //console.log(currentField, "data")
         // tslint:disable-next-line: prefer-for-of
         for (let i = 0; i < data.length; i++) {
           if (data[i][currentField]) {
@@ -1589,11 +1580,9 @@ export class Stack {
     } else {
       contents = await readFile(getEntriesPath(locale, contentTypeUid) + '.json')
     }
-    console.log(query, "qury")
+
     result.docs = result.docs.concat(contents.filter(sift(query)))
 
-    //group/image_group/file(url,title),group/reference/title
-    //console.log(paths,"this.projections")
     result.docs.forEach((doc) => {
       this.projections.forEach((key) => {
         if (doc.hasOwnProperty(key)) {
@@ -1667,63 +1656,17 @@ export class Stack {
   }
 
   private async bindReferences(entries: any[], contentTypeUid: string, locale: string) {
-    //console.log(entries, "entries>>>>>>>>>>>>>>>>>>")
     const ctQuery: IQuery = {
       $or: [{
         _content_type_uid: this.types.content_types,
         uid: contentTypeUid,
       }],
     }
-    let projections = []
+
     const {
       paths, // ref. fields in the current content types
       ctQueries, // list of content type uids, the current content types refer to
     } = await this.getAllReferencePaths(ctQuery, locale)
-    console.log(paths,"paths", this.q.only,"projectons")
-    if(this.q.only || this.q.except){
-      this.q.only.forEach(field=>{
-        let originalField = field.split('.')
-        originalField = (originalField.splice(0, originalField.length-1)).join('.')
-        //console.log(originalField,"originalField2", field)
-        if(paths.indexOf(originalField) !== -1){
-          projections.push(originalField)
-        }
-      })
-      let indexes= {}
-      projections.forEach(projection=>{
-        this.q.only.forEach((elem, index)=>{
-          elem = elem.split('.')
-          elem = (elem.splice(0, elem.length-1)).join('.')
-          if(projection === elem){
-            if(!indexes.hasOwnProperty(elem))
-              indexes[elem] = []
-            
-            if(indexes[elem].indexOf(index) === -1)
-              indexes[elem].push(index)
-          }
-        })
-       // console.log(this.indexOfAll(this.q.only, projection))
-      })
-      
-      let fields = []
-      for(let index in indexes){
-        //const only = this.q.only.toString().replace(/\./g, '/')
-        //console.log(index, "index", indexes[index])
-        
-        if(indexes[index].length > 1){
-          let query = []
-          indexes[index].forEach(elem=>{
-            query.push(this.q.only[elem].split('.').pop())
-            //fields.push(this.q.only[elem])
-          })
-          fields.push(`${index.replace(/\./g, '/')}(${query})`)
-        } else {
-          fields.push(`${this.q.only[indexes[index][0]].toString().replace(/\./g, '/')}`)
-        }
-        
-      }
-      console.log(fields.toString(), "fields")
-    }
 
     const queries = {
       $or: [],
@@ -1736,7 +1679,6 @@ export class Stack {
       this.fetchPathDetails(entries, locale, paths[i].split('.'), queries, objectPointerList, true, entries, 0)
     }
 
-    console.log(JSON.stringify(objectPointerList,null,1), "objectPointerList", JSON.stringify(queries,null,1),"<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<")
     // even after traversing, if no references were found, simply return the entries found thusfar
     if (objectPointerList.length === 0) {
       return entries
@@ -1748,7 +1690,6 @@ export class Stack {
     return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList)
   }
 
- 
   private async bindLeftoverAssets(queries, locale: string, pointerList: IShelf[]) {
     const contents = await readFile(getAssetsPath(locale) + '.json')
     const filteredAssets = contents.filter(sift(queries))
@@ -1788,7 +1729,6 @@ export class Stack {
       ctQueries,
       paths,
     } = await this.getAllReferencePaths(oldCtQueries, locale)
-    console.log(paths, "paths",oldEntryQueries,"querieeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeessssssssssss")
     // GC to aviod mem leaks
     oldCtQueries = null
     const queries = {
@@ -1799,18 +1739,14 @@ export class Stack {
     }
     const shelf = []
     await this.subIncludeAllReferencesIteration(oldEntryQueries, locale, paths, queries, result, shelf)
-    console.log(queries,"<<<<<<<<<<queries>>>>>>>>>>>>>>>>")
     // GC to avoid mem leaks!
     oldEntryQueries = null
 
-    //console.log(JSON.stringify(oldObjectPointerList, null ,2 ),"oldObjectPointerList>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     for (let i = 0, j = oldObjectPointerList.length; i < j; i++) {
       const element: IShelf = oldObjectPointerList[i]
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
-       
         if (result.docs[k].uid === element.uid) {
-          console.log(element.position, "elemen")
           element.path[element.position] = result.docs[k]
           flag = false
           break
@@ -1839,14 +1775,10 @@ export class Stack {
   }
 
   private async subIncludeAllReferencesIteration(eQuieries, locale, paths, queries, result, shelf) {
-    //console.log(JSON.stringify(eQuieries,null,1),"eQuieries")
-   // console.log(eQuieries, "eQuierieseQuierieseQuieries")
     const {
       contentTypes,
       aggQueries,
     } = segregateQueries(eQuieries.$or)
-     //console.log(contentTypes, "contentTypes")
-     console.log(JSON.stringify(aggQueries,null,1), "aggQueries")
     const promises = []
 
     contentTypes.forEach((contentType) => {
@@ -1857,7 +1789,6 @@ export class Stack {
     // wait for all promises to be resolved
     await Promise.all(promises)
 
-    //console.log(result, "+++++++++++++++++++++++")
     return {
       queries,
       result,
@@ -1866,7 +1797,6 @@ export class Stack {
   }
 
   private async getAllReferencePaths(contentTypeQueries, locale: string) {
-    //console.log(contentTypeQueries, "contentTypeQueries")
     const contents: any[] = await readFile(getContentTypesPath(locale) + '.json')
     const filteredContents: any[] = contents.filter(sift(contentTypeQueries))
     const ctQueries: IQuery = {
