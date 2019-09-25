@@ -5,15 +5,15 @@
  * MIT Licensed
  */
 
- declare module "datasync-filesystem-sdk" {
+ declare module 'datasync-filesystem-sdk' {
 
- 	export declare const readFile: (path: string, type?: string) => Promise<any>;
+ 	export const readFile: (path: string, type?: string) => Promise<any>;
 	 	/**
 	 * @summary
 	 *  Expose SDK query methods on Stack
 	 * @returns {this} - Returns `stack's` instance
 	 */
-	export declare class Stack {
+	export class Stack {
 	    config: any;
 	    readonly contentStore: any;
 	    readonly types: any;
@@ -566,14 +566,14 @@
 	        };
 	    };
 	}
-	export declare const setConfig: (userConfig: IUserConfig) => void;
-	export declare const getConfig: () => IAppConfig;
+	export const setConfig: (userConfig: IUserConfig) => void;
+	export const getConfig: () => IAppConfig;
 	/**
 	 * @public
 	 * @class Contentstack
 	 * @description Creates an instance of `Contentstack`.
 	 */
-	export declare class Contentstack {
+	export class Contentstack {
 	    /**
 	     * @description Initialize an instance of ‘Stack’
 	     * @api public
