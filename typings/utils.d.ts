@@ -39,4 +39,5 @@ export declare const segregateQueries: (queries: any) => {
     contentTypes: any[];
 };
 export declare const doNothingClause: () => boolean;
+export declare const applyProjections: (data: any, keys: any, depth: any, parent: any) => void;
 export {};
