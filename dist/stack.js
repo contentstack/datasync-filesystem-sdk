@@ -839,9 +839,12 @@ class Stack {
      */
     only(fields) {
         if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
-            this.q.only = fields;
-            //const keys = Object.keys(this.contentStore.projections)
-            //this.q.only = keys.concat(fields)
+            this.q.only = [];
+            fields.forEach((field) => {
+                if (typeof field === 'string') {
+                    this.q.only.push(field);
+                }
+            });
             return this;
         }
         throw new Error('Kindly provide valid parameters for .except()!');
@@ -866,8 +869,11 @@ class Stack {
     except(fields) {
         if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
             this.q.except = [];
-            const keys = Object.keys(this.contentStore.projections);
-            this.q.except = keys.concat(fields);
+            fields.forEach((field) => {
+                if (typeof field === 'string') {
+                    this.q.except.push(field);
+                }
+            });
             return this;
         }
         throw new Error('Kindly provide valid parameters for .except()!');
@@ -962,7 +968,6 @@ class Stack {
                         .includeSpecificReferences);
                 }
                 else if (this.q.includeAllReferences) {
-                    // need re-writes
                     yield this.bindReferences(data, this.q.content_type_uid, locale);
                 }
                 else {
@@ -1113,8 +1118,6 @@ class Stack {
                 output[key] = /* (data.length) ? data[0] : null */ data;
                 return { output };
             }
-            // TODO: sorting logic
-            // Experimental!
             if (this.q.hasOwnProperty('asc')) {
                 data = lodash_1.sortBy(data, this.q.asc);
             }
@@ -1130,15 +1133,15 @@ class Stack {
             }
             if (this.q.only) {
                 const bukcet = JSON.parse(JSON.stringify(data));
-                this.q.only.forEach(field => {
-                    let splittedField = field.split('.');
-                    bukcet.forEach(obj => {
+                this.q.only.forEach((field) => {
+                    const splittedField = field.split('.');
+                    bukcet.forEach((obj) => {
                         if (obj.hasOwnProperty(field)) {
                             delete obj[field];
                         }
                         else {
-                            let depth = 0;
-                            let parent = '';
+                            const depth = 0;
+                            const parent = '';
                             utils_1.applyProjections(obj, splittedField, depth, parent);
                         }
                     });
@@ -1146,15 +1149,15 @@ class Stack {
                 data = utils_1.difference(data, bukcet);
             }
             else if (this.q.except) {
-                this.q.except.forEach(field => {
-                    let splittedField = field.split('.');
-                    data.forEach(obj => {
+                this.q.except.forEach((field) => {
+                    const splittedField = field.split('.');
+                    data.forEach((obj) => {
                         if (obj.hasOwnProperty(field)) {
                             delete obj[field];
                         }
                         else {
-                            let depth = 0;
-                            let parent = '';
+                            const depth = 0;
+                            const parent = '';
                             utils_1.applyProjections(obj, splittedField, depth, parent);
                         }
                     });
@@ -1291,7 +1294,6 @@ class Stack {
                     const subStr = includePath.slice(0, path.length);
                     if (subStr === path) {
                         let subPath;
-                        // Its the complete path!! Hurrah!
                         if (path.length !== includePath.length) {
                             subPath = subStr;
                             pendingPath.push(includePath.slice(path.length + 1));
@@ -1340,7 +1342,7 @@ class Stack {
                                 _content_type_uid: this.types.assets,
                                 _version: { $exists: true },
                                 locale,
-                                uid: elem
+                                uid: elem,
                             });
                             shelf.push({
                                 path: data,
@@ -1352,7 +1354,7 @@ class Stack {
                             queryBucket.$or.push({
                                 _content_type_uid: elem._content_type_uid,
                                 locale,
-                                uid: elem.uid
+                                uid: elem.uid,
                             });
                             shelf.push({
                                 path: data,
@@ -1367,7 +1369,7 @@ class Stack {
                         queryBucket.$or.push({
                             _content_type_uid: data._content_type_uid,
                             locale,
-                            uid: data.uid
+                            uid: data.uid,
                         });
                         shelf.push({
                             path: parent,
@@ -1382,7 +1384,7 @@ class Stack {
                     _content_type_uid: this.types.assets,
                     _version: { $exists: true },
                     locale,
-                    uid: data
+                    uid: data,
                 });
                 shelf.push({
                     path: parent,
@@ -1473,7 +1475,6 @@ class Stack {
                 return;
             }
             const assets = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
-            // might not be required
             const filteredAssets = assets.filter(sift_1.default(queryBucket));
             for (let l = 0, m = shelf.length; l < m; l++) {
                 for (let n = 0, o = filteredAssets.length; n < o; n++) {
@@ -1628,8 +1629,6 @@ class Stack {
                         if (typeof filteredContents[i][this.types.references][entryReferencePaths[k]] === 'string') {
                             ctQueries.$or.push({
                                 _content_type_uid: this.types.content_types,
-                                // this would probably make it slow in FS, avoid this?
-                                // locale,
                                 uid: filteredContents[i][this.types.references][entryReferencePaths[k]],
                             });
                         }
@@ -1637,8 +1636,6 @@ class Stack {
                             filteredContents[i][this.types.references][entryReferencePaths[k]].forEach((uid) => {
                                 ctQueries.$or.push({
                                     _content_type_uid: this.types.content_types,
-                                    // Question: Adding extra key in query, slows querying down? Probably yes.
-                                    // locale,
                                     uid,
                                 });
                             });

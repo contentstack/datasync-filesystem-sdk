@@ -9,7 +9,7 @@ import mask from 'json-mask'
 import {
   merge,
   reverse,
-  sortBy
+  sortBy,
 } from 'lodash'
 import sift from 'sift'
 import {
@@ -17,14 +17,12 @@ import {
   readFile,
 } from './fs'
 import {
+  applyProjections,
   difference,
-  // doNothingClause,
   getAssetsPath,
   getContentTypesPath,
   getEntriesPath,
   segregateQueries,
-  applyProjections
-  //transformProjections
 } from './utils'
 
 interface IShelf {
@@ -40,7 +38,6 @@ interface IQuery {
       $exists: boolean,
     },
     uid: string,
-    // Since collection name deterines the locale
     locale?: string,
   } >
 }
@@ -957,9 +954,12 @@ export class Stack {
    */
   public only(fields) {
     if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
-      this.q.only = fields
-      //const keys = Object.keys(this.contentStore.projections)
-      //this.q.only = keys.concat(fields)
+      this.q.only = []
+      fields.forEach((field) => {
+        if (typeof field === 'string') {
+          this.q.only.push(field)
+        }
+      })
 
       return this
     }
@@ -987,8 +987,11 @@ export class Stack {
   public except(fields) {
     if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
       this.q.except = []
-      const keys = Object.keys(this.contentStore.projections)
-      this.q.except = keys.concat(fields)
+      fields.forEach((field) => {
+        if (typeof field === 'string') {
+          this.q.except.push(field)
+        }
+      })
 
       return this
     }
@@ -1094,7 +1097,6 @@ export class Stack {
             .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
               .includeSpecificReferences)
         } else if (this.q.includeAllReferences) {
-          // need re-writes
           await this.bindReferences(data, this.q.content_type_uid, locale)
         } else {
 
@@ -1252,7 +1254,7 @@ export class Stack {
       data = (data.length) ? data[0] : null
       if (this.q.only) {
         const only = this.q.only.toString().replace(/\./g, '/')
-        
+
         data = mask(data, only)
       } else if (this.q.except) {
         const bukcet = this.q.except.toString().replace(/\./g, '/')
@@ -1264,8 +1266,6 @@ export class Stack {
       return { output }
     }
 
-    // TODO: sorting logic
-    // Experimental!
     if (this.q.hasOwnProperty('asc')) {
       data = sortBy(data, this.q.asc)
     } else if (this.q.hasOwnProperty('desc')) {
@@ -1282,30 +1282,30 @@ export class Stack {
     }
 
     if (this.q.only) {
-      const bukcet = JSON.parse(JSON.stringify(data));
-      this.q.only.forEach(field=>{
-        let splittedField = field.split('.')
-        bukcet.forEach(obj =>{
-          if(obj.hasOwnProperty(field)){
+      const bukcet = JSON.parse(JSON.stringify(data))
+      this.q.only.forEach((field) => {
+        const splittedField = field.split('.')
+        bukcet.forEach((obj) => {
+          if (obj.hasOwnProperty(field)){
             delete obj[field]
           } else {
-            let depth=0
-            let parent= ''
+            const depth = 0
+            const parent = ''
             applyProjections(obj, splittedField, depth, parent)
           }
         })
       })
-      
+
       data = difference(data, bukcet)
     } else if (this.q.except) {
-      this.q.except.forEach(field=>{
-        let splittedField = field.split('.')
-        data.forEach(obj =>{
-          if(obj.hasOwnProperty(field)){
+      this.q.except.forEach((field) => {
+        const splittedField = field.split('.')
+        data.forEach((obj) => {
+          if (obj.hasOwnProperty(field)){
             delete obj[field]
           } else {
-            let depth=0
-            let parent= ''
+            const depth = 0
+            const parent = ''
             applyProjections(obj, splittedField, depth, parent)
           }
         })
@@ -1415,7 +1415,7 @@ export class Stack {
   }
 
   private async subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
-    
+
     const {
       contentTypes,
       aggQueries,
@@ -1475,7 +1475,6 @@ export class Stack {
         const subStr = includePath.slice(0, path.length)
         if (subStr === path) {
           let subPath
-          // Its the complete path!! Hurrah!
           if (path.length !== includePath.length) {
             subPath = subStr
             pendingPath.push(includePath.slice(path.length + 1))
@@ -1516,7 +1515,7 @@ export class Stack {
   }
 
   // tslint:disable-next-line: max-line-length
-  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket, shelf, assetsOnly = false, parent, pos, counter = 0) {
+  private fetchPathDetails(data: any, locale: string, pathArr: string[], queryBucket: IQuery, shelf, assetsOnly = false, parent, pos, counter = 0) {
     if (counter === (pathArr.length)) {
       if (data && typeof data === 'object') {
         if (data instanceof Array && data.length) {
@@ -1526,7 +1525,7 @@ export class Stack {
                 _content_type_uid: this.types.assets,
                 _version: { $exists: true },
                 locale,
-                uid: elem
+                uid: elem,
               })
 
               shelf.push({
@@ -1538,7 +1537,7 @@ export class Stack {
               queryBucket.$or.push({
                 _content_type_uid: elem._content_type_uid,
                 locale,
-                uid: elem.uid
+                uid: elem.uid,
               })
 
               shelf.push({
@@ -1553,7 +1552,7 @@ export class Stack {
             queryBucket.$or.push({
               _content_type_uid: data._content_type_uid,
               locale,
-              uid: data.uid
+              uid: data.uid,
             })
 
             shelf.push({
@@ -1568,7 +1567,7 @@ export class Stack {
           _content_type_uid: this.types.assets,
           _version: { $exists: true },
           locale,
-          uid: data
+          uid: data,
         })
 
         shelf.push({
@@ -1667,7 +1666,6 @@ export class Stack {
     }
 
     const assets = await readFile(getAssetsPath(locale) + '.json')
-    // might not be required
     const filteredAssets = assets.filter(sift(queryBucket))
 
     for (let l = 0, m = shelf.length; l < m; l++) {
@@ -1689,12 +1687,12 @@ export class Stack {
         uid: contentTypeUid,
       }],
     }
-   
+
     const {
       paths, // ref. fields in the current content types
       ctQueries, // list of content type uids, the current content types refer to
     } = await this.getAllReferencePaths(ctQuery, locale)
-    
+
     const queries = {
       $or: [],
     } // reference field paths
@@ -1717,7 +1715,7 @@ export class Stack {
     return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList)
   }
 
- 
+
   private async bindLeftoverAssets(queries, locale: string, pointerList: IShelf[]) {
     const contents = await readFile(getAssetsPath(locale) + '.json')
     const filteredAssets = contents.filter(sift(queries))
@@ -1757,7 +1755,7 @@ export class Stack {
       ctQueries,
       paths,
     } = await this.getAllReferencePaths(oldCtQueries, locale)
-    
+
     // GC to aviod mem leaks
     oldCtQueries = null
     const queries = {
@@ -1772,12 +1770,12 @@ export class Stack {
     // GC to avoid mem leaks!
     oldEntryQueries = null
 
-    
+
     for (let i = 0, j = oldObjectPointerList.length; i < j; i++) {
       const element: IShelf = oldObjectPointerList[i]
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
-       
+
         if (result.docs[k].uid === element.uid) {
           element.path[element.position] = result.docs[k]
           flag = false
@@ -1830,7 +1828,7 @@ export class Stack {
     }
   }
 
-  private async getAllReferencePaths(contentTypeQueries, locale: string) {
+  private async getAllReferencePaths(contentTypeQueries: IQuery, locale: string) {
     const contents: any[] = await readFile(getContentTypesPath(locale) + '.json')
     const filteredContents: any[] = contents.filter(sift(contentTypeQueries))
     const ctQueries: IQuery = {
@@ -1853,16 +1851,12 @@ export class Stack {
           if (typeof filteredContents[i][this.types.references][entryReferencePaths[k]] === 'string') {
             ctQueries.$or.push({
               _content_type_uid: this.types.content_types,
-              // this would probably make it slow in FS, avoid this?
-              // locale,
               uid: filteredContents[i][this.types.references][entryReferencePaths[k]],
             })
           } else if (filteredContents[i][this.types.references][entryReferencePaths[k]].length) {
             filteredContents[i][this.types.references][entryReferencePaths[k]].forEach((uid) => {
               ctQueries.$or.push({
                 _content_type_uid: this.types.content_types,
-                // Question: Adding extra key in query, slows querying down? Probably yes.
-                // locale,
                 uid,
               })
             })

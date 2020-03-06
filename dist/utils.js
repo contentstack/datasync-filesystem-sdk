@@ -39,7 +39,6 @@ const buildPath = (pattern, data) => {
                 pathKeys.push(data[k]);
             }
             else {
-                lodash_1.transform;
                 throw new TypeError(`The key ${k} did not exist on ${JSON.stringify(data)}`);
             }
         }
@@ -175,20 +174,21 @@ exports.doNothingClause = () => {
     return false;
 };
 exports.applyProjections = (data, keys, depth, parent) => {
-    for (let prop in data) {
+    for (const prop in data) {
         if (prop === keys[depth] && keys.length - 1 === depth) {
-            let array = keys.slice(0);
-            let field = array.slice(-1).pop();
+            const array = keys.slice(0);
+            const field = array.slice(-1).pop();
             array.pop();
-            if ((array.join('.')) === parent)
+            if ((array.join('.')) === parent) {
                 delete data[field];
+            }
         }
         else if (typeof data[prop] === 'object') {
             if (prop === keys[depth]) {
                 depth = depth + 1;
                 parent = parent !== '' ? parent + '.' + prop : prop;
                 if (data[prop] instanceof Array) {
-                    data[prop].forEach(element => {
+                    data[prop].forEach((element) => {
                         exports.applyProjections(element, keys, depth, parent);
                     });
                 }
