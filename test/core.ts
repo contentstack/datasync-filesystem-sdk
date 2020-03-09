@@ -10,6 +10,7 @@ import { entries as blogs } from './data/blog'
 import { entries as categories } from './data/category'
 import { content_types } from './data/content_types'
 import { entries as products } from './data/products'
+import { entries as snippets } from './data/snippets'
 import { destroy, init, populateAssets, populateContentTypes, pupulateEntries } from './utils'
 
 let Stack
@@ -68,6 +69,8 @@ describe('# Core', () => {
     await pupulateEntries(scriptConfig, debug, categories)
     // Products
     await pupulateEntries(scriptConfig, debug, products)
+    // Snippets
+    await pupulateEntries(scriptConfig, debug, snippets)
   })
 
   // Populate spanish data
@@ -215,7 +218,7 @@ describe('# Core', () => {
           expect(result).toHaveProperty('content_types')
           expect(result.content_type_uid).toEqual('content_types')
           expect(result.content_types instanceof Array).toBeTruthy()
-          expect(result.content_types).toHaveLength(4)
+          expect(result.content_types).toHaveLength(5)
         }).catch((error) => {
           expect(error).toBeNull()
         })
@@ -248,7 +251,7 @@ describe('# Core', () => {
           expect(result).toHaveProperty('content_type_uid')
           expect(result.locale).toEqual('en-us')
           expect(result.content_type_uid).toEqual('content_types')
-          expect(result.count).toEqual(4)
+          expect(result.count).toEqual(5)
           expect(Object.keys(result).length).toEqual(3)
         }).catch((error) => {
           expect(error).toBeNull()
@@ -308,6 +311,29 @@ describe('# Core', () => {
           expect(result.content_type_uid).toEqual('content_types')
           expect(result.content_type).toHaveProperty('title')
           expect(result.content_type).not.toHaveProperty('content_type_uid')
+        }).catch((error) => {
+          expect(error).toBeNull()
+        })
+    })
+  })
+  
+  describe('# core-entry for snippet test', () => {
+    test('find', () => {
+      return Stack.contentType('snippets')
+        .entry()
+        .find()
+        .then((result: any) => {
+          debug(`# core: entry.find result: ${JSON.stringify(result)}`)
+          expect(result).toHaveProperty('entry')
+          expect(result).toHaveProperty('content_type_uid')
+          expect(result).toHaveProperty('locale')
+          expect(result.content_type_uid).toEqual('snippets')
+          expect(result.locale).toEqual('en-us')
+          expect(result.entry).toHaveProperty('title')
+          expect(result.entry).not.toHaveProperty('content_type_uid')
+          expect(result.entry).toHaveProperty('snippet_test')
+          expect(result.entry.snippet_test).toHaveProperty('img')
+          expect(result.entry.snippet_test.img).toHaveProperty('url')
         }).catch((error) => {
           expect(error).toBeNull()
         })

@@ -98,15 +98,15 @@ module.exports = {
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
   testPathIgnorePatterns: [
-    '/test/data/*',
-    '/test/.*config.ts',
+    '<rootDir>/test/data/*',
+    '<rootDir>/test/config.ts',
     // '/test/sorting.ts',
-    '/test/utils.ts',
+    '<rootDir>/test/utils.ts',
   ],
   // The glob patterns Jest uses to detect test files
   testMatch: [
-    '**/test/**/*.js?(x)',
-    '**/test/**/*.ts?(x)',
+    '<rootDir>/test/*.js?(x)',
+    '<rootDir>/test/*.ts?(x)',
   ],
   transform: {
     '^.+\\.ts?$': 'ts-jest',
