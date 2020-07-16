@@ -26,7 +26,7 @@
   },
   "dependencies": {
     "json-mask": "0.3.8",
-    "lodash": "4.17.15",
+    "lodash": "4.17.19",
     "sift": "8.5.0"
   },
   "devDependencies": {
