@@ -27,7 +27,7 @@
   "dependencies": {
     "json-mask": "0.3.8",
     "lodash": "4.17.15",
-    "sift": "8.5.0"
+    "sift": "16.0.0"
   },
   "devDependencies": {
     "@types/jest": "24.0.15",
