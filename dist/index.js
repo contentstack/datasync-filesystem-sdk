@@ -6,16 +6,19 @@
  * MIT Licensed
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Contentstack = exports.getConfig = exports.setConfig = void 0;
 const lodash_1 = require("lodash");
 const config_1 = require("./config");
 const stack_1 = require("./stack");
 let config = config_1.defaultConfig;
-exports.setConfig = (userConfig) => {
-    config = lodash_1.merge(config, userConfig);
+const setConfig = (userConfig) => {
+    config = (0, lodash_1.merge)(config, userConfig);
 };
-exports.getConfig = () => {
+exports.setConfig = setConfig;
+const getConfig = () => {
     return config;
 };
+exports.getConfig = getConfig;
 /**
  * @public
  * @class Contentstack
@@ -32,7 +35,7 @@ class Contentstack {
      * @returns {Stack}
      */
     static Stack(stackArguments) {
-        config = lodash_1.merge(config, stackArguments);
+        config = (0, lodash_1.merge)(config, stackArguments);
         return new stack_1.Stack(config);
     }
 }

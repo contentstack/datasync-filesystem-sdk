@@ -6,22 +6,24 @@
  * MIT Licensed
  */
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.doNothingClause = exports.segregateQueries = exports.getContentTypesPath = exports.getAssetsPath = exports.getEntriesPath = exports.getBaseDir = exports.difference = void 0;
 const lodash_1 = require("lodash");
 const mkdirp_1 = require("mkdirp");
 const path_1 = require("path");
 const fs_1 = require("./fs");
 const index_1 = require("./index");
 const localePaths = {};
-exports.difference = (obj, baseObj) => {
+const difference = (obj, baseObj) => {
     const changes = (data, base) => {
-        return lodash_1.transform(data, (result, value, key) => {
-            if (!lodash_1.isEqual(value, base[key])) {
-                result[key] = (lodash_1.isObject(value) && lodash_1.isObject(base[key])) ? changes(value, base[key]) : value;
+        return (0, lodash_1.transform)(data, (result, value, key) => {
+            if (!(0, lodash_1.isEqual)(value, base[key])) {
+                result[key] = ((0, lodash_1.isObject)(value) && (0, lodash_1.isObject)(base[key])) ? changes(value, base[key]) : value;
             }
         });
     };
     return changes(obj, baseObj);
 };
+exports.difference = difference;
 const buildPath = (pattern, data) => {
     const patternKeys = pattern.split('/');
     if (patternKeys[0] === '') {
@@ -48,30 +50,31 @@ const buildPath = (pattern, data) => {
     }
     return path_1.join.apply(this, pathKeys);
 };
-exports.getBaseDir = ({ baseDir }) => {
+const getBaseDir = ({ baseDir }) => {
     let contentDir;
-    if (path_1.isAbsolute(baseDir)) {
-        if (!fs_1.existsSync(baseDir)) {
-            mkdirp_1.sync(baseDir);
+    if ((0, path_1.isAbsolute)(baseDir)) {
+        if (!(0, fs_1.existsSync)(baseDir)) {
+            (0, mkdirp_1.sync)(baseDir);
         }
         contentDir = baseDir;
     }
     else {
-        const appPath = path_1.join(__dirname, '..', '..', '..');
-        contentDir = path_1.join(appPath, baseDir);
-        if (!fs_1.existsSync(contentDir)) {
-            mkdirp_1.sync(contentDir);
+        const appPath = (0, path_1.join)(__dirname, '..', '..', '..');
+        contentDir = (0, path_1.join)(appPath, baseDir);
+        if (!(0, fs_1.existsSync)(contentDir)) {
+            (0, mkdirp_1.sync)(contentDir);
         }
     }
     return { contentDir };
 };
+exports.getBaseDir = getBaseDir;
 /**
  * @public
  * @method getEntriesPath
  * @param contentTypeUid Content type - uid, who's entries are to be fetched
  * @param locale Locale from which the contents have to be read
  */
-exports.getEntriesPath = (locale, contentTypeUid) => {
+const getEntriesPath = (locale, contentTypeUid) => {
     // if locale has been read, return data immediately
     if (localePaths.hasOwnProperty(locale)) {
         if (localePaths[locale].hasOwnProperty(contentTypeUid)) {
@@ -85,18 +88,19 @@ exports.getEntriesPath = (locale, contentTypeUid) => {
         _content_type_uid: contentTypeUid,
         locale,
     };
-    const config = index_1.getConfig().contentStore;
-    const { contentDir } = exports.getBaseDir(config);
-    const path = path_1.join(contentDir, buildPath(config.patterns.entries, data));
+    const config = (0, index_1.getConfig)().contentStore;
+    const { contentDir } = (0, exports.getBaseDir)(config);
+    const path = (0, path_1.join)(contentDir, buildPath(config.patterns.entries, data));
     localePaths[locale][contentTypeUid] = path;
     return path;
 };
+exports.getEntriesPath = getEntriesPath;
 /**
  * @public
  * @method getAssetsPath
  * @param locale Locale from which the contents have to be read
  */
-exports.getAssetsPath = (locale) => {
+const getAssetsPath = (locale) => {
     // if locale has been read, return data immediately
     if (localePaths.hasOwnProperty(locale)) {
         if (localePaths[locale].hasOwnProperty('_assets')) {
@@ -111,19 +115,20 @@ exports.getAssetsPath = (locale) => {
         _content_type_uid: '_assets',
         locale,
     };
-    const config = index_1.getConfig().contentStore;
-    const { contentDir } = exports.getBaseDir(config);
-    const path = path_1.join(contentDir, buildPath(config.patterns.assets, data));
+    const config = (0, index_1.getConfig)().contentStore;
+    const { contentDir } = (0, exports.getBaseDir)(config);
+    const path = (0, path_1.join)(contentDir, buildPath(config.patterns.assets, data));
     // tslint:disable-next-line: no-string-literal
     localePaths[locale]['_assets'] = path;
     return path;
 };
+exports.getAssetsPath = getAssetsPath;
 /**
  * @public
  * @method getContentTypesPath
  * @param locale Locale from which the contents have to be read
  */
-exports.getContentTypesPath = (locale) => {
+const getContentTypesPath = (locale) => {
     // if locale has been read, return data immediately
     if (localePaths.hasOwnProperty(locale)) {
         if (localePaths[locale].hasOwnProperty('_content_types')) {
@@ -138,14 +143,15 @@ exports.getContentTypesPath = (locale) => {
         _content_type_uid: '_content_types',
         locale,
     };
-    const config = index_1.getConfig().contentStore;
-    const { contentDir } = exports.getBaseDir(config);
-    const path = path_1.join(contentDir, buildPath(config.patterns.content_types, data));
+    const config = (0, index_1.getConfig)().contentStore;
+    const { contentDir } = (0, exports.getBaseDir)(config);
+    const path = (0, path_1.join)(contentDir, buildPath(config.patterns.content_types, data));
     // tslint:disable-next-line: no-string-literal
     localePaths[locale]['_content_types'] = path;
     return path;
 };
-exports.segregateQueries = (queries) => {
+exports.getContentTypesPath = getContentTypesPath;
+const segregateQueries = (queries) => {
     const aggQueries = {};
     const contentTypes = [];
     queries.forEach((element) => {
@@ -166,10 +172,12 @@ exports.segregateQueries = (queries) => {
         contentTypes,
     };
 };
-exports.doNothingClause = () => {
+exports.segregateQueries = segregateQueries;
+const doNothingClause = function () {
     if (this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
         this.types.assets || this.q.countOnly || this.q.excludeAllReferences) {
         return true;
     }
     return false;
 };
+exports.doNothingClause = doNothingClause;
