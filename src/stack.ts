@@ -1445,7 +1445,8 @@ export class Stack {
       // tslint:disable-next-line: forin
       for (const path in entryReferences) {
         const subStr = includePath.slice(0, path.length)
-        if (subStr === path) {
+        const subStrArr = includePath.split('.');
+        if ((subStrArr.length && subStrArr[0] === path) || includePath === path) {
           let subPath
           // Its the complete path!! Hurrah!
           if (path.length !== includePath.length) {
