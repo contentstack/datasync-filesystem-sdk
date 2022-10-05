@@ -1266,13 +1266,12 @@ class Stack {
                 const includePath = currentInclude[i];
                 // tslint:disable-next-line: forin
                 for (const path in entryReferences) {
-                    const subStr = includePath.slice(0, path.length);
                     const subStrArr = includePath.split('.');
                     if ((subStrArr.length && subStrArr[0] === path) || includePath === path) {
                         let subPath;
                         // Its the complete path!! Hurrah!
                         if (path.length !== includePath.length) {
-                            subPath = subStr;
+                            subPath = subStrArr[0];
                             pendingPath.push(includePath.slice(path.length + 1));
                         }
                         else {
