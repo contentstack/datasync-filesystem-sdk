@@ -21,26 +21,6 @@ function find (contentType = 'blog') {
 return connect()
   .then(() => {
     return find()
-      .then((result) => {
-        // Sample output
-        // {
-        //   entries: [
-        //     {
-        //       title: 'French author',
-        //       gender: null,
-        //       age: null,
-        //       summary: '',
-        //       tags: [
-
-        //       ],
-        //       locale: 'es-es',
-        //       uid: 'blt17559b99fee73d6f'
-        //     }
-        //   ],
-        //   content_type_uid: 'authors',
-        //   locale: 'es-es'
-        // }
-        console.log(JSON.stringify(result, null, 2))
-      })
+      .then(() => { });
   })
   .catch(console.error)
