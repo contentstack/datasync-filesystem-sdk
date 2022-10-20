@@ -1402,7 +1402,7 @@ class Stack {
             result.docs = result.docs.concat(contents.filter((0, sift_1.default)(query)));
             result.docs.forEach((doc) => {
                 this.projections.forEach((key) => {
-                    if (doc.hasOwnProperty(key)) {
+                    if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
                         delete doc[key];
                     }
                 });
@@ -1500,7 +1500,7 @@ class Stack {
             const filteredAssets = contents.filter((0, sift_1.default)(queries));
             filteredAssets.forEach((doc) => {
                 this.projections.forEach((key) => {
-                    if (doc.hasOwnProperty(key)) {
+                    if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
                         delete doc[key];
                     }
                 });

@@ -1585,7 +1585,7 @@ export class Stack {
 
     result.docs.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key)) {
+        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
@@ -1696,7 +1696,7 @@ export class Stack {
 
     filteredAssets.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key)) {
+        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
