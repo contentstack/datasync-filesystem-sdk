@@ -6,10 +6,11 @@
  * MIT Licensed
  */
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
         function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
@@ -17,6 +18,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.Stack = void 0;
 const json_mask_1 = __importDefault(require("json-mask"));
 const lodash_1 = require("lodash");
 const sift_1 = __importDefault(require("sift"));
@@ -370,7 +372,7 @@ class Stack {
      * @returns {string} baseDir
      */
     connect(overrides = {}) {
-        this.config = lodash_1.merge(this.config, overrides);
+        this.config = (0, lodash_1.merge)(this.config, overrides);
         return Promise.resolve(this.config);
     }
     /**
@@ -607,7 +609,7 @@ class Stack {
         if (!userQuery || typeof userQuery !== 'object') {
             throw new Error('Kindly provide valid parameters for \'.query()\'');
         }
-        this.q.query = lodash_1.merge(this.q.query, userQuery);
+        this.q.query = (0, lodash_1.merge)(this.q.query, userQuery);
         return this;
     }
     /**
@@ -947,9 +949,9 @@ class Stack {
         return new Promise((resolve, reject) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const { filePath, key, locale, } = this.preProcess();
-                let data = yield fs_1.readFile(filePath);
+                let data = yield (0, fs_1.readFile)(filePath);
                 const count = data.length;
-                data = data.filter(sift_1.default(this.q.query));
+                data = data.filter((0, sift_1.default)(this.q.query));
                 if (data.length === 0 || this.q.content_type_uid === this.types.content_types || this.q.content_type_uid ===
                     this.types.assets || this.q.countOnly || this.q.excludeAllReferences) {
                     // do nothing
@@ -967,7 +969,7 @@ class Stack {
                     yield this.includeAssetsOnly(data, locale, this.q.content_type_uid);
                 }
                 if (this.q.queryOnReferences) {
-                    data = data.filter(sift_1.default(this.q.queryOnReferences));
+                    data = data.filter((0, sift_1.default)(this.q.queryOnReferences));
                 }
                 const { output } = yield this.postProcess(data, key, locale, count);
                 return resolve(output);
@@ -1030,19 +1032,19 @@ class Stack {
         let filePath;
         switch (this.q.content_type_uid) {
             case this.types.assets:
-                filePath = utils_1.getAssetsPath(locale) + '.json';
+                filePath = (0, utils_1.getAssetsPath)(locale) + '.json';
                 key = (this.q.isSingle) ? 'asset' : 'assets';
                 break;
             case this.types.content_types:
-                filePath = utils_1.getContentTypesPath(locale) + '.json';
+                filePath = (0, utils_1.getContentTypesPath)(locale) + '.json';
                 key = (this.q.isSingle) ? 'content_type' : 'content_types';
                 break;
             default:
-                filePath = utils_1.getEntriesPath(locale, this.q.content_type_uid) + '.json';
+                filePath = (0, utils_1.getEntriesPath)(locale, this.q.content_type_uid) + '.json';
                 key = (this.q.isSingle) ? 'entry' : 'entries';
                 break;
         }
-        if (!fs_1.existsSync(filePath)) {
+        if (!(0, fs_1.existsSync)(filePath)) {
             throw new Error(`Queried content type ${this.q.content_type_uid} was not found at ${filePath}!`);
         }
         if (!this.q.hasOwnProperty('asc') && !this.q.hasOwnProperty('desc')) {
@@ -1086,7 +1088,7 @@ class Stack {
             }
             if (this.q.include_content_type) {
                 // ideally, if the content type doesn't exist, an error will be thrown before it reaches this line
-                const contentTypes = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
+                const contentTypes = yield (0, fs_1.readFile)((0, utils_1.getContentTypesPath)(locale) + '.json');
                 for (let i = 0, j = contentTypes.length; i < j; i++) {
                     if (contentTypes[i].uid === this.q.content_type_uid) {
                         output.content_type = contentTypes[i];
@@ -1101,12 +1103,12 @@ class Stack {
                 data = (data.length) ? data[0] : null;
                 if (this.q.only) {
                     const only = this.q.only.toString().replace(/\./g, '/');
-                    data = json_mask_1.default(data, only);
+                    data = (0, json_mask_1.default)(data, only);
                 }
                 else if (this.q.except) {
                     const bukcet = this.q.except.toString().replace(/\./g, '/');
-                    const except = json_mask_1.default(data, bukcet);
-                    data = utils_1.difference(data, except);
+                    const except = (0, json_mask_1.default)(data, bukcet);
+                    data = (0, utils_1.difference)(data, except);
                 }
                 output[key] = /* (data.length) ? data[0] : null */ data;
                 return { output };
@@ -1114,11 +1116,11 @@ class Stack {
             // TODO: sorting logic
             // Experimental!
             if (this.q.hasOwnProperty('asc')) {
-                data = lodash_1.sortBy(data, this.q.asc);
+                data = (0, lodash_1.sortBy)(data, this.q.asc);
             }
             else if (this.q.hasOwnProperty('desc')) {
-                const temp = lodash_1.sortBy(data, this.q.desc);
-                data = lodash_1.reverse(temp);
+                const temp = (0, lodash_1.sortBy)(data, this.q.desc);
+                data = (0, lodash_1.reverse)(temp);
             }
             if (this.q.skip) {
                 data.splice(0, this.q.skip);
@@ -1128,12 +1130,12 @@ class Stack {
             }
             if (this.q.only) {
                 const only = this.q.only.toString().replace(/\./g, '/');
-                data = json_mask_1.default(data, only);
+                data = (0, json_mask_1.default)(data, only);
             }
             else if (this.q.except) {
                 const bukcet = this.q.except.toString().replace(/\./g, '/');
-                const except = json_mask_1.default(data, bukcet);
-                data = utils_1.difference(data, except);
+                const except = (0, json_mask_1.default)(data, bukcet);
+                data = (0, utils_1.difference)(data, except);
             }
             output[key] = data;
             return { output };
@@ -1147,7 +1149,8 @@ class Stack {
             };
             const { paths, // ref. fields in the current content types
             pendingPath, // left over of *paths*
-            schemaList, } = yield this.getReferencePath(ctQuery, locale, include);
+            schemaList, // list of content type uids, the current content types refer to
+             } = yield this.getReferencePath(ctQuery, locale, include);
             const queries = {
                 $or: [],
             }; // reference field paths
@@ -1219,7 +1222,7 @@ class Stack {
     }
     subIncludeReferenceIteration(eQuieries, locale, paths, include, queries, result, shelf) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { contentTypes, aggQueries, } = utils_1.segregateQueries(eQuieries.$or);
+            const { contentTypes, aggQueries, } = (0, utils_1.segregateQueries)(eQuieries.$or);
             const promises = [];
             contentTypes.forEach((contentType) => {
                 promises.push(this.fetchDocuments(aggQueries[contentType], locale, contentType, paths, include, queries, result, shelf));
@@ -1235,8 +1238,8 @@ class Stack {
     }
     getReferencePath(query, locale, currentInclude) {
         return __awaiter(this, void 0, void 0, function* () {
-            const data = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
-            const schemas = data.filter(sift_1.default(query));
+            const data = yield (0, fs_1.readFile)((0, utils_1.getContentTypesPath)(locale) + '.json');
+            const schemas = data.filter((0, sift_1.default)(query));
             const pendingPath = [];
             const schemasReferred = [];
             const paths = [];
@@ -1253,7 +1256,7 @@ class Stack {
             let entryReferences = {};
             schemas.forEach((schema) => {
                 // Entry references
-                entryReferences = lodash_1.merge(entryReferences, schema[this.types.references]);
+                entryReferences = (0, lodash_1.merge)(entryReferences, schema[this.types.references]);
                 // tslint:disable-next-line: forin
                 for (const path in schema[this.types.assets]) {
                     paths.push(path);
@@ -1263,12 +1266,12 @@ class Stack {
                 const includePath = currentInclude[i];
                 // tslint:disable-next-line: forin
                 for (const path in entryReferences) {
-                    const subStr = includePath.slice(0, path.length);
-                    if (subStr === path) {
+                    const subStrArr = includePath.split('.');
+                    if ((subStrArr.length && subStrArr[0] === path) || includePath === path) {
                         let subPath;
                         // Its the complete path!! Hurrah!
                         if (path.length !== includePath.length) {
-                            subPath = subStr;
+                            subPath = subStrArr[0];
                             pendingPath.push(includePath.slice(path.length + 1));
                         }
                         else {
@@ -1391,15 +1394,15 @@ class Stack {
         return __awaiter(this, void 0, void 0, function* () {
             let contents;
             if (contentTypeUid === this.types.assets) {
-                contents = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
+                contents = yield (0, fs_1.readFile)((0, utils_1.getAssetsPath)(locale) + '.json');
             }
             else {
-                contents = yield fs_1.readFile(utils_1.getEntriesPath(locale, contentTypeUid) + '.json');
+                contents = yield (0, fs_1.readFile)((0, utils_1.getEntriesPath)(locale, contentTypeUid) + '.json');
             }
-            result.docs = result.docs.concat(contents.filter(sift_1.default(query)));
+            result.docs = result.docs.concat(contents.filter((0, sift_1.default)(query)));
             result.docs.forEach((doc) => {
                 this.projections.forEach((key) => {
-                    if (doc.hasOwnProperty(key)) {
+                    if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
                         delete doc[key];
                     }
                 });
@@ -1423,7 +1426,7 @@ class Stack {
     }
     includeAssetsOnly(entries, locale, contentTypeUid) {
         return __awaiter(this, void 0, void 0, function* () {
-            const schemas = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
+            const schemas = yield (0, fs_1.readFile)((0, utils_1.getContentTypesPath)(locale) + '.json');
             let schema;
             for (let i = 0, j = schemas.length; i < j; i++) {
                 if (schemas[i].uid === contentTypeUid) {
@@ -1447,9 +1450,9 @@ class Stack {
             if (shelf.length === 0) {
                 return;
             }
-            const assets = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
+            const assets = yield (0, fs_1.readFile)((0, utils_1.getAssetsPath)(locale) + '.json');
             // might not be required
-            const filteredAssets = assets.filter(sift_1.default(queryBucket));
+            const filteredAssets = assets.filter((0, sift_1.default)(queryBucket));
             for (let l = 0, m = shelf.length; l < m; l++) {
                 for (let n = 0, o = filteredAssets.length; n < o; n++) {
                     if (shelf[l].uid === filteredAssets[n].uid) {
@@ -1470,7 +1473,8 @@ class Stack {
                     }],
             };
             const { paths, // ref. fields in the current content types
-            ctQueries, } = yield this.getAllReferencePaths(ctQuery, locale);
+            ctQueries, // list of content type uids, the current content types refer to
+             } = yield this.getAllReferencePaths(ctQuery, locale);
             const queries = {
                 $or: [],
             }; // reference field paths
@@ -1492,11 +1496,11 @@ class Stack {
     }
     bindLeftoverAssets(queries, locale, pointerList) {
         return __awaiter(this, void 0, void 0, function* () {
-            const contents = yield fs_1.readFile(utils_1.getAssetsPath(locale) + '.json');
-            const filteredAssets = contents.filter(sift_1.default(queries));
+            const contents = yield (0, fs_1.readFile)((0, utils_1.getAssetsPath)(locale) + '.json');
+            const filteredAssets = contents.filter((0, sift_1.default)(queries));
             filteredAssets.forEach((doc) => {
                 this.projections.forEach((key) => {
-                    if (doc.hasOwnProperty(key)) {
+                    if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
                         delete doc[key];
                     }
                 });
@@ -1567,7 +1571,7 @@ class Stack {
     }
     subIncludeAllReferencesIteration(eQuieries, locale, paths, queries, result, shelf) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { contentTypes, aggQueries, } = utils_1.segregateQueries(eQuieries.$or);
+            const { contentTypes, aggQueries, } = (0, utils_1.segregateQueries)(eQuieries.$or);
             const promises = [];
             contentTypes.forEach((contentType) => {
                 promises.push(this.fetchDocuments(aggQueries[contentType], locale, contentType, paths, [], queries, result, shelf, true));
@@ -1583,8 +1587,8 @@ class Stack {
     }
     getAllReferencePaths(contentTypeQueries, locale) {
         return __awaiter(this, void 0, void 0, function* () {
-            const contents = yield fs_1.readFile(utils_1.getContentTypesPath(locale) + '.json');
-            const filteredContents = contents.filter(sift_1.default(contentTypeQueries));
+            const contents = yield (0, fs_1.readFile)((0, utils_1.getContentTypesPath)(locale) + '.json');
+            const filteredContents = contents.filter((0, sift_1.default)(contentTypeQueries));
             const ctQueries = {
                 $or: [],
             };
