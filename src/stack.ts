@@ -1444,12 +1444,12 @@ export class Stack {
 
       // tslint:disable-next-line: forin
       for (const path in entryReferences) {
-        const subStr = includePath.slice(0, path.length)
-        if (subStr === path) {
+        const subStrArr = includePath.split('.');
+        if ((subStrArr.length && subStrArr[0] === path) || includePath === path) {
           let subPath
           // Its the complete path!! Hurrah!
           if (path.length !== includePath.length) {
-            subPath = subStr
+            subPath = subStrArr[0]
             pendingPath.push(includePath.slice(path.length + 1))
           } else {
             subPath = includePath
@@ -1585,7 +1585,7 @@ export class Stack {
 
     result.docs.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key)) {
+        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
@@ -1696,7 +1696,7 @@ export class Stack {
 
     filteredAssets.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key)) {
+        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
