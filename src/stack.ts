@@ -983,7 +983,7 @@ export class Stack {
   public except(fields) {
     if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
       this.q.except = []
-      const keys = Object.keys(this.contentStore.projections)
+      const keys = Object.keys(this.contentStore.projections).filter(key => this.contentStore.projections[key] === 0)
       this.q.except = keys.concat(fields)
 
       return this
@@ -1189,7 +1189,7 @@ export class Stack {
     }
 
     if (!this.q.hasOwnProperty('except') && !this.q.hasOwnProperty('only')) {
-      const keys = Object.keys(this.contentStore.projections)
+      const keys = Object.keys(this.contentStore.projections).filter(key => this.contentStore.projections[key] === 0)
       this.q.except = keys
     }
 
