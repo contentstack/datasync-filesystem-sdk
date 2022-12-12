@@ -20,7 +20,7 @@ import {
   getConfig,
 } from './index'
 
-const localePaths = {}
+const localePaths = Object.create(null)
 
 export const difference = (obj, baseObj) => {
   const changes = (data, base) => {
