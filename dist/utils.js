@@ -12,7 +12,7 @@ const mkdirp_1 = require("mkdirp");
 const path_1 = require("path");
 const fs_1 = require("./fs");
 const index_1 = require("./index");
-const localePaths = {};
+const localePaths = Object.create(null);
 const difference = (obj, baseObj) => {
     const changes = (data, base) => {
         return (0, lodash_1.transform)(data, (result, value, key) => {
