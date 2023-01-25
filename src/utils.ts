@@ -88,7 +88,7 @@ export const getBaseDir = ({baseDir}) => {
  */
 export const getEntriesPath = (locale, contentTypeUid) => {
   // if locale has been read, return data immediately
-  if (localePaths.hasOwnProperty(locale)) {
+  if (locale in localePaths) {
     if (localePaths[locale].hasOwnProperty(contentTypeUid)) {
       return localePaths[locale][contentTypeUid]
     }
@@ -115,7 +115,7 @@ export const getEntriesPath = (locale, contentTypeUid) => {
  */
 export const getAssetsPath = (locale) => {
   // if locale has been read, return data immediately
-  if (localePaths.hasOwnProperty(locale)) {
+  if (locale in localePaths) {
     if (localePaths[locale].hasOwnProperty('_assets')) {
       // tslint:disable-next-line: no-string-literal
       return localePaths[locale]['_assets']
@@ -144,7 +144,7 @@ export const getAssetsPath = (locale) => {
  */
 export const getContentTypesPath = (locale) => {
   // if locale has been read, return data immediately
-  if (localePaths.hasOwnProperty(locale)) {
+  if (locale in localePaths) {
     if (localePaths[locale].hasOwnProperty('_content_types')) {
       // tslint:disable-next-line: no-string-literal
       return localePaths[locale]['_content_types']
