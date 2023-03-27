@@ -1279,7 +1279,7 @@ export class Stack {
     if (this.q.only) {
       const only = this.q.only.toString().replace(/\./g, '/')
       data = mask(data, only)
-    } else if (this.q.except) {
+    } else if (this.q.except.length) {
       const bukcet = this.q.except.toString().replace(/\./g, '/')
       const except = mask(data, bukcet)
       data = difference(data, except)
@@ -1441,15 +1441,17 @@ export class Stack {
 
     for (let i = 0, j = currentInclude.length; i < j; i++) {
       const includePath = currentInclude[i]
-
       // tslint:disable-next-line: forin
       for (const path in entryReferences) {
-        const subStrArr = includePath.split('.');
-        if ((subStrArr.length && subStrArr[0] === path) || includePath === path) {
+        if (path.length > includePath.length) {
+          continue;
+        }
+        const subStr = includePath.slice(0, path.length);
+        if (subStr === path && (includePath[path.length] === '.' || includePath === subStr)) {
           let subPath
           // Its the complete path!! Hurrah!
           if (path.length !== includePath.length) {
-            subPath = subStrArr[0]
+            subPath = subStr
             pendingPath.push(includePath.slice(path.length + 1))
           } else {
             subPath = includePath

@@ -4,7 +4,7 @@
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
-export declare const difference: (obj: any, baseObj: any) => unknown[];
+export declare const difference: (obj: any, baseObj: any) => unknown;
 export declare const getBaseDir: ({ baseDir }: {
     baseDir: any;
 }) => {
