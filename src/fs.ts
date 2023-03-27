@@ -15,11 +15,11 @@ import {
 
 const promisifiedReadFile = promisify(rf)
 
-export const readFile = async (path: string, type: string = 'utf-8') => {
+export const readFile = async (path: string) => {
   if (existsSync(path)) {
-    const contents: string = await promisifiedReadFile(path, type)
+    const contents: Buffer = await promisifiedReadFile(path)
 
-    return JSON.parse(contents)
+    return JSON.parse(contents.toString())
   }
 
   return []
