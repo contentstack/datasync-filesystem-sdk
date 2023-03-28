@@ -4,5 +4,5 @@
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
-export declare const readFile: (path: string, type?: string) => Promise<any>;
+export declare const readFile: (path: string) => Promise<any>;
 export { existsSync, } from 'fs';
