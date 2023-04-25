@@ -5,25 +5,20 @@
  * MIT Licensed
  */
 
-import {
-  existsSync,
-  readFile as rf,
-} from 'fs'
-import {
-  promisify,
-} from 'util'
+import { existsSync, readFileSync } from "fs";
 
-const promisifiedReadFile = promisify(rf)
-
-export const readFile = async (path: string, type: string = 'utf-8') => {
+export const readFile = async (
+  path: string,
+  encoding: BufferEncoding = "utf-8"
+) => {
   if (existsSync(path)) {
-    const contents: string = await promisifiedReadFile(path, type)
+    const contents: string = readFileSync(path, { encoding });
 
-    return JSON.parse(contents)
+    return JSON.parse(contents);
   }
 
-  return []
-}
+  return [];
+};
 
 export {
   existsSync,
