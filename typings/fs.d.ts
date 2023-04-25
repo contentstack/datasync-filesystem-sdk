@@ -4,5 +4,6 @@
  * Copyright (c) Contentstack LLC
  * MIT Licensed
  */
-export declare const readFile: (path: string, type?: string) => Promise<any>;
+/// <reference types="node" />
+export declare const readFile: (path: string, encoding?: BufferEncoding) => Promise<any>;
 export { existsSync, } from 'fs';
