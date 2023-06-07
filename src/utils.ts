@@ -10,7 +10,7 @@ import {
   isObject,
   transform,
 } from 'lodash'
-import { sync } from 'mkdirp'
+import  sync  from 'mkdirp'
 import {
   isAbsolute,
   join,
