@@ -10,7 +10,7 @@ import {
   isObject,
   transform,
 } from 'lodash'
-import { sync } from 'mkdirp'
+
 import {
   isAbsolute,
   join,
@@ -19,7 +19,7 @@ import { existsSync } from './fs'
 import {
   getConfig,
 } from './index'
-
+import mkdirp from 'mkdirp';
 const localePaths = Object.create(null)
 
 export const difference = (obj, baseObj) => {
@@ -66,14 +66,14 @@ export const getBaseDir = ({baseDir}) => {
   let contentDir: string
   if (isAbsolute(baseDir)) {
     if (!existsSync(baseDir)) {
-      sync(baseDir)
+      mkdirp.sync(baseDir)
     }
     contentDir = baseDir
   } else {
     const appPath = join(__dirname, '..', '..', '..')
     contentDir = join(appPath, baseDir)
     if (!existsSync(contentDir)) {
-      sync(contentDir)
+      mkdirp.sync(contentDir)
     }
   }
 
