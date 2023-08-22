@@ -1369,9 +1369,12 @@ export class Stack {
       if (flag) {
         for (let e = 0, f = oldShelf[i].path.length; e < f; e++) {
           // tslint:disable-next-line: max-line-length
-          if (oldShelf[i].path[e].hasOwnProperty('_content_type_uid') && Object.keys(oldShelf[i].path[e]).length === 2) {
-            (oldShelf[i].path as any).splice(e, 1)
-            break
+          if (
+            oldShelf[i].path[e]?.hasOwnProperty("_content_type_uid") &&
+            Object.keys(oldShelf[i].path[e]).length === 2
+          ) {
+            (oldShelf[i].path as any).splice(e, 1);
+            break;
           }
         }
       }
@@ -1587,7 +1590,7 @@ export class Stack {
 
     result.docs.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
+        if (doc?.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
@@ -1698,7 +1701,7 @@ export class Stack {
 
     filteredAssets.forEach((doc) => {
       this.projections.forEach((key) => {
-        if (doc.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
+        if (doc?.hasOwnProperty(key) && this.contentStore.projections[key] === 0) {
           delete doc[key]
         }
       })
@@ -1758,7 +1761,7 @@ export class Stack {
       if (flag) {
         for (let e = 0, f = oldObjectPointerList[i].path.length; e < f; e++) {
           // tslint:disable-next-line: max-line-length
-          if (oldObjectPointerList[i].path[e].hasOwnProperty('_content_type_uid') && Object.keys(oldObjectPointerList[i].path[e]).length === 2) {
+          if (oldObjectPointerList[i].path[e]?.hasOwnProperty('_content_type_uid') && Object.keys(oldObjectPointerList[i].path[e]).length === 2) {
             (oldObjectPointerList[i].path as any).splice(e, 1)
             break
           }
@@ -1809,11 +1812,11 @@ export class Stack {
     for (let i = 0, j = filteredContents.length; i < j; i++) {
       let assetFieldPaths: string[]
       let entryReferencePaths: string[]
-      if (filteredContents[i].hasOwnProperty(this.types.assets)) {
+      if (filteredContents[i]?.hasOwnProperty(this.types.assets)) {
         assetFieldPaths = Object.keys(filteredContents[i][this.types.assets])
         paths = paths.concat(assetFieldPaths)
       }
-      if (filteredContents[i].hasOwnProperty('_references')) {
+      if (filteredContents[i]?.hasOwnProperty('_references')) {
         entryReferencePaths = Object.keys(filteredContents[i][this.types.references])
         paths = paths.concat(entryReferencePaths)
 
