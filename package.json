@@ -1,6 +1,6 @@
 {
   "name": "datasync-filesystem-sdk",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "JavaScript filesystem SDK to query data synced via @contentstack/datasync-content-store-filesystem",
   "main": "dist/index.js",
   "scripts": {
@@ -27,7 +27,7 @@
   "dependencies": {
     "json-mask": "2.0.0",
     "lodash": "^4.17.21",
-    "mkdirp": "^2.1.6",
+    "mkdirp": "^3.0.1",
     "sift": "16.0.1"
   },
   "devDependencies": {
