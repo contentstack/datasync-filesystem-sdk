@@ -19,7 +19,7 @@ import { existsSync } from './fs'
 import {
   getConfig,
 } from './index'
-import mkdirp from 'mkdirp';
+import { sync } from 'mkdirp';
 const localePaths = Object.create(null)
 
 export const difference = (obj, baseObj) => {
@@ -66,14 +66,14 @@ export const getBaseDir = ({baseDir}) => {
   let contentDir: string
   if (isAbsolute(baseDir)) {
     if (!existsSync(baseDir)) {
-      mkdirp.sync(baseDir)
+      sync(baseDir)
     }
     contentDir = baseDir
   } else {
     const appPath = join(__dirname, '..', '..', '..')
     contentDir = join(appPath, baseDir)
     if (!existsSync(contentDir)) {
-      mkdirp.sync(contentDir)
+      sync(contentDir)
     }
   }
 
