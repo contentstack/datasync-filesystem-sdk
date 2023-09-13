@@ -1747,7 +1747,7 @@ export class Stack {
     // GC to avoid mem leaks!
     oldEntryQueries = null
 
-    for (let i = 0, j = oldObjectPointerList.length; i < j; i++) {
+    for (let i = oldObjectPointerList.length - 1, j = 0; i >= j; i--) {
       const element: IShelf = oldObjectPointerList[i]
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
