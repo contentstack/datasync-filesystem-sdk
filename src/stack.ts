@@ -8,6 +8,7 @@
 import mask from 'json-mask'
 import {
   merge,
+  mergeWith,
   reverse,
   sortBy,
 } from 'lodash'
@@ -1435,7 +1436,7 @@ export class Stack {
 
     schemas.forEach((schema) => {
       // Entry references
-      entryReferences = merge(entryReferences, schema[this.types.references])
+      entryReferences = mergeWith(entryReferences, schema[this.types.references])
       // tslint:disable-next-line: forin
       for (const path in schema[this.types.assets]) {
         paths.push(path)
