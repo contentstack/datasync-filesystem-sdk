@@ -10,8 +10,9 @@ import {
   merge,
   reverse,
   sortBy,
+  mergeWith,
+  isArray
 } from 'lodash'
-import _ from 'lodash'
 import sift from 'sift'
 import {
   existsSync,
@@ -1436,8 +1437,8 @@ export class Stack {
 
     schemas.forEach((schema) => {
       // Entry references
-      entryReferences = _.mergeWith(entryReferences, schema[this.types.references], (existingReferences, newReferences) => {
-        if (_.isArray(existingReferences)) { 
+      entryReferences = mergeWith(entryReferences, schema[this.types.references], (existingReferences, newReferences) => {
+        if (isArray(existingReferences)) { 
           return Array.from(new Set(existingReferences.concat(newReferences))); 
         }
         return existingReferences;
