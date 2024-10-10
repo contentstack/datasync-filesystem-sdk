@@ -8,9 +8,10 @@
 import mask from 'json-mask'
 import {
   merge,
-  mergeWith,
   reverse,
   sortBy,
+  mergeWith,
+  isArray
 } from 'lodash'
 import sift from 'sift'
 import {
@@ -1436,11 +1437,12 @@ export class Stack {
 
     schemas.forEach((schema) => {
       // Entry references
-      entryReferences = mergeWith(entryReferences, schema[this.types.references])
-      // tslint:disable-next-line: forin
-      for (const path in schema[this.types.assets]) {
-        paths.push(path)
-      }
+      entryReferences = mergeWith(entryReferences, schema[this.types.references], (existingReferences, newReferences) => {
+        if (isArray(existingReferences)) { 
+          return Array.from(new Set(existingReferences.concat(newReferences))); 
+        }
+        return existingReferences;
+      });
     })
 
     for (let i = 0, j = currentInclude.length; i < j; i++) {
