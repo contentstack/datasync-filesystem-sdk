@@ -70,8 +70,8 @@ export const getBaseDir = ({baseDir}) => {
     }
     contentDir = baseDir
   } else {
-    const appPath = join(__dirname, '..', '..', '..')
-    contentDir = join(appPath, baseDir)
+    const appPath = join(sanitizePath(__dirname), '..', '..', '..')
+    contentDir = join(sanitizePath(appPath), sanitizePath(baseDir))
     if (!existsSync(contentDir)) {
       sync(contentDir)
     }
@@ -102,7 +102,7 @@ export const getEntriesPath = (locale, contentTypeUid) => {
   }
   const config = getConfig().contentStore
   const { contentDir } = getBaseDir(config)
-  const path = join(contentDir, buildPath(config.patterns.entries, data))
+  const path = join(sanitizePath(contentDir), sanitizePath(buildPath(config.patterns.entries, data)))
   localePaths[locale][contentTypeUid] = path
 
   return path
@@ -130,7 +130,7 @@ export const getAssetsPath = (locale) => {
   }
   const config = getConfig().contentStore
   const { contentDir } = getBaseDir(config)
-  const path = join(contentDir, buildPath(config.patterns.assets, data))
+  const path = join(sanitizePath(contentDir), sanitizePath(buildPath(config.patterns.assets, data)))
   // tslint:disable-next-line: no-string-literal
   localePaths[locale]['_assets'] = path
 
@@ -158,7 +158,7 @@ export const getContentTypesPath = (locale) => {
   }
   const config = getConfig().contentStore
   const { contentDir } = getBaseDir(config)
-  const path = join(contentDir, buildPath(config.patterns.content_types, data))
+  const path = join(sanitizePath(contentDir), sanitizePath(buildPath(config.patterns.content_types, data)))
   // tslint:disable-next-line: no-string-literal
   localePaths[locale]['_content_types'] = path
 
@@ -203,3 +203,7 @@ export const doNothingClause = function() {
 
   return false
 }
+
+// To remove the relative path
+export const sanitizePath = (str: string) =>
+  str?.replace(/^(\.\.(\/|\\|$))+/, "");
