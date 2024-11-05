@@ -1443,6 +1443,10 @@ export class Stack {
         }
         return existingReferences;
       });
+      // tslint:disable-next-line: forin
+      for (const path in schema[this.types.assets]) {
+        paths.push(path)
+      }
     })
 
     for (let i = 0, j = currentInclude.length; i < j; i++) {
