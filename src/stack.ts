@@ -1359,6 +1359,11 @@ export class Stack {
 
     for (let i = 0, j = oldShelf.length; i < j; i++) {
       const element: IShelf = oldShelf[i]
+      // Adjust position if needed (e.g., if item was removed before the current position)
+      if (Number(element.position) >= element.path.length) {
+        element.position = (element.path.length - 1).toString(); // Ensure position is within bounds
+      }
+
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
         if (result.docs[k].uid === element.uid) {
@@ -1755,7 +1760,7 @@ export class Stack {
     oldEntryQueries = null
 
     for (let i = oldObjectPointerList.length - 1, j = 0; i >= j; i--) {
-      const element: IShelf = oldObjectPointerList[i]
+      const element: IShelf = oldObjectPointerList[i]     
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
         if (result.docs[k].uid === element.uid) {
