@@ -136,8 +136,8 @@ Stack.contentType('blog')
 In order to learn more about advance queries please refer the API documentation, [here](https://contentstack.github.io/datasync-filesystem-sdk/).
   
 ## Further Reading
-- [Getting started with Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync) 
-- [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync/configuration-files-for-contentstack-datasync) doc lists the configuration for different modules
+- [Getting started with Contentstack DataSync](https://www.contentstack.com/docs/developers/develop-apps-with-datasync/get-started-with-contentstack-datasync) 
+- [Contentstack DataSync](https://www.contentstack.com/docs/developers/develop-apps-with-datasync/configuration-files-for-contentstack-datasync) doc lists the configuration for different modules
 
 ## Support and Feature requests
 
