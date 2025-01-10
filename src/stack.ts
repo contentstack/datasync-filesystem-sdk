@@ -1357,7 +1357,7 @@ export class Stack {
     // GC to avoid mem leaks!
     eQuery = null
 
-    for (let i = 0, j = oldShelf.length; i < j; i++) {
+    for (let i = oldShelf.length - 1, j = 0; i >= j; i--) {
       const element: IShelf = oldShelf[i]
       let flag = true
       for (let k = 0, l = result.docs.length; k < l; k++) {
