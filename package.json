@@ -1,6 +1,6 @@
 {
   "name": "datasync-filesystem-sdk",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "JavaScript filesystem SDK to query data synced via @contentstack/datasync-content-store-filesystem",
   "main": "dist/index.js",
   "scripts": {
