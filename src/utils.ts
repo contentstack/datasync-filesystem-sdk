@@ -205,5 +205,10 @@ export const doNothingClause = function() {
 }
 
 // To remove the relative path
-export const sanitizePath = (str: string) =>
-  str?.replace(/^(\.\.(\/|\\|$))+/, "");
+export const sanitizePath = (str: string) => {
+  const decodedStr = decodeURIComponent(str);
+  return decodedStr
+    ?.replace(/^([\/\\]){2,}/, "./") // Normalize leading slashes/backslashes to ''
+    .replace(/[\/\\]+/g, "/") // Replace multiple slashes/backslashes with a single '/'
+    .replace(/(\.\.(\/|\\|$))+/g, ""); // Remove directory traversal (../ or ..\)
+};
