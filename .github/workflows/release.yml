@@ -47,7 +47,7 @@ jobs:
       # Create GitHub Release
       - name: Create GitHub Release
         if: steps.update_tag.outputs.tagname != ''
-        uses: actions/create-release@v4
+        uses: actions/create-release@v1
         id: create_release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -60,7 +60,7 @@ jobs:
       # Upload release asset
       - name: Upload Release Asset
         if: steps.update_tag.outputs.tagname != ''
-        uses: actions/upload-release-asset@v4
+        uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
