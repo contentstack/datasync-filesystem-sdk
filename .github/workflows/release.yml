@@ -29,12 +29,19 @@ jobs:
       - name: Pack the npm package
         run: npx npm-pack-all
 
+      # Unpublish the package if pushing to feat/2326-npm-publish
+      - name: Unpublish from npm
+        if: github.ref == 'refs/heads/feat/2326-npm-publish'
+        run: npm unpublish datasync-filesystem-sdk --force
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       # Publish package to npm
-      - name: Publish to npm
-        id: publish_npm
-        uses: JS-DevTools/npm-publish@v3
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
+      # - name: Publish to npm
+      #   id: publish_npm
+      #   uses: JS-DevTools/npm-publish@v3
+      #   with:
+      #     token: ${{ secrets.NPM_TOKEN }}
 
       # Auto-tag new version
       - name: Auto-tag new version
