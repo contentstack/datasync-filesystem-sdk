@@ -36,7 +36,7 @@ jobs:
         uses: JS-DevTools/npm-publish@v3
         with:
           token: ${{ secrets.NPM_TOKEN }}
-          # access: public // Uncomment this line if you want to publish the package as public for first time
+          # access: public # Uncomment this line if you want to publish the package as public for first time
 
       # Auto-tag new version
       - name: Auto-tag new version
