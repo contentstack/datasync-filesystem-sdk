@@ -28,7 +28,7 @@ jobs:
         run: npm install npm-pack-all
 
       - name: Pack the npm package
-        run: npx npm-pack-all
+        run: node node_modules/.bin/npm-pack-all
 
       # Publish package to npm
       - name: Publish to npm
