@@ -24,11 +24,11 @@ jobs:
         id: package
         uses: codex-team/action-nodejs-package-info@v1.1
 
-      - name: Install npm-pack-all
-        run: npm install npm-pack-all
+      - name: Install npm pack
+        run: npm install npm-pack
 
       - name: Pack the npm package
-        run: node node_modules/.bin/npm-pack-all
+        run: npm pack
 
       # Publish package to npm
       - name: Publish to npm
