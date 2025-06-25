@@ -70,7 +70,7 @@ export const getBaseDir = ({baseDir}) => {
     }
     contentDir = baseDir
   } else {
-    const appPath = process.cwd();
+    const appPath = process.env.APP_ROOT || process.cwd();
     contentDir = join(sanitizePath(appPath), sanitizePath(baseDir))
     if (!existsSync(contentDir)) {
       sync(contentDir)
