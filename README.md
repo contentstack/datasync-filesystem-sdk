@@ -20,6 +20,14 @@ Contentstack is a headless CMS with an API-first approach. It is a CMS that deve
 |referenceDepth|number|2|**Optional** The default nested-reference-field depth that'd be considered when calling .includeReferences(). This can be overridden by passing a numerical argument to .includeReferences(4)|
 |projections|object|{_content_type_uid: 0}|**Optional** Keys that by default would be removed from results. Pass `key: 0` to remove, `key: 1` to override the existing..|
 
+### Environment Variables
+
+The SDK supports the following environment variables for advanced configuration:
+
+| Variable    | Description |
+|-------------|-------------|
+| `APP_ROOT`  | (Optional) Sets the root directory for content storage. If not set, defaults to the current working directory. |
+
 ### Config Overview
 
 Here's an overview of the SDK's configurable properties
