@@ -24,9 +24,9 @@ Contentstack is a headless CMS with an API-first approach. It is a CMS that deve
 
 The SDK supports the following environment variables for advanced configuration:
 
-| Variable    | Description |
-|-------------|-------------|
-| `APP_ROOT`  | (Optional) Sets the root directory for content storage. If not set, defaults to the current working directory. |
+| Variable    | Description | Default |
+|-------------|-------------|-------------| 
+| `APP_ROOT`  | (Optional) Sets the root directory for content storage. | current working directory |
 
 ### Config Overview
 
