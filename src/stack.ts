@@ -1090,10 +1090,10 @@ export class Stack {
         } else if (this.q.includeSpecificReferences) {
           await this
             .includeSpecificReferences(data, this.q.content_type_uid, locale, this.q
-              .includeSpecificReferences, true)
+              .includeSpecificReferences)
         } else if (this.q.includeAllReferences) {
           // need re-writes
-          await this.bindReferences(data, this.q.content_type_uid, locale, false)
+          await this.bindReferences(data, this.q.content_type_uid, locale)
         } else {
 
           await this.includeAssetsOnly(data, locale, this.q.content_type_uid)
@@ -1292,7 +1292,7 @@ export class Stack {
     return { output }
   }
 
-  private async includeSpecificReferences(entries: any[], contentTypeUid: string, locale: string, include: string[], preserveUnpublished = false) {
+  private async includeSpecificReferences(entries: any[], contentTypeUid: string, locale: string, include: string[]) {
     const ctQuery = {
       _content_type_uid: this.types.content_types,
       uid: contentTypeUid,
@@ -1324,12 +1324,12 @@ export class Stack {
     // else, self-recursively iterate and fetch references
     // Note: Shelf is the one holding `pointers` to the actual entry
     // Once the pointer has been used, for GC, point the object to null
-    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf, preserveUnpublished)
+    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
 
     return
   }
 
-  private async includeReferenceIteration(eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf: IShelf[], preserveUnpublished = false) {
+  private async includeReferenceIteration(eQuery: any, ctQuery: any, locale: string, include: string[], oldShelf: IShelf[]) {
     if (oldShelf.length === 0) {
       return
     } else if (ctQuery.$or.length === 0 && eQuery.$or.length > 0) {
@@ -1369,18 +1369,12 @@ export class Stack {
 
       if (flag) {
         for (let e = 0, f = oldShelf[i].path.length; e < f; e++) {
+          // tslint:disable-next-line: max-line-length
           if (
             oldShelf[i].path[e]?.hasOwnProperty("_content_type_uid") &&
             Object.keys(oldShelf[i].path[e]).length === 2
           ) {
-            const ref = oldShelf[i].path[e];
-            if (preserveUnpublished) {
-              ((oldShelf[i].path as any) as any[])[e] = typeof ref === "string"
-                ? { uid: ref, _content_type_uid: null }
-                : { uid: (ref as any).uid, _content_type_uid: (ref as any)._content_type_uid };
-            } else {
-              ((oldShelf[i].path as any) as any[]).splice(e, 1);
-            }
+            (oldShelf[i].path as any).splice(e, 1);
             break;
           }
         }
@@ -1392,7 +1386,7 @@ export class Stack {
     result = null
 
     // Iterative loops, that traverses paths and binds them onto entries
-    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf, preserveUnpublished)
+    await this.includeReferenceIteration(queries, schemaList, locale, pendingPath, shelf)
 
     return
   }
@@ -1672,7 +1666,7 @@ export class Stack {
     return
   }
 
-  private async bindReferences(entries: any[], contentTypeUid: string, locale: string, preserveUnpublished = false) {
+  private async bindReferences(entries: any[], contentTypeUid: string, locale: string) {
     const ctQuery: IQuery = {
       $or: [{
         _content_type_uid: this.types.content_types,
@@ -1704,7 +1698,7 @@ export class Stack {
     // Note: Shelf is the one holding `pointers` to the actual entry
     // Once the pointer has been used, for GC, point the object to null
 
-    return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList, 0, preserveUnpublished)
+    return this.includeAllReferencesIteration(queries, ctQueries, locale, objectPointerList)
   }
 
   private async bindLeftoverAssets(queries: IQuery, locale: string, pointerList: IShelf[]) {
@@ -1732,7 +1726,7 @@ export class Stack {
   }
 
   // tslint:disable-next-line: max-line-length
-  private async includeAllReferencesIteration(oldEntryQueries: IQuery, oldCtQueries: IQuery, locale: string, oldObjectPointerList: IShelf[], depth = 0, preserveUnpublished = false) {
+  private async includeAllReferencesIteration(oldEntryQueries: IQuery, oldCtQueries: IQuery, locale: string, oldObjectPointerList: IShelf[], depth = 0) {
     if (depth > this.q.referenceDepth || oldObjectPointerList.length === 0) {
       return
     } else if (oldCtQueries.$or.length === 0 && oldObjectPointerList.length > 0 && oldEntryQueries.$or.length > 0) {
@@ -1772,16 +1766,10 @@ export class Stack {
 
       if (flag) {
         for (let e = 0, f = oldObjectPointerList[i].path.length; e < f; e++) {
+          // tslint:disable-next-line: max-line-length
           if (oldObjectPointerList[i].path[e]?.hasOwnProperty('_content_type_uid') && Object.keys(oldObjectPointerList[i].path[e]).length === 2) {
-            const ref = oldObjectPointerList[i].path[e];
-            if (preserveUnpublished) {
-              ((oldObjectPointerList[i].path as any) as any[])[e] = typeof ref === "string"
-                ? { uid: ref, _content_type_uid: null }
-                : { uid: (ref as any).uid, _content_type_uid: (ref as any)._content_type_uid };
-            } else {
-              ((oldObjectPointerList[i].path as any) as any[]).splice(e, 1);
-            }
-            break;
+            (oldObjectPointerList[i].path as any).splice(e, 1)
+            break
           }
         }
       }
@@ -1792,7 +1780,7 @@ export class Stack {
 
     ++depth
     // Iterative loops, that traverses paths and binds them onto entries
-    await this.includeAllReferencesIteration(queries, ctQueries, locale, shelf, depth, preserveUnpublished)
+    await this.includeAllReferencesIteration(queries, ctQueries, locale, shelf, depth)
 
     return
   }
