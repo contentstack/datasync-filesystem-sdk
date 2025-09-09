@@ -273,9 +273,13 @@ export declare class Stack {
      *  .include(['authors','categories'])
      *  .find()
      *
+     * // Overlapping paths are automatically chained:
+     * // .include(['content', 'content.nested']) becomes equivalent to:
+     * // .include(['content']).include(['content.nested'])
+     *
      * @returns {this} - Returns `stack's` instance
      */
-    include(fields: any): this;
+    include(fields: any): Stack;
     /**
      * @public
      * @method includeReferences
@@ -498,6 +502,22 @@ export declare class Stack {
      * @returns {object} - Returns an object, that has been processed, filtered and referenced
      */
     fetch(): Promise<unknown>;
+    /**
+     * @private
+     * @method analyzeReferencePaths
+     * @description Analyzes reference paths to detect overlaps and dependencies
+     * @param {Array} paths - Array of reference paths
+     * @returns {Object} Analysis result
+     */
+    private analyzeReferencePaths;
+    /**
+     * @private
+     * @method processOverlappingPaths
+     * @description Processes overlapping paths using a chained approach
+     * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
+     * @returns {this} - Returns stack instance
+     */
+    private processOverlappingPaths;
     /**
      * @private
      * @method preProcess
