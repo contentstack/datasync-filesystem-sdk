@@ -795,18 +795,40 @@ export class Stack {
    *  .include(['authors','categories'])
    *  .find()
    *
+   * // Overlapping paths are automatically chained:
+   * // .include(['content', 'content.nested']) becomes equivalent to:
+   * // .include(['content']).include(['content.nested'])
+   *
    * @returns {this} - Returns `stack's` instance
    */
   public include(fields) {
-    if (fields && typeof fields === 'object' && fields instanceof Array && fields.length) {
-      this.q.includeSpecificReferences = fields
-    } else if (fields && typeof fields === 'string') {
-      this.q.includeSpecificReferences = [fields]
+    // Normalize input to array
+    let fieldsArray: string[]
+    if (typeof fields === 'string') {
+      fieldsArray = [fields]
+    } else if (fields && Array.isArray(fields) && fields.length) {
+      fieldsArray = [...fields] // Create a copy to avoid mutation
     } else {
       throw new Error('Kindly pass \'string\' OR \'array\' fields for .include()!')
     }
 
-    return this
+    // If only one field, use original behavior
+    if (fieldsArray.length === 1) {
+      this.q.includeSpecificReferences = fieldsArray
+      return this
+    }
+
+    // Analyze paths for overlaps and dependencies
+    const pathAnalysis = this.analyzeReferencePaths(fieldsArray)
+    
+    if (pathAnalysis.hasOverlaps) {
+      // Process paths with overlaps using chained approach
+      return this.processOverlappingPaths(pathAnalysis)
+    } else {
+      // No overlaps, use original behavior
+      this.q.includeSpecificReferences = fieldsArray
+      return this
+    }
   }
 
   /**
@@ -1153,6 +1175,87 @@ export class Stack {
     this.q.isSingle = true
 
     return this.find()
+  }
+
+  /**
+   * @private
+   * @method analyzeReferencePaths
+   * @description Analyzes reference paths to detect overlaps and dependencies
+   * @param {Array} paths - Array of reference paths
+   * @returns {Object} Analysis result
+   */
+  private analyzeReferencePaths(paths: string[]) {
+    const analysis = {
+      hasOverlaps: false,
+      independentPaths: [] as string[],
+      overlappingGroups: [] as string[][],
+      allPaths: paths
+    }
+
+    // Sort paths by length to process shorter paths first
+    const sortedPaths = [...paths].sort((a, b) => a.length - b.length)
+    const processed = new Set<string>()
+
+    for (let i = 0; i < sortedPaths.length; i++) {
+      const currentPath = sortedPaths[i]
+      
+      if (processed.has(currentPath)) {
+        continue
+      }
+
+      // Find all paths that start with currentPath
+      const relatedPaths = sortedPaths.filter(path => 
+        path.startsWith(currentPath) && 
+        (path === currentPath || path[currentPath.length] === '.')
+      )
+
+      if (relatedPaths.length > 1) {
+        // Found overlapping paths
+        analysis.hasOverlaps = true
+        analysis.overlappingGroups.push(relatedPaths)
+        relatedPaths.forEach(path => processed.add(path))
+      } else {
+        // Independent path
+        analysis.independentPaths.push(currentPath)
+        processed.add(currentPath)
+      }
+    }
+
+    return analysis
+  }
+
+  /**
+   * @private
+   * @method processOverlappingPaths
+   * @description Processes overlapping paths using a chained approach
+   * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
+   * @returns {this} - Returns stack instance
+   */
+  private processOverlappingPaths(pathAnalysis: any): Stack {
+    // Start with independent paths (if any)
+    if (pathAnalysis.independentPaths.length > 0) {
+      this.q.includeSpecificReferences = pathAnalysis.independentPaths
+    }
+
+    // Process each overlapping group by using the most specific path
+    pathAnalysis.overlappingGroups.forEach((group: string[]) => {
+      // Sort group by length (longest/most specific first)
+      const sortedGroup = group.sort((a, b) => b.length - a.length)
+      
+      // Use the most specific path from each group
+      const mostSpecificPath = sortedGroup[0]
+      
+      // If this is the first group and we have no independent paths,
+      // set the includeSpecificReferences
+      if (!this.q.includeSpecificReferences) {
+        this.q.includeSpecificReferences = [mostSpecificPath]
+      } else {
+        // Add the most specific path to existing references
+        this.q.includeSpecificReferences.push(mostSpecificPath)
+      }
+    })
+
+    return this
   }
 
   /**
