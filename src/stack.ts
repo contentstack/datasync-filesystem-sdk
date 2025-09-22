@@ -1227,32 +1227,22 @@ export class Stack {
   /**
    * @private
    * @method processOverlappingPaths
-   * @description Processes overlapping paths using a chained approach
+   * @description Processes overlapping paths by including all paths from each group
    * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
    * @returns {this} - Returns stack instance
    */
   private processOverlappingPaths(pathAnalysis: any): Stack {
     // Start with independent paths (if any)
     if (pathAnalysis.independentPaths.length > 0) {
-      this.q.includeSpecificReferences = pathAnalysis.independentPaths
+      this.q.includeSpecificReferences = [...pathAnalysis.independentPaths]
+    } else {
+      this.q.includeSpecificReferences = []
     }
 
-    // Process each overlapping group by using the most specific path
+    // Process each overlapping group by including ALL paths from each group
     pathAnalysis.overlappingGroups.forEach((group: string[]) => {
-      // Sort group by length (longest/most specific first)
-      const sortedGroup = group.sort((a, b) => b.length - a.length)
-      
-      // Use the most specific path from each group
-      const mostSpecificPath = sortedGroup[0]
-      
-      // If this is the first group and we have no independent paths,
-      // set the includeSpecificReferences
-      if (!this.q.includeSpecificReferences) {
-        this.q.includeSpecificReferences = [mostSpecificPath]
-      } else {
-        // Add the most specific path to existing references
-        this.q.includeSpecificReferences.push(mostSpecificPath)
-      }
+      // Add all paths from the group to includeSpecificReferences
+      this.q.includeSpecificReferences.push(...group)
     })
 
     return this
