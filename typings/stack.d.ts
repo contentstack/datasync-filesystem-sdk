@@ -513,7 +513,7 @@ export declare class Stack {
     /**
      * @private
      * @method processOverlappingPaths
-     * @description Processes overlapping paths using a chained approach
+     * @description Processes overlapping paths by including all paths from each group
      * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
      * @returns {this} - Returns stack instance
      */
