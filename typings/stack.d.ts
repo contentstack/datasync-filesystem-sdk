@@ -513,11 +513,19 @@ export declare class Stack {
     /**
      * @private
      * @method processOverlappingPaths
-     * @description Processes overlapping paths by including all paths from each group
+     * @description Processes overlapping paths using a chained approach
      * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
      * @returns {this} - Returns stack instance
      */
     private processOverlappingPaths;
+    /**
+     * @private
+     * @method removeRedundantPaths
+     * @description Removes parent paths that are fully covered by more specific child paths
+     * Example: ["content", "content.content"] → ["content.content"]
+     * But keeps: ["form", "form.fields", "form.fields.rules"] → all three (not redundant)
+     */
+    private removeRedundantPaths;
     /**
      * @private
      * @method preProcess
