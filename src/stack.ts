@@ -1227,26 +1227,62 @@ export class Stack {
   /**
    * @private
    * @method processOverlappingPaths
-   * @description Processes overlapping paths by including all paths from each group
+   * @description Processes overlapping paths using a chained approach
    * @param {Object} pathAnalysis - Analysis result from analyzeReferencePaths
    * @returns {this} - Returns stack instance
    */
   private processOverlappingPaths(pathAnalysis: any): Stack {
-    // Start with independent paths (if any)
+    // Collect ALL paths first
+    const allPaths: string[] = []
+    
+    // Add independent paths
     if (pathAnalysis.independentPaths.length > 0) {
-      this.q.includeSpecificReferences = [...pathAnalysis.independentPaths]
-    } else {
-      this.q.includeSpecificReferences = []
+      allPaths.push(...pathAnalysis.independentPaths)
     }
 
-    // Process each overlapping group by including ALL paths from each group
+    // Add all paths from overlapping groups
     pathAnalysis.overlappingGroups.forEach((group: string[]) => {
-      // Add all paths from the group to includeSpecificReferences
-      this.q.includeSpecificReferences.push(...group)
+      allPaths.push(...group)
     })
 
+    // Remove exact duplicates
+    const uniquePaths = [...new Set(allPaths)]
+    
+    // Smart filtering: remove parent paths that are fully covered by child paths
+    const filteredPaths = this.removeRedundantPaths(uniquePaths)
+    
+    this.q.includeSpecificReferences = filteredPaths
     return this
   }
+
+  /**
+   * @private
+   * @method removeRedundantPaths
+   * @description Removes parent paths that are fully covered by more specific child paths
+   * Example: ["content", "content.content"] → ["content.content"]
+   * But keeps: ["form", "form.fields", "form.fields.rules"] → all three (not redundant)
+   */
+  private removeRedundantPaths(paths: string[]): string[] {
+    // Sort by length (longest first) to prioritize more specific paths
+    const sortedPaths = paths.sort((a, b) => b.length - a.length)
+    const result: string[] = []
+    
+    for (const currentPath of sortedPaths) {
+      // Check if this path is made redundant by a more specific path already in result
+      const isRedundant = result.some(existingPath => {
+        // Check if currentPath is a direct parent of existingPath
+        return existingPath.startsWith(currentPath + '.') && 
+               existingPath.split('.').length === currentPath.split('.').length + 1
+      })
+      
+      if (!isRedundant) {
+        result.push(currentPath)
+      }
+    }
+    
+    return result
+  }
+  
 
   /**
    * @private
