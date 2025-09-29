@@ -520,6 +520,14 @@ export declare class Stack {
     private processOverlappingPaths;
     /**
      * @private
+     * @method removeRedundantPaths
+     * @description Removes parent paths that are fully covered by more specific child paths
+     * Example: ["content", "content.content"] → ["content.content"]
+     * But keeps: ["form", "form.fields", "form.fields.rules"] → all three (not redundant)
+     */
+    private removeRedundantPaths;
+    /**
+     * @private
      * @method preProcess
      * @description
      * Runs before .find()
