@@ -1641,11 +1641,13 @@ export class Stack {
                 uid: elem,
               })
 
-              shelf.push({
-                path: data,
-                position: idx,
-                uid: elem,
-              })
+              if (!shelf.some(entry => entry.path === data && entry.position === idx && entry.uid === elem)) {
+                shelf.push({
+                  path: data,
+                  position: idx,
+                  uid: elem,
+                })
+              }
             } else if (elem && typeof elem === 'object' && elem.hasOwnProperty('_content_type_uid')) {
               queryBucket.$or.push({
                 _content_type_uid: elem._content_type_uid,
@@ -1653,11 +1655,13 @@ export class Stack {
                 uid: elem.uid,
               })
 
-              shelf.push({
-                path: data,
-                position: idx,
-                uid: elem.uid,
-              })
+              if (!shelf.some(entry => entry.path === data && entry.position === idx && entry.uid === elem.uid)) {
+                shelf.push({
+                  path: data,
+                  position: idx,
+                  uid: elem.uid,
+                })
+              }
             }
           })
         } else if (typeof data === 'object') {
@@ -1668,11 +1672,13 @@ export class Stack {
               uid: data.uid,
             })
 
-            shelf.push({
-              path: parent,
-              position: pos,
-              uid: data.uid,
-            })
+            if (!shelf.some(entry => entry.path === parent && entry.position === pos && entry.uid === data.uid)) {
+              shelf.push({
+                path: parent,
+                position: pos,
+                uid: data.uid,
+              })
+            }
           }
         }
       } else if (typeof data === 'string') {
@@ -1683,11 +1689,13 @@ export class Stack {
           uid: data,
         })
 
-        shelf.push({
-          path: parent,
-          position: pos,
-          uid: data,
-        })
+        if (!shelf.some(entry => entry.path === parent && entry.position === pos && entry.uid === data)) {
+          shelf.push({
+            path: parent,
+            position: pos,
+            uid: data,
+          })
+        }
       }
     } else {
       const currentField = pathArr[counter]
