@@ -551,6 +551,16 @@ export declare class Stack {
     private includeReferenceIteration;
     private subIncludeReferenceIteration;
     private getReferencePath;
+    /**
+    * @private
+    * @method addToShelfIfNotExists
+    * @description Helper function to add entry to shelf only if it doesn't already exist
+    * @param {IShelf[]} shelf - The shelf array to add to
+    * @param {any} path - The path reference
+    * @param {number} position - The position in the path
+    * @param {string} uid - The unique identifier
+    */
+    private addToShelfIfNotExists;
     private fetchPathDetails;
     private fetchDocuments;
     private includeAssetsOnly;
