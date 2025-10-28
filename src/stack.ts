@@ -26,6 +26,7 @@ import {
   getEntriesPath,
   segregateQueries,
 } from './utils'
+import { WARNING_MESSAGES } from './messages'
 
 interface IShelf {
   path: string,
@@ -847,7 +848,7 @@ export class Stack {
    * @returns {this} - Returns `stack's` instance
    */
   public includeReferences(depth?: number) {
-    console.warn('.includeReferences() is a relatively slow query..!')
+    console.warn(WARNING_MESSAGES.INCLUDE_REFERENCES_SLOW())
     this.q.includeAllReferences = true
     if (typeof depth === 'number') {
       this.q.referenceDepth = depth
@@ -1069,7 +1070,7 @@ export class Stack {
     this.q.referenceDepth = depth
 
     if (depth > this.contentStore.referenceDepth) {
-      console.warn(`Increasing reference depth above ${this.contentStore.referenceDepth} may degrade performance!`)
+      console.warn(WARNING_MESSAGES.REFERENCE_DEPTH_PERFORMANCE(this.contentStore.referenceDepth))
     }
 
     return this
