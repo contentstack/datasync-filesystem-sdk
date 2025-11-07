@@ -8,6 +8,7 @@
 import { merge } from 'lodash'
 import { defaultConfig } from './config'
 import { Stack } from './stack'
+export { ERROR_MESSAGES, WARNING_MESSAGES } from './messages'
 
 interface IUserConfig {
   contentStore?: {
