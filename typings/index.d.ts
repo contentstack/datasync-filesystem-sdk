@@ -5,6 +5,7 @@
  * MIT Licensed
  */
 import { Stack } from './stack';
+export { ERROR_MESSAGES, WARNING_MESSAGES } from './messages';
 interface IUserConfig {
     contentStore?: {
         baseDir?: string;
@@ -53,4 +54,3 @@ export declare class Contentstack {
      */
     static Stack(stackArguments: any): Stack;
 }
-export {};
