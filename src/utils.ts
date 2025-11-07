@@ -19,7 +19,8 @@ import { existsSync } from './fs'
 import {
   getConfig,
 } from './index'
-import { sync } from 'mkdirp';
+import { sync } from 'mkdirp'
+import { ERROR_MESSAGES } from './messages';
 const localePaths = Object.create(null)
 
 export const difference = (obj, baseObj) => {
@@ -52,7 +53,7 @@ const buildPath = (pattern, data) => {
       if (data[k]) {
         pathKeys.push(data[k])
       } else {
-        throw new TypeError(`The key ${k} did not exist on ${JSON.stringify(data)}`)
+        throw new TypeError(ERROR_MESSAGES.KEY_NOT_FOUND(k, data))
       }
     } else {
       pathKeys.push(patternKeys[i])
