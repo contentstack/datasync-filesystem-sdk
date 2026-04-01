@@ -1,0 +1,27 @@
+---
+description: TypeScript source conventions for src/ — match existing ESLint and project tsconfig
+globs: src/**/*.ts
+alwaysApply: false
+---
+
+# TypeScript (`src/`)
+
+## Tooling
+
+- **Compiler:** `tsconfig.json` — `module` CommonJS, `target` ES6, `strict` unused locals/parameters, `noImplicitReturns`, declarations emitted to `typings/`.
+- **Lint:** `npm run lint` uses ESLint with the config referenced in `package.json` (verify the config file name matches the repo — a `.eslintrc` may also be present).
+- **Formatting:** `.jsbeautifyrc` exists at repo root; align with existing file style (indentation, quotes, semicolons as in neighboring code).
+
+## Layout
+
+- Keep the public surface in `src/index.ts`; heavy logic stays in `stack.ts`, `utils.ts`, `fs.ts`, `config.ts`, `messages.ts`.
+- Prefer **JSDoc** on exported symbols (`@public`, `@description`, `@api`) for generated docs.
+- Use existing **error/warning** patterns via `messages.ts` where appropriate instead of ad hoc strings.
+
+## Logging
+
+- Avoid introducing `console` noise in library code; follow existing patterns. Tests may use `debug` (see `test/utils.ts`).
+
+## Dependencies
+
+- Do not add HTTP clients or REST assumptions — this SDK targets **local filesystem** content and in-process queries. Use dependencies already in line with `package.json`.
