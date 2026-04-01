@@ -1,0 +1,44 @@
+---
+description: PR review checklist for datasync-filesystem-sdk — API docs, compatibility, tests, terminology
+alwaysApply: true
+---
+
+# Code review checklist
+
+## Product terminology
+
+- This package is the **DataSync Filesystem SDK** (local synced content). Do **not** describe it as the **CDA** or **CMA** HTTP client unless the change explicitly documents comparison or migration.
+- Distinguish **in-memory/filesystem** queries from **REST** or **CDN** behavior.
+
+## Public API and docs
+
+- Exported APIs should have accurate **JSDoc** (`@public`, parameters, return shape).
+- README / examples should match actual **`Contentstack.Stack`** usage and config keys.
+
+## Backward compatibility
+
+- Avoid breaking changes to query results shape, config schema, or method signatures without a **semver-major** plan and changelog intent.
+- Deprecations should be clearly commented and documented.
+
+## Errors
+
+- Prefer centralized messages from **`messages.ts`** (`ERROR_MESSAGES`, `WARNING_MESSAGES`) for user-visible strings; keep messages actionable.
+
+## Null and data safety
+
+- Guard against missing files, empty arrays, and malformed JSON consistent with existing patterns in `stack.ts` / `fs.ts`.
+
+## Dependencies and security
+
+- New dependencies need justification (bundle size, maintenance). Align with **`package.json`** constraints.
+- Consider **Snyk** / org policy — `pretest` does not replace dependency review.
+
+## Tests
+
+- Behavioral changes in **`src/`** should include or update **Jest** coverage under **`test/`** using filesystem fixtures — not live API calls.
+
+## Severity (optional labels)
+
+- **Blocker:** wrong results, data loss risk, security issue, broken public API contract.
+- **Major:** missing tests for core behavior, breaking change without version/docs strategy.
+- **Minor:** style, non-user-facing refactors, doc nits.

@@ -1,0 +1,33 @@
+---
+description: Jest tests under test/ — fixtures, temp dirs, coverage, ignores
+globs: test/**/*.ts
+alwaysApply: false
+---
+
+# Testing
+
+## Runner and config
+
+- **Jest** with **ts-jest**, **Node** environment (`jest.config.js`).
+- **Coverage:** enabled; output under `coverage/`; `collectCoverage` true.
+- **Ignored from tests:** `test/data/*`, `test/utils.ts`, and paths listed in `testPathIgnorePatterns` — adjust only alongside `jest.config.js`.
+
+## Layout
+
+- Test files: `test/**/*.ts` matching Jest `testMatch`.
+- **Fixtures:** `test/data/` — static JSON samples (assets, entries, content types, etc.).
+- **Helpers:** `test/utils.ts` — `init`, `populate*`, `destroy`, temp `baseDir` per suite under `__dirname` + module name.
+
+## Naming and style
+
+- Suites use `describe` / `it` with labels like `# Core`, `# Queries` (existing convention).
+- **No live HTTP** — tests exercise the SDK against **written files** only.
+
+## Environment
+
+- **`APP_ROOT`:** optional; only if a test explicitly relies on README-documented behavior.
+- No Delivery/Management API keys required.
+
+## Timeouts and notifications
+
+- Jest `notify: true` may use `node-notifier` locally — failures are normal if notifications are unavailable in CI.
