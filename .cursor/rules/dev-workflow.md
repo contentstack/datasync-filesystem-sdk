@@ -7,7 +7,9 @@ alwaysApply: false
 
 ## Branches
 
-Use your team’s Git branching model (e.g. feature branches off the default branch). Keep commits focused; this repo uses **Husky** hooks that expect **Talisman** and **Snyk** to be installed locally unless you bypass with `SKIP_HOOK=1` (see `.husky/pre-commit`).
+- Use **feature branches** for new work; open pull requests against **`development`** to integrate changes.
+- For a **release**, open a pull request from **`development`** into **`master`**. Releases to npm are driven from **`master`**.
+
 
 ## Install and build
 
