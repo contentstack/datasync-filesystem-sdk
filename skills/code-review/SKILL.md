@@ -1,48 +1,61 @@
 ---
 name: code-review
-description: PR review checklist for @contentstack/datasync-filesystem-sdk — API docs, compatibility, tests, DataSync terminology
+description: PR review checklist for DataSync Filesystem SDK—API docs, compatibility, tests, terminology (not CDA/CMA HTTP SDK)
 ---
 
-# Code review (expanded)
+# Code review – Contentstack DataSync Filesystem SDK
 
-Use this skill when reviewing or authoring changes to [**@contentstack/datasync-filesystem-sdk**](https://github.com/contentstack/datasync-filesystem-sdk/). Align with [`.cursor/rules/code-review.mdc`](../../.cursor/rules/code-review.mdc).
+## When to use
 
-## Scope clarity
+- Reviewing a pull request that touches `src/`, `test/`, or public docs
+- Preparing your own PR and self-checking before request for review
+- Verifying semver impact or regression risk for query/config behavior
 
-- Confirm the change targets **local DataSync filesystem querying**, not CDA/CMA HTTP APIs, unless the diff is documentation comparing ecosystems.
+## Instructions
 
-## Public API
+### Scope and terminology
 
-- **JSDoc** on exports: purpose, parameters, return values, examples where helpful.
-- **README** and **example/** snippets reflect real `Contentstack.Stack` config and method chains.
+- This package is the **DataSync Filesystem SDK** (local synced content). Do **not** describe it as the **CDA** or **CMA** HTTP client unless the change explicitly documents comparison or migration.
+- Distinguish **in-memory/filesystem** queries from **REST** or **CDN** behavior.
+- Confirm behavior changes are covered by **filesystem-based** Jest tests, not live API calls.
 
-## Compatibility
+### Public API and docs
 
-- **Semver:** breaking changes to public methods, config shape, or default behavior likely require a **major** bump; additive features **minor**; fixes **patch** — follow team policy.
-- Avoid silent changes to projection defaults, locale handling, or reference resolution depth.
+- Exported APIs should have accurate **JSDoc** (`@public`, parameters, return shape).
+- **README** and **example/** snippets must match real `Contentstack.Stack` usage and config keys.
 
-## Errors and UX
+### Compatibility
 
-- User-facing strings should flow through **`messages.ts`** where possible.
-- Thrown errors should be debuggable (include context, avoid leaking sensitive paths in production if your deployment cares).
+- Avoid breaking query result shape, config schema, or public method signatures without a **semver-major** plan and changelog intent.
+- Deprecations: comment + document clearly.
 
-## Correctness and safety
+### Errors and messages
 
-- **Filesystem:** race-free assumptions, `existsSync` / read patterns consistent with `fs.ts`.
-- **Queries:** `sift` / lodash behavior matches intended Mongo-like operators documented or implied by tests.
+- Prefer centralized strings from **`src/messages.ts`** (`ERROR_MESSAGES`, `WARNING_MESSAGES`); keep messages actionable.
 
-## Dependencies
+### Correctness and null safety
 
-- New packages: license, maintenance, size — and run org security processes (**Snyk**, etc.).
+- Guard missing files, empty arrays, and malformed JSON consistently with patterns in `stack.ts` / `fs.ts`.
 
-## Tests
+### Dependencies and security
 
-- **`src/`** behavior changes need **Jest** updates under **`test/`** with filesystem fixtures — not network mocks for Contentstack APIs.
+- New dependencies need justification (bundle size, maintenance). Align with **`package.json`**.
+- Consider **Snyk** / org policy — `pretest` does not replace dependency review.
 
-## Optional severity
+### Tests
+
+- Behavioral changes in **`src/`** need matching updates under **`test/`** with fixtures in **`test/data/`** — not live API calls.
+
+### Optional severity
 
 | Level | Examples |
 |-------|----------|
-| Blocker | Wrong query results, security issue, broken published API |
-| Major | Missing regression tests, breaking change without version strategy |
-| Minor | Comments, internal refactors, doc typos |
+| Blocker | Wrong query results, data loss risk, security issue, broken public API contract |
+| Major | Missing tests for core behavior, breaking change without version/docs strategy |
+| Minor | Style, non-user-facing refactors, doc nits |
+
+## References
+
+- [`../testing/SKILL.md`](../testing/SKILL.md)
+- [`../datasync-filesystem/SKILL.md`](../datasync-filesystem/SKILL.md)
+- [`../../AGENTS.md`](../../AGENTS.md)

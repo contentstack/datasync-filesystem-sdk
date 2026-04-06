@@ -1,91 +1,49 @@
-# Agent guidance — `@contentstack/datasync-filesystem-sdk`
+# Contentstack DataSync Filesystem SDK – Agent guide
 
-## Single source of truth
+**Universal entry point** for contributors and AI agents (Cursor, Copilot, CLI tools, or none). Conventions and detailed guidance live in **`skills/*/SKILL.md`**, not in editor-specific config, so the same instructions apply everywhere.
 
-Use this file and **`skills/`** as the **canonical** place for project context, workflows, and review standards so contributors get consistent guidance in any IDE or agent (Cursor, Copilot, CLI, others).
+**Flow:** [`.cursor/rules/README.md`](.cursor/rules/README.md) (optional, Cursor only) → **`AGENTS.md`** (this file) → **`skills/<name>/SKILL.md`**
 
-| Layer | Role |
-|-------|------|
-| **`AGENTS.md`** (this file) | Entry point: package identity, repo links, tech stack, source layout, commands, and skills index |
-| **`skills/<topic>/SKILL.md`** | Full detail: SDK mental model, testing, and code review checklists |
-| **`.cursor/rules/`** | Cursor-only scoped pointers (`description` / `globs` / `alwaysApply`) that reference this file and `skills/` |
+## What this repo is
 
-**Flow:** Cursor rules -> **`AGENTS.md`** -> **`skills/*.md`**
+| Field | Detail |
+|-------|--------|
+| *Name:* | [`@contentstack/datasync-filesystem-sdk`](https://github.com/contentstack/datasync-filesystem-sdk/) |
+| *Purpose:* | TypeScript/JavaScript library to **query locally synced filesystem JSON** produced by [Contentstack DataSync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync), typically after sync via `@contentstack/datasync-content-store-filesystem`. |
+| *Out of scope (if any):* | **Not** the Contentstack Delivery (CDA) or Management (CMA) HTTP SDK; **no** REST calls for core behavior—reads disk and runs in-process queries (`lodash`, `sift`, `json-mask`). |
 
-## What this package is
-
-**Contentstack DataSync Filesystem SDK** is a **Node.js/TypeScript** library that queries **locally synced filesystem JSON content** produced by Contentstack DataSync (typically via `@contentstack/datasync-content-store-filesystem`).
-
-It is **not** the Contentstack Delivery (CDA) SDK or Management (CMA) SDK, and it does **not** call Contentstack REST APIs for core behavior.
-
-## Repository
-
-- **Git:** [https://github.com/contentstack/datasync-filesystem-sdk/](https://github.com/contentstack/datasync-filesystem-sdk/)
-- **Product docs:** [https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync](https://www.contentstack.com/docs/guide/synchronization/contentstack-datasync)
-
-## Tech stack
+## Tech stack (at a glance)
 
 | Area | Details |
 |------|---------|
-| Language/runtime | TypeScript (`typescript` `^4.9.5`), Node.js (README recommends v20+) |
-| Compilation/build | `tsc` (`compile`), clean + `tsc` via `build-ts`; output to `dist/` and `typings/` |
-| Test framework | Jest + ts-jest (`jest.config.js`, Node test environment, coverage enabled) |
-| Lint/tooling | `npm run lint` invokes ESLint command from `package.json`; repo also includes `.eslintrc` |
-| Core query/data libs | `lodash`, `sift`, `json-mask`, `mkdirp` |
-| Docs generation | JSDoc via `npm run build-doc` |
+| Language | TypeScript `^4.9.5` (`package.json`); Node.js v20+ recommended (`README.md`) |
+| Build | `tsc` → `dist/`; declarations in `typings/`; `tsconfig.json`; `npm run build-ts` / `compile` |
+| Tests | Jest + ts-jest; `jest.config.js`; tests under `test/**/*.ts` (see `testMatch` / ignores) |
+| Lint / coverage | `npm run lint` (ESLint per `package.json` on `src/**/*.ts`); Jest coverage to `coverage/` |
+| Other | Core deps: `lodash`, `sift`, `json-mask`, `mkdirp`; docs: `npm run build-doc` → `docs/` |
 
-## Source layout and public entry points
+## Commands (quick reference)
 
-| Role | Path |
-|------|------|
-| Package runtime entry | `dist/index.js` (`main` in `package.json`) |
-| TS public facade | `src/index.ts` (`Contentstack`, `setConfig`, `getConfig`) |
-| User-visible messages | `src/messages.ts` (`ERROR_MESSAGES`, `WARNING_MESSAGES`) |
-| Query builder/core behavior | `src/stack.ts` |
-| Defaults + path/file helpers | `src/config.ts`, `src/utils.ts`, `src/fs.ts` |
-| Tests and fixtures | `test/` with fixtures in `test/data/` |
-| Generated declarations | `typings/*.d.ts` |
+| Command type | Command |
+|--------------|---------|
+| Build | `npm run build-ts` (clean + compile) or `npm run compile` (`tsc` only) |
+| Test | `npm test` (`pretest` runs `build-ts`, then Jest with coverage) |
+| Lint | `npm run lint` |
 
-## Common commands
+Optional: CI and automation live under [`.github/workflows/`](.github/workflows/) (e.g. CodeQL, SCA, policy scans, version-bump checks—see each workflow for triggers).
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build-ts` | Clean `dist`, `typings`, `coverage`, then compile TypeScript |
-| `npm run compile` | Compile TypeScript only |
-| `npm test` | `pretest` runs `build-ts`, then Jest with coverage |
-| `npm run lint` | Run lint command defined in `package.json` |
-| `npm run build-doc` | Build and generate JSDoc docs under `docs/` |
+## Where the documentation lives: skills
 
-## Test model and env/credentials
+| Skill | Path | What it covers |
+|-------|------|----------------|
+| Dev workflow | [`skills/dev-workflow/SKILL.md`](skills/dev-workflow/SKILL.md) | Branches, hooks, build/test/lint, PR and version expectations |
+| TypeScript (`src/`) | [`skills/typescript/SKILL.md`](skills/typescript/SKILL.md) | Compiler/lint, layout, JSDoc, dependencies—no HTTP/REST assumptions |
+| DataSync filesystem SDK | [`skills/datasync-filesystem/SKILL.md`](skills/datasync-filesystem/SKILL.md) | Stack, config, query surface, DataSync vs CDA/CMA |
+| Testing | [`skills/testing/SKILL.md`](skills/testing/SKILL.md) | Jest layout, fixtures, temp dirs, env, coverage |
+| Code review | [`skills/code-review/SKILL.md`](skills/code-review/SKILL.md) | PR checklist, semver, terminology, severity labels |
 
-- Tests are filesystem-based (local fixtures + temp directories), not live Contentstack API calls.
-- Test suites live in `test/`; `jest.config.js` controls matches/ignores.
-- No Delivery/Management API credentials are required for core tests.
-- Optional environment variable: `APP_ROOT` (documented in `README.md`) to override content root resolution.
+An index with “when to use” hints is in [`skills/README.md`](skills/README.md).
 
-## Skills index
+## Using Cursor (optional)
 
-- Skills index: [`skills/README.md`](skills/README.md)
-- Key skills:
-  - [`skills/code-review/SKILL.md`](skills/code-review/SKILL.md)
-  - [`skills/testing/SKILL.md`](skills/testing/SKILL.md)
-  - [`skills/typescript-datasync-filesystem/SKILL.md`](skills/typescript-datasync-filesystem/SKILL.md)
-
-## Cursor rules
-
-- Cursor rules overview: [`.cursor/rules/README.md`](.cursor/rules/README.md)
-- Treat `.cursor/rules/` as scoped pointers; do not treat them as a second source of truth.
-- Update policy and standards primarily in `AGENTS.md` and `skills/`, then keep rule pointers aligned.
-
-## Cursor-specific quick references
-
-For Cursor workflows, reference these scoped rules:
-
-- `@typescript` -> [`.cursor/rules/typescript.mdc`](.cursor/rules/typescript.mdc)
-- `@testing` -> [`.cursor/rules/testing.mdc`](.cursor/rules/testing.mdc)
-- `@datasync-filesystem-sdk` -> [`.cursor/rules/datasync-filesystem-sdk.mdc`](.cursor/rules/datasync-filesystem-sdk.mdc)
-- `@code-review` -> [`.cursor/rules/code-review.mdc`](.cursor/rules/code-review.mdc)
-- `@dev-workflow` -> [`.cursor/rules/dev-workflow.md`](.cursor/rules/dev-workflow.md)
-- [`skills/typescript-datasync-filesystem/SKILL.md`](skills/typescript-datasync-filesystem/SKILL.md)
-- [`skills/testing/SKILL.md`](skills/testing/SKILL.md)
-- [`skills/code-review/SKILL.md`](skills/code-review/SKILL.md)
+If you use *Cursor*, [`.cursor/rules/README.md`](.cursor/rules/README.md) only points to *[`AGENTS.md`](AGENTS.md)*—same docs as everyone else.

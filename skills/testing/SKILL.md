@@ -1,45 +1,62 @@
 ---
 name: testing
-description: Run and extend Jest tests for datasync-filesystem-sdk — build pretest, fixtures, temp dirs, ignores
+description: Jest tests for datasync-filesystem-sdk—pretest build, fixtures, test/utils, ignores, coverage, no live API
 ---
 
-# Testing skill
+# Testing – Contentstack DataSync Filesystem SDK
 
-## Commands
+## When to use
 
-```bash
-npm test
-```
+- Adding or changing tests under `test/`
+- Debugging failures after `src/` changes
+- Understanding why a path is ignored in Jest or how temp dirs are created
 
-`pretest` runs **`npm run build-ts`** (clean + `tsc`), then **Jest** runs with **coverage** (`jest.config.js`).
+## Instructions
 
-```bash
-npm run build-ts   # alone if you only need dist/typings before debugging tests
-```
+### Commands
 
-## Layout
+- `npm test` — `pretest` runs `npm run build-ts`, then Jest with coverage (`jest.config.js`).
+- `npm run build-ts` — use alone when you need `dist/` / `typings/` before debugging tests.
+
+### Runner and config
+
+- **Jest** with **ts-jest**, **Node** environment (`jest.config.js`).
+- **Coverage:** enabled; output under `coverage/` (`collectCoverage` true).
+- **Ignored from test discovery:** `test/data/*`, `test/utils.ts`, and paths in `testPathIgnorePatterns` — change only together with `jest.config.js`.
+
+### Layout
 
 | Path | Role |
 |------|------|
-| `test/**/*.ts` | Test suites (see `testMatch` in `jest.config.js`) |
-| `test/data/` | Static JSON fixtures — **ignored** as test files |
-| `test/utils.ts` | `init`, populate helpers, `destroy` — **ignored** as a test file |
-| Per-suite temp dirs | Created under `test/<suiteName>/` via `init(..., moduleName)` |
+| `test/**/*.ts` | Test suites (`testMatch` in `jest.config.js`) |
+| `test/data/` | Static JSON fixtures (ignored as test files) |
+| `test/utils.ts` | `init`, `populate*`, `destroy` (ignored as a test file) |
+| Per-suite dirs | Temp content under `test/<suiteName>/` via `init(Contentstack, config, moduleName)` |
 
-## Naming
+### Naming and style
 
-- Suites use **`describe`** / **`it`** with readable labels (e.g. `# Core`).
-- Not all files use `*.test.ts`; Jest discovers by path pattern, not name suffix.
+- Suites use `describe` / `it` with labels like `# Core`, `# Queries` (existing convention).
+- File names need not be `*.test.ts`; Jest matches by path pattern.
+- **No live HTTP** — tests exercise the SDK against **written files** only.
 
-## Environment
+### Environment and credentials
 
-- **No API credentials** for core tests.
-- **`APP_ROOT`:** only if exercising README-documented resolution behavior.
+- **No** Delivery or Management API keys for default tests.
+- Optional: `APP_ROOT` only if a test exercises README-documented root resolution.
 
-## Mocks
+### Mocks and I/O
 
-- Tests use **real filesystem writes** into temp directories, not HTTP mocks. Reuse **`populateAssets`**, **`populateContentTypes`**, **`pupulateEntries`** from `test/utils.ts` where applicable.
+- Tests write **real files** under temp directories; reuse `populateAssets`, `populateContentTypes`, `pupulateEntries` from `test/utils.ts` where applicable.
 
-## Coverage and CI
+### Coverage
 
-- Coverage outputs to **`coverage/`** (HTML + JSON). Adjust **`jest.config.js`** only when changing collect rules deliberately.
+- Reports under `coverage/`; change `jest.config.js` only when intentionally adjusting collect rules.
+
+### Notifications
+
+- Jest `notify: true` may use `node-notifier` locally — notification failures are normal if unavailable in CI.
+
+## References
+
+- [`../datasync-filesystem/SKILL.md`](../datasync-filesystem/SKILL.md) — what `src/` is doing under test
+- [`../../AGENTS.md`](../../AGENTS.md)
